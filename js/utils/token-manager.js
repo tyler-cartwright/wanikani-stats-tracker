@@ -1,7 +1,9 @@
 // Token Management
-// Handles secure token storage and retrieval
+// Handles secure token storage and retrieval with persistence
 
 import apiClient from '../api/api-client.js';
+
+const STORAGE_KEY = 'wk_stats_token';
 
 class TokenManager {
     constructor() {
@@ -41,11 +43,105 @@ class TokenManager {
     }
 
     /**
+     * Load token from localStorage
+     * @returns {string|null}
+     */
+    loadFromStorage() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                console.log('[TokenManager] Token found in storage');
+                return stored;
+            }
+        } catch (error) {
+            console.error('[TokenManager] Failed to load token from storage:', error);
+        }
+        return null;
+    }
+
+    /**
+     * Save token to localStorage
+     * @param {string} token - Token to save
+     * @param {boolean} remember - Whether to persist token
+     */
+    saveToStorage(token, remember = true) {
+        if (!remember) {
+            console.log('[TokenManager] Token not persisted (remember=false)');
+            return;
+        }
+
+        try {
+            localStorage.setItem(STORAGE_KEY, token);
+            console.log('[TokenManager] Token saved to storage');
+        } catch (error) {
+            console.error('[TokenManager] Failed to save token to storage:', error);
+        }
+    }
+
+    /**
+     * Remove token from localStorage
+     */
+    removeFromStorage() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            console.log('[TokenManager] Token removed from storage');
+        } catch (error) {
+            console.error('[TokenManager] Failed to remove token from storage:', error);
+        }
+    }
+
+    /**
+     * Restore token from storage and validate
+     * @returns {Promise<boolean>} True if token restored successfully
+     */
+    async restoreToken() {
+        const storedToken = this.loadFromStorage();
+        
+        if (!storedToken) {
+            return false;
+        }
+
+        // Validate format
+        if (!this.validateFormat(storedToken)) {
+            console.warn('[TokenManager] Stored token has invalid format, clearing');
+            this.removeFromStorage();
+            return false;
+        }
+
+        // Set in API client
+        apiClient.setToken(storedToken);
+
+        // Test token
+        try {
+            const isValid = await apiClient.testToken();
+            
+            if (!isValid) {
+                console.warn('[TokenManager] Stored token is invalid, clearing');
+                this.removeFromStorage();
+                apiClient.clearToken();
+                return false;
+            }
+
+            // Token is valid
+            this.token = storedToken;
+            await this.sendTokenToServiceWorker(storedToken);
+            console.log('[TokenManager] Token restored successfully');
+            return true;
+
+        } catch (error) {
+            console.error('[TokenManager] Failed to validate stored token:', error);
+            // Don't clear on network error - might be offline
+            return false;
+        }
+    }
+
+    /**
      * Set and validate token
      * @param {string} token - API token
+     * @param {boolean} remember - Whether to persist token
      * @returns {Promise<{success: boolean, error?: string}>}
      */
-    async setToken(token) {
+    async setToken(token, remember = true) {
         const trimmedToken = token.trim();
 
         // Validate format
@@ -73,6 +169,9 @@ class TokenManager {
 
             // Token is valid, store it
             this.token = trimmedToken;
+            
+            // Save to localStorage if remember is true
+            this.saveToStorage(trimmedToken, remember);
             
             // Send to service worker for request interception
             await this.sendTokenToServiceWorker(trimmedToken);
@@ -129,11 +228,12 @@ class TokenManager {
     }
 
     /**
-     * Clear token
+     * Clear token (from memory and storage)
      */
     clearToken() {
         this.token = null;
         apiClient.clearToken();
+        this.removeFromStorage();
         
         // Notify service worker
         if (this.serviceWorkerReady && navigator.serviceWorker.controller) {

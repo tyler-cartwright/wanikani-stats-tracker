@@ -11,7 +11,7 @@ console.log('WaniKani Stats Tracker - Initializing...');
 
 // DOM elements
 let loadingScreen, loadingMessage, progressFill;
-let tokenModal, tokenInput, tokenSubmitBtn, tokenError;
+let tokenModal, tokenInput, tokenSubmitBtn, tokenError, rememberTokenCheckbox;
 let appContainer;
 
 // Service worker registration
@@ -28,13 +28,15 @@ function initDOMReferences() {
     tokenInput = document.getElementById('api-token-input');
     tokenSubmitBtn = document.getElementById('token-submit-btn');
     tokenError = document.getElementById('token-error');
+    rememberTokenCheckbox = document.getElementById('remember-token');
     
     appContainer = document.getElementById('app');
     
     console.log('[App] DOM references:', {
         tokenModal: !!tokenModal,
         tokenInput: !!tokenInput,
-        tokenSubmitBtn: !!tokenSubmitBtn
+        tokenSubmitBtn: !!tokenSubmitBtn,
+        rememberTokenCheckbox: !!rememberTokenCheckbox
     });
 }
 
@@ -102,8 +104,9 @@ function showApp() {
 async function handleTokenSubmit() {
     console.log('[App] Token submit clicked!');
     const token = tokenInput?.value?.trim();
+    const remember = rememberTokenCheckbox?.checked ?? true;
     
-    console.log('[App] Token length:', token?.length);
+    console.log('[App] Token length:', token?.length, 'Remember:', remember);
     
     if (!token) {
         showTokenError('Please enter your API token');
@@ -118,11 +121,12 @@ async function handleTokenSubmit() {
         tokenSubmitBtn.disabled = true;
         tokenSubmitBtn.textContent = 'Validating...';
     }
+    if (rememberTokenCheckbox) rememberTokenCheckbox.disabled = true;
 
     console.log('[App] Validating token...');
 
     // Validate and set token
-    const result = await tokenManager.setToken(token);
+    const result = await tokenManager.setToken(token, remember);
 
     console.log('[App] Token validation result:', result);
 
@@ -133,6 +137,7 @@ async function handleTokenSubmit() {
             tokenSubmitBtn.disabled = false;
             tokenSubmitBtn.textContent = 'Continue';
         }
+        if (rememberTokenCheckbox) rememberTokenCheckbox.disabled = false;
         showTokenError(result.error);
         return;
     }
@@ -179,11 +184,22 @@ async function loadInitialData() {
                         Service Worker Active: ${swRegistration ? '✅' : '❌'}<br>
                         Offline support enabled!
                     </p>
+                    <br>
+                    <button onclick="logout()" class="btn-secondary">Logout</button>
                 </div>
             `;
         }
     }
 }
+
+// Logout function (global for onclick)
+window.logout = function() {
+    const confirmed = confirm('Are you sure you want to logout? This will clear your saved token.');
+    if (confirmed) {
+        tokenManager.clearToken();
+        window.location.reload();
+    }
+};
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
@@ -199,7 +215,6 @@ if ('serviceWorker' in navigator) {
 
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // New service worker available, prompt user to refresh
                         console.log('[App] New service worker installed, update available');
                         showUpdateNotification();
                     }
@@ -262,10 +277,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('[App] Could not find token input!');
         }
 
-        // Show token modal after brief delay
-        setTimeout(() => {
-            showTokenModal();
-        }, 500);
+        // Try to restore saved token
+        console.log('[App] Checking for saved token...');
+        const tokenRestored = await tokenManager.restoreToken();
+        
+        if (tokenRestored) {
+            console.log('[App] Token restored from storage');
+            // Show loading screen and load data
+            if (loadingScreen) loadingScreen.style.display = 'flex';
+            await loadInitialData();
+        } else {
+            console.log('[App] No saved token found, showing token modal');
+            // Show token modal after brief delay
+            setTimeout(() => {
+                showTokenModal();
+            }, 500);
+        }
         
         console.log('[App] Initialization complete');
         

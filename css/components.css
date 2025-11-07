@@ -123,3 +123,31 @@ a:hover {
     color: var(--color-primary-dark);
     text-decoration: underline;
 }
+
+/* Remember Me Checkbox */
+.remember-me-container {
+    margin: var(--spacing-md) 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
+.checkbox-label span {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.checkbox-label:hover span {
+    color: var(--text-primary);
+}
