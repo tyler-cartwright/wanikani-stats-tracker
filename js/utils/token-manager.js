@@ -75,13 +75,7 @@ class TokenManager {
             this.token = trimmedToken;
             
             // Send to service worker for request interception
-            if (this.serviceWorkerReady && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({
-                    type: 'STORE_TOKEN',
-                    token: trimmedToken
-                });
-                console.log('[TokenManager] Token sent to service worker');
-            }
+            await this.sendTokenToServiceWorker(trimmedToken);
 
             console.log('[TokenManager] Token validated and stored');
             return { success: true };
@@ -93,6 +87,28 @@ class TokenManager {
                 success: false,
                 error: 'Failed to validate token. Please check your internet connection and try again.'
             };
+        }
+    }
+
+    /**
+     * Send token to service worker
+     * @param {string} token - API token
+     */
+    async sendTokenToServiceWorker(token) {
+        if (!this.serviceWorkerReady) {
+            console.warn('[TokenManager] Service worker not ready, waiting...');
+            await this.initServiceWorkerCommunication();
+        }
+
+        if (navigator.serviceWorker.controller) {
+            // Send message to service worker
+            navigator.serviceWorker.controller.postMessage({
+                type: 'STORE_TOKEN',
+                token: token
+            });
+            console.log('[TokenManager] Token sent to service worker');
+        } else {
+            console.warn('[TokenManager] No service worker controller available');
         }
     }
 

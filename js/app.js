@@ -14,6 +14,9 @@ let loadingScreen, loadingMessage, progressFill;
 let tokenModal, tokenInput, tokenSubmitBtn, tokenError;
 let appContainer;
 
+// Service worker registration
+let swRegistration = null;
+
 // Initialize DOM references
 function initDOMReferences() {
     console.log('[App] Getting DOM references...');
@@ -171,6 +174,11 @@ async function loadInitialData() {
                     <p>Subjects: ${result.subjects.length}</p>
                     <br>
                     <p><strong>Dashboard UI coming in Phase 5!</strong></p>
+                    <br>
+                    <p style="color: #757575; font-size: 0.875rem;">
+                        Service Worker Active: ${swRegistration ? '✅' : '❌'}<br>
+                        Offline support enabled!
+                    </p>
                 </div>
             `;
         }
@@ -179,15 +187,43 @@ async function loadInitialData() {
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then((registration) => {
-                console.log('[App] Service Worker registered:', registration.scope);
-            })
-            .catch((error) => {
-                console.error('[App] Service Worker registration failed:', error);
+    window.addEventListener('load', async () => {
+        try {
+            swRegistration = await navigator.serviceWorker.register('./sw.js');
+            console.log('[App] Service Worker registered:', swRegistration.scope);
+
+            // Check for updates
+            swRegistration.addEventListener('updatefound', () => {
+                const newWorker = swRegistration.installing;
+                console.log('[App] Service Worker update found');
+
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New service worker available, prompt user to refresh
+                        console.log('[App] New service worker installed, update available');
+                        showUpdateNotification();
+                    }
+                });
             });
+
+        } catch (error) {
+            console.error('[App] Service Worker registration failed:', error);
+        }
     });
+}
+
+// Show update notification
+function showUpdateNotification() {
+    const shouldUpdate = confirm(
+        'A new version of WaniKani Stats is available! Would you like to update now?'
+    );
+
+    if (shouldUpdate) {
+        if (swRegistration && swRegistration.waiting) {
+            swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+        }
+    }
 }
 
 // Initialize app when DOM is ready
@@ -226,8 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('[App] Could not find token input!');
         }
 
-        // Check if we have a token
-        // For now, always show token modal (we'll add persistence later)
+        // Show token modal after brief delay
         setTimeout(() => {
             showTokenModal();
         }, 500);
