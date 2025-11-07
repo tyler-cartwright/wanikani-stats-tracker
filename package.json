@@ -1,0 +1,19 @@
+{
+  "name": "wanikani-stats-tracker",
+  "version": "0.1.0",
+  "description": "Advanced statistics tracker for WaniKani",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8080 -c-1 -o",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "wanikani",
+    "statistics",
+    "pwa",
+    "japanese"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {}
+}
