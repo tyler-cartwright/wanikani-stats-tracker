@@ -29,18 +29,26 @@ export async function fetchReviewStatistics(options = {}, onProgress = null) {
 
         if (stats === null) {
             // Not modified
+            console.log('[Review Statistics API] Not modified, returning cached data');
             return await db.getAll('review_statistics');
         }
 
-        // Store in database
+        // Store in database (merge updates)
         if (stats.length > 0) {
-            console.log(`[Review Statistics API] Caching ${stats.length} review statistics`);
+            console.log(`[Review Statistics API] Caching ${stats.length} review statistics updates`);
             await db.putBulk('review_statistics', stats);
             
             await db.metadata('review_statistics_last_sync', new Date().toISOString());
+        } else {
+            console.log('[Review Statistics API] No updates found');
+            // Still update last sync time
+            await db.metadata('review_statistics_last_sync', new Date().toISOString());
         }
 
-        return stats;
+        // Always return ALL cached review statistics (not just the updates)
+        const allStats = await db.getAll('review_statistics');
+        console.log(`[Review Statistics API] Returning ${allStats.length} total review statistics`);
+        return allStats;
 
     } catch (error) {
         console.error('[Review Statistics API] Failed to fetch review statistics:', error);

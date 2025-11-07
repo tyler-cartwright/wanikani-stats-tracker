@@ -30,19 +30,27 @@ export async function fetchAssignments(options = {}, onProgress = null) {
 
         if (assignments === null) {
             // Not modified, return cached data
+            console.log('[Assignments API] Not modified, returning cached data');
             return await db.getAll('assignments');
         }
 
-        // Store in database
+        // Store in database (merge updates)
         if (assignments.length > 0) {
-            console.log(`[Assignments API] Caching ${assignments.length} assignments`);
+            console.log(`[Assignments API] Caching ${assignments.length} assignment updates`);
             await db.putBulk('assignments', assignments);
             
             // Update last sync time
             await db.metadata('assignments_last_sync', new Date().toISOString());
+        } else {
+            console.log('[Assignments API] No updates found');
+            // Still update last sync time even if no changes
+            await db.metadata('assignments_last_sync', new Date().toISOString());
         }
 
-        return assignments;
+        // Always return ALL cached assignments (not just the updates)
+        const allAssignments = await db.getAll('assignments');
+        console.log(`[Assignments API] Returning ${allAssignments.length} total assignments`);
+        return allAssignments;
 
     } catch (error) {
         console.error('[Assignments API] Failed to fetch assignments:', error);

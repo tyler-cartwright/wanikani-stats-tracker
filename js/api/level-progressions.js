@@ -11,23 +11,41 @@ import db from '../storage/db.js';
  */
 export async function fetchLevelProgressions(onProgress = null) {
     try {
+        // Check for incremental update
+        const lastSync = await db.metadata('level_progressions_last_sync');
+        const options = {};
+        
+        if (lastSync) {
+            console.log('[Level Progressions API] Fetching updates since', lastSync);
+            options.params = {
+                updated_after: lastSync
+            };
+        }
+
         // Fetch from API (usually small dataset, 1-60 records)
         console.log('[Level Progressions API] Fetching level progressions');
-        const progressions = await apiClient.getAllPages('/level_progressions', {}, onProgress);
+        const progressions = await apiClient.getAllPages('/level_progressions', options, onProgress);
 
         if (progressions === null) {
+            console.log('[Level Progressions API] Not modified, returning cached data');
             return await db.getAll('level_progressions');
         }
 
         // Store in database
         if (progressions.length > 0) {
-            console.log(`[Level Progressions API] Caching ${progressions.length} level progressions`);
+            console.log(`[Level Progressions API] Caching ${progressions.length} level progression updates`);
             await db.putBulk('level_progressions', progressions);
             
             await db.metadata('level_progressions_last_sync', new Date().toISOString());
+        } else {
+            console.log('[Level Progressions API] No updates found');
+            await db.metadata('level_progressions_last_sync', new Date().toISOString());
         }
 
-        return progressions;
+        // Always return ALL cached level progressions
+        const allProgressions = await db.getAll('level_progressions');
+        console.log(`[Level Progressions API] Returning ${allProgressions.length} total level progressions`);
+        return allProgressions;
 
     } catch (error) {
         console.error('[Level Progressions API] Failed to fetch level progressions:', error);
