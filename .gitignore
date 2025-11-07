@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Development
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Environment files
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+
+# Cache
+.cache/
+
+# API tokens (NEVER commit these!)
+*token*.txt
+secrets/
