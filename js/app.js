@@ -4,8 +4,10 @@ console.log('[App] Starting imports...');
 
 import tokenManager from './utils/token-manager.js';
 import db from './storage/db.js';
-import { initialDataLoad } from './api/data-sync.js';
+import { initialDataLoad, quickRefresh } from './api/data-sync.js';
 import { getCompleteLeechAnalysis } from './calculations/leech-detector.js';
+import navigation from './components/navigation.js';
+import Dashboard from './components/dashboard.js';
 
 console.log('[App] Imports successful!');
 console.log('WaniKani Stats Tracker - Initializing...');
@@ -13,13 +15,16 @@ console.log('WaniKani Stats Tracker - Initializing...');
 // DOM elements
 let loadingScreen, loadingMessage, progressFill;
 let tokenModal, tokenInput, tokenSubmitBtn, tokenError, rememberTokenCheckbox;
-let appContainer;
+let appContainer, mainContent;
 
 // Service worker registration
 let swRegistration = null;
 
 // Store loaded data
 let appData = null;
+
+// Current view
+let currentView = 'dashboard';
 
 // Initialize DOM references
 function initDOMReferences() {
@@ -35,6 +40,7 @@ function initDOMReferences() {
     rememberTokenCheckbox = document.getElementById('remember-token');
     
     appContainer = document.getElementById('app');
+    mainContent = document.getElementById('main-content');
     
     console.log('[App] DOM references:', {
         tokenModal: !!tokenModal,
@@ -59,14 +65,14 @@ function updateLoadingProgress(step, total, message) {
 function showTokenError(message) {
     if (tokenError) {
         tokenError.textContent = message;
-        tokenError.style.display = 'block';
+        tokenError.classList.remove('hidden');
     }
 }
 
 // Hide token error
 function hideTokenError() {
     if (tokenError) {
-        tokenError.style.display = 'none';
+        tokenError.classList.add('hidden');
     }
 }
 
@@ -74,10 +80,10 @@ function hideTokenError() {
 function showTokenModal() {
     console.log('[App] Showing token modal');
     if (loadingScreen) {
-        loadingScreen.style.display = 'none';
+        loadingScreen.classList.add('hidden');
     }
     if (tokenModal) {
-        tokenModal.style.display = 'flex';
+        tokenModal.classList.remove('hidden');
     }
     if (tokenInput) {
         tokenInput.focus();
@@ -87,20 +93,20 @@ function showTokenModal() {
 // Hide token modal
 function hideTokenModal() {
     if (tokenModal) {
-        tokenModal.style.display = 'none';
+        tokenModal.classList.add('hidden');
     }
 }
 
 // Show app
 function showApp() {
     if (loadingScreen) {
-        loadingScreen.style.display = 'none';
+        loadingScreen.classList.add('hidden');
     }
     if (tokenModal) {
-        tokenModal.style.display = 'none';
+        tokenModal.classList.add('hidden');
     }
     if (appContainer) {
-        appContainer.style.display = 'flex';
+        appContainer.classList.remove('hidden');
     }
 }
 
@@ -148,7 +154,9 @@ async function handleTokenSubmit() {
 
     // Token is valid! Start loading data
     hideTokenModal();
-    if (loadingScreen) loadingScreen.style.display = 'flex';
+    if (loadingScreen) {
+        loadingScreen.classList.remove('hidden');
+    }
     
     await loadInitialData();
 }
@@ -183,147 +191,81 @@ async function loadInitialData() {
     // Show the app
     showApp();
     
-    // Display loaded data with leech information
-    displayDashboard();
+    // Render navigation
+    renderNavigation();
+    
+    // Display dashboard
+    navigateTo('dashboard');
 }
 
-// Display dashboard
-function displayDashboard() {
-    if (!appContainer || !appData) return;
-    
-    const mainContent = document.getElementById('main-content');
-    if (!mainContent) return;
-    
-    const { user, assignments, subjects, leechAnalysis } = appData;
-    
-    mainContent.innerHTML = `
-        <div style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
-            <div style="text-align: center; margin-bottom: 3rem;">
-                <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">‚ú® Welcome Back!</h1>
-                <p style="font-size: 1.25rem; color: var(--text-secondary);">
-                    ${user.data.username} - Level ${user.data.level}
-                </p>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
-                <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-                    <h3 style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">TOTAL ITEMS</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--color-primary);">${assignments.length}</p>
-                </div>
-                
-                <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-                    <h3 style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">SUBJECTS</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--color-primary);">${subjects.length}</p>
-                </div>
-                
-                <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-                    <h3 style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">LEECHES DETECTED</h3>
-                    <p style="font-size: 2.5rem; font-weight: bold; color: var(--color-error);">${leechAnalysis.stats.totalLeeches}</p>
-                </div>
-            </div>
-            
-            ${leechAnalysis.stats.totalLeeches > 0 ? `
-                <div style="background: linear-gradient(135deg, var(--color-error) 0%, #c62828 100%); padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem; color: white; box-shadow: var(--shadow-lg);">
-                    <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">Ì¥• Leech Analysis</h2>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                        <div>
-                            <div style="font-size: 0.875rem; opacity: 0.9;">Severe</div>
-                            <div style="font-size: 2rem; font-weight: bold;">${leechAnalysis.stats.bySeverity.severe}</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.875rem; opacity: 0.9;">Moderate</div>
-                            <div style="font-size: 2rem; font-weight: bold;">${leechAnalysis.stats.bySeverity.moderate}</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.875rem; opacity: 0.9;">Mild</div>
-                            <div style="font-size: 2rem; font-weight: bold;">${leechAnalysis.stats.bySeverity.mild}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">By Type:</div>
-                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                            ${leechAnalysis.stats.byType.radical > 0 ? `<span>Radicals: <strong>${leechAnalysis.stats.byType.radical}</strong></span>` : ''}
-                            ${leechAnalysis.stats.byType.kanji > 0 ? `<span>Kanji: <strong>${leechAnalysis.stats.byType.kanji}</strong></span>` : ''}
-                            ${leechAnalysis.stats.byType.vocabulary > 0 ? `<span>Vocabulary: <strong>${leechAnalysis.stats.byType.vocabulary}</strong></span>` : ''}
-                        </div>
-                    </div>
-                    
-                    ${leechAnalysis.stats.confusionPairs > 0 ? `
-                        <div style="margin-bottom: 1rem;">
-                            <span style="font-size: 1.5rem; margin-right: 0.5rem;">‚ö†Ô∏è</span>
-                            <strong>${leechAnalysis.stats.confusionPairs}</strong> confusion pairs detected
-                        </div>
-                    ` : ''}
-                    
-                    ${leechAnalysis.stats.rootCauses > 0 ? `
-                        <div style="margin-bottom: 1rem;">
-                            <span style="font-size: 1.5rem; margin-right: 0.5rem;">ÌæØ</span>
-                            <strong>${leechAnalysis.stats.rootCauses}</strong> root cause components found
-                        </div>
-                    ` : ''}
-                    
-                    <button onclick="showLeechDetails()" class="btn-primary" style="background: white; color: var(--color-error); margin-top: 1rem;">
-                        View Detailed Analysis
-                    </button>
-                </div>
-            ` : `
-                <div style="background: var(--color-success); padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem; color: white; box-shadow: var(--shadow-lg); text-align: center;">
-                    <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Ìæâ No Leeches Detected!</h2>
-                    <p style="font-size: 1.125rem; opacity: 0.9;">Your accuracy is looking great. Keep up the excellent work!</p>
-                </div>
-            `}
-            
-            <div style="text-align: center; padding: 2rem; background: var(--bg-secondary); border-radius: var(--radius-lg);">
-                <h2 style="margin-bottom: 1rem;">Phase 4 Complete! ÌæØ</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    Leech detection system is fully operational.<br>
-                    Dashboard UI (Phase 5) coming next!
-                </p>
-                <div style="color: var(--text-tertiary); font-size: 0.875rem; margin-top: 1rem;">
-                    Service Worker: ${swRegistration ? '‚úÖ Active' : '‚ùå Inactive'}<br>
-                    Offline support enabled
-                </div>
-                <button onclick="logout()" class="btn-secondary" style="margin-top: 1.5rem;">Logout</button>
-            </div>
-        </div>
-    `;
+// Render navigation
+function renderNavigation() {
+    const navPlaceholder = document.getElementById('navigation-placeholder');
+    if (navPlaceholder) {
+        navPlaceholder.innerHTML = navigation.render();
+    }
 }
 
-// Show leech details (placeholder for Phase 5)
-window.showLeechDetails = function() {
-    if (!appData || !appData.leechAnalysis) return;
+// Navigate to view
+window.navigateTo = function(view) {
+    currentView = view;
+    navigation.setActiveView(view);
     
-    const mainContent = document.getElementById('main-content');
-    if (!mainContent) return;
+    if (!mainContent || !appData) return;
     
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    switch (view) {
+        case 'dashboard':
+            renderDashboard();
+            break;
+        case 'leeches':
+            renderLeechesView();
+            break;
+        case 'progress':
+            renderProgressView();
+            break;
+        case 'accuracy':
+            renderAccuracyView();
+            break;
+        case 'reviews':
+            renderReviewsView();
+            break;
+        default:
+            renderDashboard();
+    }
+};
+
+// Render dashboard
+function renderDashboard() {
+    const dashboard = new Dashboard(appData);
+    mainContent.innerHTML = dashboard.render();
+}
+
+// Render leeches view (from Phase 4)
+function renderLeechesView() {
     const { leeches, prioritizedStudyList, confusionPairs, rootCauses } = appData.leechAnalysis;
     
-    // Display top 20 priority leeches
     const topLeeches = prioritizedStudyList.slice(0, 20);
     
     mainContent.innerHTML = `
-        <div style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
-            <div style="margin-bottom: 2rem;">
-                <button onclick="displayDashboard()" class="btn-secondary">‚Üê Back to Dashboard</button>
-            </div>
-            
-            <h1 style="margin-bottom: 2rem;">Ì¥• Leech Details</h1>
+        <div class="dashboard">
+            <h1 class="dashboard-title"> Leech Management</h1>
             
             ${rootCauses.length > 0 ? `
-                <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
-                    <h2 style="margin-bottom: 1rem; color: var(--color-error);">ÌæØ Root Cause Components</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                <div class="card">
+                    <h2 class="card-title"> Root Cause Components</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
                         These components are causing problems in multiple items. Study these first!
                     </p>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
                         ${rootCauses.slice(0, 5).map(rc => `
-                            <div style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md); border-left: 4px solid var(--color-error);">
-                                <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">
+                            <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid var(--color-error);">
+                                <div style="font-size: 2rem; font-weight: bold; margin-bottom: var(--spacing-xs);">
                                     ${rc.subject?.data?.characters || 'N/A'}
                                 </div>
-                                <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                                <div style="color: var(--text-secondary);">
                                     Affecting <strong>${rc.affectedLeechCount}</strong> other leeches
                                 </div>
                             </div>
@@ -332,9 +274,9 @@ window.showLeechDetails = function() {
                 </div>
             ` : ''}
             
-            <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
-                <h2 style="margin-bottom: 1rem;">Ì≥ã Priority Study List (Top 20)</h2>
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="card">
+                <h2 class="card-title"> Priority Study List (Top 20)</h2>
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
                     ${topLeeches.map(leech => {
                         const char = leech.subject?.data?.characters || 'N/A';
                         const meanings = leech.subject?.data?.meanings?.map(m => m.meaning).join(', ') || 'N/A';
@@ -343,29 +285,29 @@ window.showLeechDetails = function() {
                                             'var(--color-info)';
                         
                         return `
-                            <div style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md); border-left: 4px solid ${severityColor};">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid ${severityColor};">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--spacing-md);">
                                     <div>
-                                        <span style="font-size: 2rem; font-weight: bold;">${char}</span>
-                                        <span style="margin-left: 1rem; color: var(--text-secondary);">${meanings}</span>
+                                        <span style="font-size: 2.5rem; font-weight: bold;">${char}</span>
+                                        <span style="margin-left: var(--spacing-md); color: var(--text-secondary);">${meanings}</span>
                                     </div>
                                     <div style="text-align: right;">
-                                        <div style="font-size: 0.75rem; color: var(--text-tertiary);">Severity</div>
-                                        <div style="font-size: 1.5rem; font-weight: bold; color: ${severityColor};">${leech.severity}</div>
+                                        <div style="font-size: var(--font-size-xs); color: var(--text-tertiary);">Severity</div>
+                                        <div style="font-size: 2rem; font-weight: bold; color: ${severityColor};">${leech.severity}</div>
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--spacing-sm); margin-bottom: var(--spacing-md); font-size: var(--font-size-sm);">
                                     <div>Accuracy: <strong>${leech.accuracy.toFixed(1)}%</strong></div>
                                     <div>Reviews: <strong>${leech.totalReviews}</strong></div>
                                     <div>Type: <strong>${leech.subject_type}</strong></div>
                                 </div>
                                 ${leech.recommendations ? `
-                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--bg-tertiary); font-size: 0.875rem;">
-                                        <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <div style="margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--bg-tertiary); font-size: var(--font-size-sm);">
+                                        <div style="color: var(--text-secondary); margin-bottom: var(--spacing-xs);">
                                             <strong>Focus:</strong> ${leech.recommendations.focus.join(', ')}
                                         </div>
                                         ${leech.recommendations.studyTips.length > 0 ? `
-                                            <div style="color: var(--text-secondary); margin-top: 0.5rem;">
+                                            <div style="color: var(--text-secondary);">
                                                 ${leech.recommendations.studyTips[0]}
                                             </div>
                                         ` : ''}
@@ -378,31 +320,31 @@ window.showLeechDetails = function() {
             </div>
             
             ${confusionPairs.length > 0 ? `
-                <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: var(--radius-lg);">
-                    <h2 style="margin-bottom: 1rem;">‚ö†Ô∏è Confusion Pairs (Top 10)</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                <div class="card">
+                    <h2 class="card-title">‚ö†Ô∏è Confusion Pairs (Top 10)</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
                         These similar items are both giving you trouble. Study the differences!
                     </p>
-                    <div style="display: grid; gap: 1rem;">
+                    <div style="display: grid; gap: var(--spacing-md);">
                         ${confusionPairs.slice(0, 10).map(pair => `
-                            <div style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-md);">
-                                <div style="display: flex; gap: 2rem; align-items: center; justify-content: center;">
+                            <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md);">
+                                <div style="display: flex; gap: var(--spacing-2xl); align-items: center; justify-content: center;">
                                     <div style="text-align: center;">
-                                        <div style="font-size: 3rem; font-weight: bold;">${pair.subject1.data?.data?.characters || 'N/A'}</div>
-                                        <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                        <div style="font-size: 3.5rem; font-weight: bold;">${pair.subject1.data?.data?.characters || 'N/A'}</div>
+                                        <div style="font-size: var(--font-size-base); color: var(--text-secondary); margin-top: var(--spacing-xs);">
                                             ${pair.subject1.data?.data?.meanings?.[0]?.meaning || 'N/A'}
                                         </div>
-                                        <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.25rem;">
+                                        <div style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin-top: var(--spacing-xs);">
                                             Accuracy: ${pair.subject1.leech.accuracy.toFixed(1)}%
                                         </div>
                                     </div>
                                     <div style="font-size: 2rem; color: var(--text-tertiary);">‚öîÔ∏è</div>
                                     <div style="text-align: center;">
-                                        <div style="font-size: 3rem; font-weight: bold;">${pair.subject2.data?.data?.characters || 'N/A'}</div>
-                                        <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                        <div style="font-size: 3.5rem; font-weight: bold;">${pair.subject2.data?.data?.characters || 'N/A'}</div>
+                                        <div style="font-size: var(--font-size-base); color: var(--text-secondary); margin-top: var(--spacing-xs);">
                                             ${pair.subject2.data?.data?.meanings?.[0]?.meaning || 'N/A'}
                                         </div>
-                                        <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 0.25rem;">
+                                        <div style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin-top: var(--spacing-xs);">
                                             Accuracy: ${pair.subject2.leech.accuracy.toFixed(1)}%
                                         </div>
                                     </div>
@@ -414,6 +356,102 @@ window.showLeechDetails = function() {
             ` : ''}
         </div>
     `;
+}
+
+// Placeholder views (Phase 6+)
+function renderProgressView() {
+    mainContent.innerHTML = `
+        <div class="dashboard">
+            <h1 class="dashboard-title"> Progress Tracking</h1>
+            <div class="card">
+                <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
+                    Detailed progress tracking coming in Phase 6!<br>
+                    <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
+                        Back to Dashboard
+                    </button>
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function renderAccuracyView() {
+    mainContent.innerHTML = `
+        <div class="dashboard">
+            <h1 class="dashboard-title"> Accuracy Analysis</h1>
+            <div class="card">
+                <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
+                    Detailed accuracy analysis coming in Phase 6!<br>
+                    <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
+                        Back to Dashboard
+                    </button>
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function renderReviewsView() {
+    mainContent.innerHTML = `
+        <div class="dashboard">
+            <h1 class="dashboard-title"> Review History</h1>
+            <div class="card">
+                <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
+                    Review history coming in Phase 6!<br>
+                    <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
+                        Back to Dashboard
+                    </button>
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+// Refresh data
+window.refreshData = async function() {
+    if (!appData) return;
+    
+    const confirmed = confirm('Refresh data from WaniKani? This may take a moment.');
+    if (!confirmed) return;
+    
+    // Show loading
+    if (loadingScreen) {
+        loadingScreen.classList.remove('hidden');
+        loadingMessage.textContent = 'Refreshing data...';
+    }
+    
+    try {
+        const result = await quickRefresh();
+        
+        if (result.success) {
+            // Update app data
+            appData.summary = result.summary;
+            appData.assignments = result.assignments;
+            appData.reviewStats = result.reviewStats;
+            
+            // Re-analyze leeches
+            const leechAnalysis = await getCompleteLeechAnalysis(
+                result.reviewStats,
+                appData.subjects,
+                result.assignments
+            );
+            appData.leechAnalysis = leechAnalysis;
+            
+            // Re-render current view
+            navigateTo(currentView);
+            
+            alert('Data refreshed successfully!');
+        } else {
+            alert('Failed to refresh data: ' + result.error);
+        }
+    } catch (error) {
+        console.error('[App] Refresh failed:', error);
+        alert('Failed to refresh data. Please try again.');
+    } finally {
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+    }
 };
 
 // Logout function (global for onclick)
@@ -424,9 +462,6 @@ window.logout = function() {
         window.location.reload();
     }
 };
-
-// Make displayDashboard global
-window.displayDashboard = displayDashboard;
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
@@ -511,7 +546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (tokenRestored) {
             console.log('[App] Token restored from storage');
             // Show loading screen and load data
-            if (loadingScreen) loadingScreen.style.display = 'flex';
+            if (loadingScreen) loadingScreen.classList.remove('hidden');
             await loadInitialData();
         } else {
             console.log('[App] No saved token found, showing token modal');

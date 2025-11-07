@@ -2,25 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    
-    <!-- SEO -->
-    <title>WaniKani Statistics Tracker</title>
-    <meta name="description" content="Advanced statistics and analytics for WaniKani with leech detection, predictions, and offline support">
-    <meta name="keywords" content="WaniKani, statistics, Japanese, kanji, learning, SRS, analytics">
-    
-    <!-- PWA -->
-    <link rel="manifest" href="./manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Advanced statistics and analytics for WaniKani with leech detection and predictive insights">
     <meta name="theme-color" content="#aa00ff">
-    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WK Stats">
     
-    <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="./assets/icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="./assets/icons/icon-192x192.png">
+    <title>WaniKani Statistics Tracker</title>
+    
+    <!-- Favicon & PWA Icons -->
+    <link rel="icon" type="image/png" href="./assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="./assets/icons/icon-192x192.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="./manifest.json">
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="./css/variables.css">
@@ -28,11 +26,11 @@
     <link rel="stylesheet" href="./css/components.css">
 </head>
 <body>
-    <!-- Loading Screen (shown initially) -->
+    <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <h2>WaniKani Stats</h2>
+            <h2>Loading WaniKani Stats</h2>
             <p id="loading-message">Initializing...</p>
             <div class="progress-bar">
                 <div id="progress-fill" class="progress-fill"></div>
@@ -40,67 +38,62 @@
         </div>
     </div>
 
-    <!-- Main App Container (hidden until loaded) -->
-    <div id="app" class="app-container" style="display: none;">
-        <!-- Navigation will be injected here -->
-        <nav id="navigation"></nav>
-        
-        <!-- Main Content Area -->
-        <main id="main-content" class="main-content">
-            <!-- Dynamic content will be injected here -->
-        </main>
-    </div>
-
-    <!-- Token Input Modal (shown if no token) -->
-    <div id="token-modal" class="modal" style="display: none;">
+    <!-- Token Input Modal -->
+    <div id="token-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>Welcome to WaniKani Stats!</h2>
-            <p>To get started, please enter your WaniKani API token.</p>
+            <h2>Welcome to WaniKani Stats</h2>
+            <p>Enter your WaniKani API token to get started.</p>
             
             <div class="token-input-container">
-                <label for="api-token-input">API Token:</label>
+                <label for="api-token-input">API Token</label>
                 <input 
                     type="text" 
                     id="api-token-input" 
                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                     autocomplete="off"
                     spellcheck="false"
-                >
+                />
+                <div id="token-error" class="error-message hidden"></div>
+            </div>
+
+            <div class="token-info">
+                <p><strong>How to get your API token:</strong></p>
+                <ol>
+                    <li>Go to <a href="https://www.wanikani.com/settings/personal_access_tokens" target="_blank" rel="noopener">WaniKani Settings â†’ API Tokens</a></li>
+                    <li>Click "Generate a new token"</li>
+                    <li>Give it a name (e.g., "Stats Tracker")</li>
+                    <li>Copy the token and paste it above</li>
+                </ol>
+                <div class="security-notice">
+                    í´’ Your token is stored locally and never sent to any server except WaniKani's official API.
+                </div>
             </div>
 
             <div class="remember-me-container">
                 <label class="checkbox-label">
                     <input type="checkbox" id="remember-token" checked>
-                    <span>Remember me (keep me logged in)</span>
+                    <span>Remember my token on this device</span>
                 </label>
             </div>
-            
-            <div class="token-info">
-                <p><strong>How to get your token:</strong></p>
-                <ol>
-                    <li>Go to <a href="https://www.wanikani.com/settings/personal_access_tokens" target="_blank" rel="noopener noreferrer">WaniKani Settings</a></li>
-                    <li>Click "Generate a new token"</li>
-                    <li>Give it a description (e.g., "Stats Tracker")</li>
-                    <li>Copy the token and paste it here</li>
-                </ol>
-                
-                <p class="security-notice">
-                    <strong>í´’ Privacy Notice:</strong> Your token is stored locally in your browser 
-                    and never transmitted to any third-party servers. All data processing happens 
-                    on your device. If you check "Remember me", your token will be saved in 
-                    localStorage for convenience.
-                </p>
-            </div>
-            
+
             <div class="modal-actions">
                 <button id="token-submit-btn" class="btn-primary">Continue</button>
             </div>
-            
-            <p id="token-error" class="error-message" style="display: none;"></p>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Main App Container -->
+    <div id="app" class="app-container hidden">
+        <!-- Navigation will be injected here -->
+        <div id="navigation-placeholder"></div>
+        
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+            <!-- Dynamic content will be rendered here -->
+        </main>
+    </div>
+
+    <!-- App Script (ES6 Module) -->
     <script type="module" src="./js/app.js"></script>
 </body>
 </html>
