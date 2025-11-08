@@ -8,6 +8,8 @@ import { initialDataLoad, quickRefresh } from './api/data-sync.js';
 import { getCompleteLeechAnalysis } from './calculations/leech-detector.js';
 import navigation from './components/navigation.js';
 import Dashboard from './components/dashboard.js';
+import AssignmentsTable from './components/assignments-table.js';
+import LevelTimeline from './components/level-timeline.js';
 
 console.log('[App] Imports successful!');
 console.log('WaniKani Stats Tracker - Initializing...');
@@ -25,6 +27,9 @@ let appData = null;
 
 // Current view
 let currentView = 'dashboard';
+
+// Table instance
+let assignmentsTable = null;
 
 // Initialize DOM references
 function initDOMReferences() {
@@ -188,6 +193,15 @@ async function loadInitialData() {
     
     appData.leechAnalysis = leechAnalysis;
     
+    // Merge accuracy data into assignments
+    appData.assignments = appData.assignments.map(assignment => {
+        const stats = appData.reviewStats.find(s => s.data.subject_id === assignment.data.subject_id);
+        return {
+            ...assignment,
+            accuracy: stats?.data?.percentage_correct
+        };
+    });
+    
     // Show the app
     showApp();
     
@@ -243,6 +257,94 @@ function renderDashboard() {
     mainContent.innerHTML = dashboard.render();
 }
 
+// Render progress view (now with assignments table and timeline)
+function renderProgressView() {
+    assignmentsTable = new AssignmentsTable(appData.assignments, appData.subjects);
+    const timeline = new LevelTimeline(appData.levelProgressions, appData.user);
+    
+    mainContent.innerHTML = `
+        <div class="dashboard">
+            <h1 class="dashboard-title">í³ˆ Progress Tracking</h1>
+            
+            <div class="card">
+                <h2 class="card-title">Level Timeline</h2>
+                ${timeline.render()}
+            </div>
+            
+            <div class="card" style="margin-top: var(--spacing-lg);">
+                <h2 class="card-title">All Assignments</h2>
+                <div id="assignments-table-container"></div>
+            </div>
+        </div>
+    `;
+    
+    // Render table after DOM is ready
+    setTimeout(() => {
+        const container = document.getElementById('assignments-table-container');
+        if (container) {
+            container.innerHTML = assignmentsTable.render();
+        }
+    }, 0);
+}
+
+// Table filter and sort handlers
+window.updateTableFilter = function(filterType, value) {
+    if (!assignmentsTable) return;
+    assignmentsTable.filters[filterType] = value;
+    const container = document.getElementById('assignments-table-container');
+    if (container) {
+        container.innerHTML = assignmentsTable.render();
+    }
+};
+
+window.resetTableFilters = function() {
+    if (!assignmentsTable) return;
+    assignmentsTable.filters = {
+        type: 'all',
+        level: 'all',
+        srsStage: 'all',
+        search: ''
+    };
+    
+    // Reset form elements
+    const typeSelect = document.getElementById('filter-type');
+    const srsSelect = document.getElementById('filter-srs');
+    const searchInput = document.getElementById('filter-search');
+    
+    if (typeSelect) typeSelect.value = 'all';
+    if (srsSelect) srsSelect.value = 'all';
+    if (searchInput) searchInput.value = '';
+    
+    const container = document.getElementById('assignments-table-container');
+    if (container) {
+        container.innerHTML = assignmentsTable.render();
+    }
+};
+
+window.sortTable = function(column) {
+    if (!assignmentsTable) return;
+    
+    if (assignmentsTable.currentSort.column === column) {
+        // Toggle direction
+        assignmentsTable.currentSort.direction = 
+            assignmentsTable.currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        assignmentsTable.currentSort.column = column;
+        assignmentsTable.currentSort.direction = 'asc';
+    }
+    
+    const container = document.getElementById('assignments-table-container');
+    if (container) {
+        container.innerHTML = assignmentsTable.render();
+    }
+};
+
+window.showItemDetail = function(subjectId) {
+    // TODO: Implement in next phase
+    console.log('Show item detail:', subjectId);
+    alert('Item detail view coming soon!');
+};
+
 // Render leeches view (from Phase 4)
 function renderLeechesView() {
     const { leeches, prioritizedStudyList, confusionPairs, rootCauses } = appData.leechAnalysis;
@@ -251,11 +353,11 @@ function renderLeechesView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title"> Leech Management</h1>
+            <h1 class="dashboard-title">í´¥ Leech Management</h1>
             
             ${rootCauses.length > 0 ? `
                 <div class="card">
-                    <h2 class="card-title"> Root Cause Components</h2>
+                    <h2 class="card-title">í¾¯ Root Cause Components</h2>
                     <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
                         These components are causing problems in multiple items. Study these first!
                     </p>
@@ -275,7 +377,7 @@ function renderLeechesView() {
             ` : ''}
             
             <div class="card">
-                <h2 class="card-title"> Priority Study List (Top 20)</h2>
+                <h2 class="card-title">í³‹ Priority Study List (Top 20)</h2>
                 <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
                     ${topLeeches.map(leech => {
                         const char = leech.subject?.data?.characters || 'N/A';
@@ -358,30 +460,14 @@ function renderLeechesView() {
     `;
 }
 
-// Placeholder views (Phase 6+)
-function renderProgressView() {
-    mainContent.innerHTML = `
-        <div class="dashboard">
-            <h1 class="dashboard-title"> Progress Tracking</h1>
-            <div class="card">
-                <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
-                    Detailed progress tracking coming in Phase 6!<br>
-                    <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
-                        Back to Dashboard
-                    </button>
-                </p>
-            </div>
-        </div>
-    `;
-}
-
+// Placeholder views
 function renderAccuracyView() {
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title"> Accuracy Analysis</h1>
+            <h1 class="dashboard-title">í¾¯ Accuracy Analysis</h1>
             <div class="card">
                 <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
-                    Detailed accuracy analysis coming in Phase 6!<br>
+                    Detailed accuracy analysis coming soon!<br>
                     <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
                         Back to Dashboard
                     </button>
@@ -394,10 +480,10 @@ function renderAccuracyView() {
 function renderReviewsView() {
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title"> Review History</h1>
+            <h1 class="dashboard-title">í³š Review History</h1>
             <div class="card">
                 <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
-                    Review history coming in Phase 6!<br>
+                    Review history coming soon!<br>
                     <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
                         Back to Dashboard
                     </button>
@@ -428,6 +514,15 @@ window.refreshData = async function() {
             appData.summary = result.summary;
             appData.assignments = result.assignments;
             appData.reviewStats = result.reviewStats;
+            
+            // Merge accuracy data
+            appData.assignments = appData.assignments.map(assignment => {
+                const stats = appData.reviewStats.find(s => s.data.subject_id === assignment.data.subject_id);
+                return {
+                    ...assignment,
+                    accuracy: stats?.data?.percentage_correct
+                };
+            });
             
             // Re-analyze leeches
             const leechAnalysis = await getCompleteLeechAnalysis(
