@@ -20,9 +20,9 @@ export class Dashboard {
     render() {
         const { user, summary, assignments, reviewStats, subjects, leechAnalysis } = this.appData;
         
-        // Calculate all statistics
+        // Calculate all statistics - NOW PASSING SUBJECTS TO LEVEL PROGRESS
         const srsDistribution = calculateSRSDistribution(assignments);
-        const levelProgress = calculateLevelProgress(assignments, user);
+        const levelProgress = calculateLevelProgress(assignments, user, subjects);
         const accuracyStats = calculateAccuracyStats(reviewStats);
         const burnedStats = calculateBurnedStats(assignments);
         const currentReviews = getCurrentReviewCount(summary);
@@ -33,6 +33,7 @@ export class Dashboard {
             srsDistribution,
             levelProgress,
             assignments: assignments.length,
+            subjects: subjects.length,
             userLevel: user.data.level
         });
 
@@ -139,12 +140,8 @@ export class Dashboard {
         const kanjiPercent = levelProgress.kanji.neededToPass > 0
             ? (levelProgress.kanji.atGuru / levelProgress.kanji.neededToPass * 100)
             : 0;
-        const radicalsPercent = levelProgress.radicals.total > 0
-            ? levelProgress.radicals.percentage
-            : 0;
-        const vocabPercent = levelProgress.vocabulary.total > 0
-            ? levelProgress.vocabulary.percentage
-            : 0;
+        const radicalsPercent = levelProgress.radicals.percentage;
+        const vocabPercent = levelProgress.vocabulary.percentage;
 
         return `
             <div class="card level-progress-card">
@@ -372,7 +369,7 @@ export class Dashboard {
                 </div>
                 
                 <div class="forecast-legend">
-                    <span>Ìµê Time (24h format)</span>
+                    <span>ÔøΩÔøΩ Time (24h format)</span>
                     <span>Ì≥ä Reviews per hour</span>
                 </div>
             </div>

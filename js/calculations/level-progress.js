@@ -7,23 +7,37 @@ import { SRS_STAGES } from '../utils/constants.js';
  * Calculate level progress
  * @param {Array} assignments - All assignments
  * @param {Object} user - User data
+ * @param {Array} subjects - All subjects (needed for level lookup)
  * @returns {Object} Level progress statistics
  */
-export function calculateLevelProgress(assignments, user) {
+export function calculateLevelProgress(assignments, user, subjects) {
     const currentLevel = user.data.level;
     
-    // Get assignments for current level
-    const levelAssignments = assignments.filter(a => a.data.level === currentLevel);
+    console.log('[LevelProgress] Calculating for level', currentLevel);
+    console.log('[LevelProgress] Total assignments:', assignments.length);
+    console.log('[LevelProgress] Total subjects:', subjects.length);
+    
+    // Get assignments for current level by looking up subject levels
+    const levelAssignments = assignments.filter(assignment => {
+        const subject = subjects.find(s => s.id === assignment.data.subject_id);
+        return subject && subject.data.level === currentLevel;
+    });
+    
+    console.log('[LevelProgress] Level assignments found:', levelAssignments.length);
     
     // Separate by type
     const radicals = levelAssignments.filter(a => a.data.subject_type === 'radical');
     const kanji = levelAssignments.filter(a => a.data.subject_type === 'kanji');
     const vocabulary = levelAssignments.filter(a => a.data.subject_type === 'vocabulary');
     
+    console.log('[LevelProgress] Radicals:', radicals.length, 'Kanji:', kanji.length, 'Vocab:', vocabulary.length);
+    
     // Count items at Guru or higher (SRS stage >= 5)
     const radicalsAtGuru = radicals.filter(a => a.data.srs_stage >= SRS_STAGES.GURU_1).length;
     const kanjiAtGuru = kanji.filter(a => a.data.srs_stage >= SRS_STAGES.GURU_1).length;
     const vocabularyAtGuru = vocabulary.filter(a => a.data.srs_stage >= SRS_STAGES.GURU_1).length;
+    
+    console.log('[LevelProgress] At Guru+ - Radicals:', radicalsAtGuru, 'Kanji:', kanjiAtGuru, 'Vocab:', vocabularyAtGuru);
     
     // Calculate what's needed to pass level
     // Need 90% of kanji at Guru+ to level up
@@ -32,18 +46,18 @@ export function calculateLevelProgress(assignments, user) {
     
     // Calculate percentages
     const radicalsPercentage = radicals.length > 0 
-        ? (radicalsAtGuru / radicals.length * 100).toFixed(1) 
+        ? parseFloat((radicalsAtGuru / radicals.length * 100).toFixed(1))
         : 0;
     const kanjiPercentage = kanji.length > 0 
-        ? (kanjiAtGuru / kanji.length * 100).toFixed(1) 
+        ? parseFloat((kanjiAtGuru / kanji.length * 100).toFixed(1))
         : 0;
     const vocabularyPercentage = vocabulary.length > 0 
-        ? (vocabularyAtGuru / vocabulary.length * 100).toFixed(1) 
+        ? parseFloat((vocabularyAtGuru / vocabulary.length * 100).toFixed(1))
         : 0;
     
     // Overall level completion (based on kanji only, as that's what matters for level-up)
-    const levelCompletion = kanji.length > 0
-        ? (kanjiAtGuru / kanjiNeededToPass * 100).toFixed(1)
+    const levelCompletion = kanji.length > 0 && kanjiNeededToPass > 0
+        ? parseFloat((kanjiAtGuru / kanjiNeededToPass * 100).toFixed(1))
         : 0;
     
     // Check if level is passed
@@ -55,13 +69,13 @@ export function calculateLevelProgress(assignments, user) {
         ? calculateDaysSince(levelStartTime)
         : null;
     
-    return {
+    const result = {
         currentLevel,
         radicals: {
             total: radicals.length,
             atGuru: radicalsAtGuru,
             remaining: radicals.length - radicalsAtGuru,
-            percentage: parseFloat(radicalsPercentage)
+            percentage: radicalsPercentage
         },
         kanji: {
             total: kanji.length,
@@ -69,21 +83,25 @@ export function calculateLevelProgress(assignments, user) {
             remaining: kanji.length - kanjiAtGuru,
             neededToPass: kanjiNeededToPass,
             remainingToPass: kanjiRemainingToPass,
-            percentage: parseFloat(kanjiPercentage)
+            percentage: kanjiPercentage
         },
         vocabulary: {
             total: vocabulary.length,
             atGuru: vocabularyAtGuru,
             remaining: vocabulary.length - vocabularyAtGuru,
-            percentage: parseFloat(vocabularyPercentage)
+            percentage: vocabularyPercentage
         },
         overall: {
             totalItems: levelAssignments.length,
-            completion: parseFloat(levelCompletion),
+            completion: levelCompletion,
             isPassed,
             daysSinceLevelStart
         }
     };
+    
+    console.log('[LevelProgress] Result:', result);
+    
+    return result;
 }
 
 /**
@@ -125,22 +143,30 @@ function calculateDaysSince(date) {
 /**
  * Get items by level
  * @param {Array} assignments - All assignments
+ * @param {Array} subjects - All subjects
  * @param {number} level - Level to filter
  * @returns {Array} Filtered assignments
  */
-export function getItemsByLevel(assignments, level) {
-    return assignments.filter(a => a.data.level === level);
+export function getItemsByLevel(assignments, subjects, level) {
+    return assignments.filter(assignment => {
+        const subject = subjects.find(s => s.id === assignment.data.subject_id);
+        return subject && subject.data.level === level;
+    });
 }
 
 /**
  * Get available lessons for current level
  * @param {Array} assignments - All assignments
+ * @param {Array} subjects - All subjects
  * @param {number} currentLevel - Current level
  * @returns {Array} Assignments available for lessons
  */
-export function getAvailableLessons(assignments, currentLevel) {
-    return assignments.filter(a => 
-        a.data.srs_stage === SRS_STAGES.UNLOCKING &&
-        a.data.level <= currentLevel
-    );
+export function getAvailableLessons(assignments, subjects, currentLevel) {
+    return assignments.filter(assignment => {
+        if (assignment.data.srs_stage !== SRS_STAGES.UNLOCKING) {
+            return false;
+        }
+        const subject = subjects.find(s => s.id === assignment.data.subject_id);
+        return subject && subject.data.level <= currentLevel;
+    });
 }
