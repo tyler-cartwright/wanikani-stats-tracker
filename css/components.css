@@ -1885,3 +1885,20 @@ a:hover {
         min-width: 50px;
     }
 }
+
+/* Fix for SRS Chart - ensure proper height */
+.srs-chart {
+    min-height: 250px;
+    max-height: 250px;
+}
+
+.srs-bar {
+    position: relative;
+}
+
+.srs-bar-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}

@@ -29,6 +29,13 @@ export class Dashboard {
         const forecast = generate24HourForecast(summary);
         const workload = calculateWorkload(assignments, summary);
 
+        console.log('Dashboard Data:', {
+            srsDistribution,
+            levelProgress,
+            assignments: assignments.length,
+            userLevel: user.data.level
+        });
+
         return `
             <div class="dashboard">
                 ${this.renderHeader(user)}
@@ -81,7 +88,7 @@ export class Dashboard {
         return `
             <div class="quick-stats">
                 <div class="stat-card stat-card-primary">
-                    <div class="stat-icon"></div>
+                    <div class="stat-icon">Ì≥ö</div>
                     <div class="stat-content">
                         <div class="stat-value">${currentReviews}</div>
                         <div class="stat-label">Reviews Now</div>
@@ -89,7 +96,7 @@ export class Dashboard {
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-icon"></div>
+                    <div class="stat-icon">Ì≥ñ</div>
                     <div class="stat-content">
                         <div class="stat-value">${lessonsAvailable}</div>
                         <div class="stat-label">Lessons Available</div>
@@ -113,7 +120,7 @@ export class Dashboard {
                 </div>
                 
                 <div class="stat-card ${leechAnalysis.stats.totalLeeches > 0 ? 'stat-card-danger' : 'stat-card-success'}">
-                    <div class="stat-icon">${leechAnalysis.stats.totalLeeches > 0 ? '' : '‚ú®'}</div>
+                    <div class="stat-icon">${leechAnalysis.stats.totalLeeches > 0 ? 'Ì¥•' : '‚ú®'}</div>
                     <div class="stat-content">
                         <div class="stat-value">${leechAnalysis.stats.totalLeeches}</div>
                         <div class="stat-label">Leeches</div>
@@ -127,9 +134,17 @@ export class Dashboard {
      * Render level progress section
      */
     renderLevelProgress(levelProgress) {
-        const kanjiPercent = (levelProgress.kanji.atGuru / levelProgress.kanji.neededToPass * 100);
-        const radicalsPercent = levelProgress.radicals.percentage;
-        const vocabPercent = levelProgress.vocabulary.percentage;
+        console.log('Level Progress Data:', levelProgress);
+        
+        const kanjiPercent = levelProgress.kanji.neededToPass > 0
+            ? (levelProgress.kanji.atGuru / levelProgress.kanji.neededToPass * 100)
+            : 0;
+        const radicalsPercent = levelProgress.radicals.total > 0
+            ? levelProgress.radicals.percentage
+            : 0;
+        const vocabPercent = levelProgress.vocabulary.total > 0
+            ? levelProgress.vocabulary.percentage
+            : 0;
 
         return `
             <div class="card level-progress-card">
@@ -177,8 +192,8 @@ export class Dashboard {
                 
                 ${levelProgress.overall.daysSinceLevelStart !== null ? `
                     <div class="level-progress-footer">
-                        <span> ${levelProgress.overall.daysSinceLevelStart} days on this level</span>
-                        <span> ${levelProgress.kanji.remainingToPass} kanji to level up</span>
+                        <span>Ì≥Ö ${levelProgress.overall.daysSinceLevelStart} days on this level</span>
+                        <span>ÌæØ ${levelProgress.kanji.remainingToPass} kanji to level up</span>
                     </div>
                 ` : ''}
             </div>
@@ -189,7 +204,13 @@ export class Dashboard {
      * Render SRS distribution chart
      */
     renderSRSDistribution(distribution) {
-        const maxCount = Math.max(...Object.values(distribution.byCategory));
+        const maxCount = Math.max(...Object.values(distribution.byCategory), 1);
+        
+        console.log('SRS Distribution:', {
+            byCategory: distribution.byCategory,
+            maxCount,
+            total: distribution.total
+        });
         
         return `
             <div class="card srs-card">
@@ -197,13 +218,22 @@ export class Dashboard {
                 
                 <div class="srs-chart">
                     ${Object.entries(distribution.byCategory).map(([category, count]) => {
-                        const percentage = (count / distribution.total * 100) || 0;
-                        const barHeight = maxCount > 0 ? (count / maxCount * 100) : 0;
+                        const percentage = distribution.total > 0 
+                            ? (count / distribution.total * 100) 
+                            : 0;
+                        const barHeight = maxCount > 0 
+                            ? (count / maxCount * 100) 
+                            : 0;
+                        
+                        console.log(`${category}: count=${count}, percentage=${percentage.toFixed(1)}%, barHeight=${barHeight.toFixed(1)}%`);
                         
                         return `
                             <div class="srs-bar-container">
-                                <div class="srs-bar" style="height: ${barHeight}%">
-                                    <div class="srs-bar-fill srs-${category}" title="${count} items"></div>
+                                <div class="srs-bar">
+                                    <div class="srs-bar-fill srs-${category}" 
+                                         style="height: ${barHeight}%"
+                                         title="${count} items">
+                                    </div>
                                 </div>
                                 <div class="srs-bar-label">
                                     <div class="srs-bar-name">${this.capitalize(category)}</div>
@@ -272,7 +302,7 @@ export class Dashboard {
     renderBurnedItems(burnedStats) {
         return `
             <div class="card burned-card">
-                <h2 class="card-title">Burned Items </h2>
+                <h2 class="card-title">Burned Items Ì¥•</h2>
                 
                 <div class="burned-main">
                     <div class="burned-total">${burnedStats.total}</div>
@@ -285,11 +315,11 @@ export class Dashboard {
                         <span class="burned-type-count">${burnedStats.byType.radical}</span>
                     </div>
                     <div class="burned-type">
-                        <span class="burned-type-icon">Ô∏è</span>
+                        <span class="burned-type-icon">Ì∏∑Ô∏è</span>
                         <span class="burned-type-count">${burnedStats.byType.kanji}</span>
                     </div>
                     <div class="burned-type">
-                        <span class="burned-type-icon"></span>
+                        <span class="burned-type-icon">Ì≥ù</span>
                         <span class="burned-type-count">${burnedStats.byType.vocabulary}</span>
                     </div>
                 </div>
@@ -342,8 +372,8 @@ export class Dashboard {
                 </div>
                 
                 <div class="forecast-legend">
-                    <span> Time (24h format)</span>
-                    <span> Reviews per hour</span>
+                    <span>Ìµê Time (24h format)</span>
+                    <span>Ì≥ä Reviews per hour</span>
                 </div>
             </div>
         `;
@@ -356,7 +386,7 @@ export class Dashboard {
         if (leechAnalysis.stats.totalLeeches === 0) {
             return `
                 <div class="card success-card">
-                    <h2 class="card-title"> No Leeches Detected!</h2>
+                    <h2 class="card-title">Ìæâ No Leeches Detected!</h2>
                     <p class="success-message">Your accuracy is excellent. Keep up the great work!</p>
                 </div>
             `;
@@ -365,7 +395,7 @@ export class Dashboard {
         return `
             <div class="card leech-summary-card">
                 <div class="card-header">
-                    <h2 class="card-title"> Leech Summary</h2>
+                    <h2 class="card-title">Ì¥• Leech Summary</h2>
                     <button class="btn-primary" onclick="window.navigateTo('leeches')">
                         View Details ‚Üí
                     </button>
@@ -394,7 +424,7 @@ export class Dashboard {
                     
                     ${leechAnalysis.stats.rootCauses > 0 ? `
                         <div class="leech-stat">
-                            <div class="leech-stat-value"> ${leechAnalysis.stats.rootCauses}</div>
+                            <div class="leech-stat-value">ÌæØ ${leechAnalysis.stats.rootCauses}</div>
                             <div class="leech-stat-label">Root Causes</div>
                         </div>
                     ` : ''}
@@ -423,11 +453,11 @@ export class Dashboard {
 
     getWorkloadIcon(level) {
         const icons = {
-            light: '',
-            moderate: '',
-            heavy: ''
+            light: 'Ì∏ä',
+            moderate: 'Ì∏ê',
+            heavy: 'Ì∏∞'
         };
-        return icons[level] || '';
+        return icons[level] || 'Ì≥ä';
     }
 
     getAccuracyClass(accuracy) {
