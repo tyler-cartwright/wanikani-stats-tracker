@@ -10,6 +10,8 @@ import navigation from './components/navigation.js';
 import Dashboard from './components/dashboard.js';
 import AssignmentsTable from './components/assignments-table.js';
 import LevelTimeline from './components/level-timeline.js';
+import ItemDetail from './components/item-detail.js';
+import AccuracyDeepDive from './components/accuracy-deep-dive.js';
 
 console.log('[App] Imports successful!');
 console.log('WaniKani Stats Tracker - Initializing...');
@@ -27,6 +29,8 @@ let appData = null;
 
 // Current view
 let currentView = 'dashboard';
+let previousView = null;
+let currentItemId = null;
 
 // Table instance
 let assignmentsTable = null;
@@ -46,13 +50,6 @@ function initDOMReferences() {
     
     appContainer = document.getElementById('app');
     mainContent = document.getElementById('main-content');
-    
-    console.log('[App] DOM references:', {
-        tokenModal: !!tokenModal,
-        tokenInput: !!tokenInput,
-        tokenSubmitBtn: !!tokenSubmitBtn,
-        rememberTokenCheckbox: !!rememberTokenCheckbox
-    });
 }
 
 // Update loading progress
@@ -121,8 +118,6 @@ async function handleTokenSubmit() {
     const token = tokenInput?.value?.trim();
     const remember = rememberTokenCheckbox?.checked ?? true;
     
-    console.log('[App] Token length:', token?.length, 'Remember:', remember);
-    
     if (!token) {
         showTokenError('Please enter your API token');
         return;
@@ -138,12 +133,8 @@ async function handleTokenSubmit() {
     }
     if (rememberTokenCheckbox) rememberTokenCheckbox.disabled = true;
 
-    console.log('[App] Validating token...');
-
     // Validate and set token
     const result = await tokenManager.setToken(token, remember);
-
-    console.log('[App] Token validation result:', result);
 
     if (!result.success) {
         // Re-enable input
@@ -168,8 +159,6 @@ async function handleTokenSubmit() {
 
 // Load initial data
 async function loadInitialData() {
-    console.log('[App] Loading initial data...');
-
     const result = await initialDataLoad(updateLoadingProgress);
 
     if (!result.success) {
@@ -177,8 +166,6 @@ async function loadInitialData() {
         showTokenModal();
         return;
     }
-
-    console.log('[App] Initial data loaded successfully');
     
     // Store data globally
     appData = result;
@@ -257,7 +244,7 @@ function renderDashboard() {
     mainContent.innerHTML = dashboard.render();
 }
 
-// Render progress view (now with assignments table and timeline)
+// Render progress view
 function renderProgressView() {
     assignmentsTable = new AssignmentsTable(appData.assignments, appData.subjects);
     const timeline = new LevelTimeline(appData.levelProgressions, appData.user);
@@ -286,6 +273,52 @@ function renderProgressView() {
         }
     }, 0);
 }
+
+// Render accuracy view
+function renderAccuracyView() {
+    const accuracyDeepDive = new AccuracyDeepDive(
+        appData.reviewStats,
+        appData.subjects,
+        appData.assignments
+    );
+    
+    mainContent.innerHTML = `
+        <div class="dashboard">
+            <h1 class="dashboard-title">ÌæØ Accuracy Analysis</h1>
+            ${accuracyDeepDive.render()}
+        </div>
+    `;
+}
+
+// Show item detail
+window.showItemDetail = function(subjectId) {
+    previousView = currentView;
+    currentItemId = subjectId;
+    
+    const itemDetail = new ItemDetail(
+        subjectId,
+        appData.subjects,
+        appData.assignments,
+        appData.reviewStats
+    );
+    
+    mainContent.innerHTML = `
+        <div class="dashboard">
+            ${itemDetail.render()}
+        </div>
+    `;
+};
+
+// Close item detail
+window.closeItemDetail = function() {
+    if (previousView) {
+        navigateTo(previousView);
+        previousView = null;
+        currentItemId = null;
+    } else {
+        navigateTo('dashboard');
+    }
+};
 
 // Table filter and sort handlers
 window.updateTableFilter = function(filterType, value) {
@@ -339,12 +372,6 @@ window.sortTable = function(column) {
     }
 };
 
-window.showItemDetail = function(subjectId) {
-    // TODO: Implement in next phase
-    console.log('Show item detail:', subjectId);
-    alert('Item detail view coming soon!');
-};
-
 // Render leeches view (from Phase 4)
 function renderLeechesView() {
     const { leeches, prioritizedStudyList, confusionPairs, rootCauses } = appData.leechAnalysis;
@@ -363,7 +390,7 @@ function renderLeechesView() {
                     </p>
                     <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
                         ${rootCauses.slice(0, 5).map(rc => `
-                            <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid var(--color-error);">
+                            <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid var(--color-error); cursor: pointer;" onclick="window.showItemDetail(${rc.id})">
                                 <div style="font-size: 2rem; font-weight: bold; margin-bottom: var(--spacing-xs);">
                                     ${rc.subject?.data?.characters || 'N/A'}
                                 </div>
@@ -387,7 +414,7 @@ function renderLeechesView() {
                                             'var(--color-info)';
                         
                         return `
-                            <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid ${severityColor};">
+                            <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid ${severityColor}; cursor: pointer;" onclick="window.showItemDetail(${leech.subject_id})">
                                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--spacing-md);">
                                     <div>
                                         <span style="font-size: 2.5rem; font-weight: bold;">${char}</span>
@@ -431,7 +458,7 @@ function renderLeechesView() {
                         ${confusionPairs.slice(0, 10).map(pair => `
                             <div style="background: var(--bg-primary); padding: var(--spacing-lg); border-radius: var(--radius-md);">
                                 <div style="display: flex; gap: var(--spacing-2xl); align-items: center; justify-content: center;">
-                                    <div style="text-align: center;">
+                                    <div style="text-align: center; cursor: pointer;" onclick="window.showItemDetail(${pair.subject1.id})">
                                         <div style="font-size: 3.5rem; font-weight: bold;">${pair.subject1.data?.data?.characters || 'N/A'}</div>
                                         <div style="font-size: var(--font-size-base); color: var(--text-secondary); margin-top: var(--spacing-xs);">
                                             ${pair.subject1.data?.data?.meanings?.[0]?.meaning || 'N/A'}
@@ -441,7 +468,7 @@ function renderLeechesView() {
                                         </div>
                                     </div>
                                     <div style="font-size: 2rem; color: var(--text-tertiary);">‚öîÔ∏è</div>
-                                    <div style="text-align: center;">
+                                    <div style="text-align: center; cursor: pointer;" onclick="window.showItemDetail(${pair.subject2.id})">
                                         <div style="font-size: 3.5rem; font-weight: bold;">${pair.subject2.data?.data?.characters || 'N/A'}</div>
                                         <div style="font-size: var(--font-size-base); color: var(--text-secondary); margin-top: var(--spacing-xs);">
                                             ${pair.subject2.data?.data?.meanings?.[0]?.meaning || 'N/A'}
@@ -460,30 +487,14 @@ function renderLeechesView() {
     `;
 }
 
-// Placeholder views
-function renderAccuracyView() {
-    mainContent.innerHTML = `
-        <div class="dashboard">
-            <h1 class="dashboard-title">ÌæØ Accuracy Analysis</h1>
-            <div class="card">
-                <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
-                    Detailed accuracy analysis coming soon!<br>
-                    <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
-                        Back to Dashboard
-                    </button>
-                </p>
-            </div>
-        </div>
-    `;
-}
-
+// Placeholder view
 function renderReviewsView() {
     mainContent.innerHTML = `
         <div class="dashboard">
             <h1 class="dashboard-title">Ì≥ö Review History</h1>
             <div class="card">
                 <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
-                    Review history coming soon!<br>
+                    Review history visualization coming in Phase 7!<br>
                     <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
                         Back to Dashboard
                     </button>
@@ -549,7 +560,7 @@ window.refreshData = async function() {
     }
 };
 
-// Logout function (global for onclick)
+// Logout function
 window.logout = function() {
     const confirmed = confirm('Are you sure you want to logout? This will clear your saved token.');
     if (confirmed) {
@@ -565,31 +576,22 @@ if ('serviceWorker' in navigator) {
             swRegistration = await navigator.serviceWorker.register('./sw.js');
             console.log('[App] Service Worker registered:', swRegistration.scope);
 
-            // Check for updates
             swRegistration.addEventListener('updatefound', () => {
                 const newWorker = swRegistration.installing;
-                console.log('[App] Service Worker update found');
-
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('[App] New service worker installed, update available');
                         showUpdateNotification();
                     }
                 });
             });
-
         } catch (error) {
             console.error('[App] Service Worker registration failed:', error);
         }
     });
 }
 
-// Show update notification
 function showUpdateNotification() {
-    const shouldUpdate = confirm(
-        'A new version of WaniKani Stats is available! Would you like to update now?'
-    );
-
+    const shouldUpdate = confirm('A new version of WaniKani Stats is available! Would you like to update now?');
     if (shouldUpdate) {
         if (swRegistration && swRegistration.waiting) {
             swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -600,63 +602,30 @@ function showUpdateNotification() {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('[App] DOM loaded, initializing...');
-    
     try {
         initDOMReferences();
-
-        // Initialize database
-        console.log('[App] Initializing database...');
         await db.init();
-        console.log('[App] Database initialized successfully');
 
-        // Set up token input handler
-        console.log('[App] Setting up event listeners...');
         if (tokenSubmitBtn) {
-            tokenSubmitBtn.addEventListener('click', () => {
-                console.log('[App] Button clicked (from event listener)');
-                handleTokenSubmit();
-            });
-            console.log('[App] Click event listener attached to button');
-        } else {
-            console.error('[App] Could not find token submit button!');
+            tokenSubmitBtn.addEventListener('click', handleTokenSubmit);
         }
         
         if (tokenInput) {
             tokenInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    console.log('[App] Enter key pressed');
-                    handleTokenSubmit();
-                }
+                if (e.key === 'Enter') handleTokenSubmit();
             });
-            console.log('[App] Keypress event listener attached to input');
-        } else {
-            console.error('[App] Could not find token input!');
         }
 
-        // Try to restore saved token
-        console.log('[App] Checking for saved token...');
         const tokenRestored = await tokenManager.restoreToken();
         
         if (tokenRestored) {
-            console.log('[App] Token restored from storage');
-            // Show loading screen and load data
             if (loadingScreen) loadingScreen.classList.remove('hidden');
             await loadInitialData();
         } else {
-            console.log('[App] No saved token found, showing token modal');
-            // Show token modal after brief delay
-            setTimeout(() => {
-                showTokenModal();
-            }, 500);
+            setTimeout(() => showTokenModal(), 500);
         }
-        
-        console.log('[App] Initialization complete');
-        
     } catch (error) {
         console.error('[App] Initialization error:', error);
         alert(`Initialization failed: ${error.message}`);
     }
 });
-
-console.log('[App] Setup complete (module loaded)');
