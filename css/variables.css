@@ -91,11 +91,44 @@
 
 /* Dark Mode Variables */
 [data-theme="dark"] {
-    --bg-primary: #1a1a1a;
-    --bg-secondary: #2d2d2d;
-    --bg-tertiary: #404040;
-    
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-tertiary: #808080;
+    /* Backgrounds - Deep, comfortable dark */
+    --bg-primary: #0f0f0f;
+    --bg-secondary: #1a1a1a;
+    --bg-tertiary: #2d2d2d;
+    --bg-overlay: rgba(0, 0, 0, 0.8);
+
+    /* Text Colors - High contrast for readability */
+    --text-primary: #e8e8e8;
+    --text-secondary: #a8a8a8;
+    --text-tertiary: #6e6e6e;
+    --text-inverse: #0f0f0f;
+
+    /* Primary Colors - Adjusted for dark background */
+    --color-primary: #c77dff;
+    --color-primary-dark: #9d4edd;
+    --color-primary-light: #e0aaff;
+
+    /* SRS Stage Colors - Brightened for visibility */
+    --color-apprentice: #ff1fa4;
+    --color-guru: #a855f7;
+    --color-master: #60a5fa;
+    --color-enlightened: #22d3ee;
+    --color-burned: #71717a;
+    --color-locked: #52525b;
+
+    /* Semantic Colors - Enhanced visibility */
+    --color-success: #22c55e;
+    --color-success-light: #4ade80;
+    --color-warning: #f59e0b;
+    --color-warning-light: #fbbf24;
+    --color-error: #ef4444;
+    --color-error-light: #f87171;
+    --color-info: #3b82f6;
+    --color-info-light: #60a5fa;
+
+    /* Shadows - Subtle depth for dark mode */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.7);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.8);
 }

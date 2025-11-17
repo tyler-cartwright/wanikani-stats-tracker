@@ -12,6 +12,8 @@ import AssignmentsTable from './components/assignments-table.js';
 import LevelTimeline from './components/level-timeline.js';
 import ItemDetail from './components/item-detail.js';
 import AccuracyDeepDive from './components/accuracy-deep-dive.js';
+import './components/theme-toggle.js';
+import './utils/swipe-handler.js';
 import {
     exportAssignmentsCSV,
     exportReviewStatsCSV,
