@@ -2285,6 +2285,102 @@ a:hover {
     color: var(--text-secondary);
 }
 
+/* Guru Candidates Card */
+.guru-candidates-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+}
+
+.guru-candidates-main {
+    display: flex;
+    justify-content: center;
+    margin: var(--spacing-lg) 0;
+}
+
+.guru-count-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xl);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    border: 4px solid;
+    min-width: 180px;
+    transition: all var(--transition-base);
+}
+
+.guru-count-display:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.guru-count-number {
+    font-size: 4rem;
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+}
+
+.guru-count-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.guru-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+}
+
+.guru-breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+}
+
+.guru-breakdown-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.guru-breakdown-text {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+}
+
+.guru-breakdown-text strong {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+}
+
+.guru-candidates-tip {
+    padding: var(--spacing-md);
+    background: var(--color-info);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    margin-top: var(--spacing-lg);
+}
+
+.guru-candidates-empty {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+}
+
+.guru-candidates-empty p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
 /* Time-of-Day Performance */
 .time-performance-card {
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
