@@ -132,7 +132,7 @@ export class SwipeHandler {
         const targetView = this.views[targetIndex];
 
         // Add visual feedback
-        this.showSwipeF eedback(direction);
+        this.showSwipeFeedback(direction);
 
         // Navigate
         if (window.navigateTo) {
