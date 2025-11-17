@@ -1,6 +1,6 @@
 {
   "name": "wanikani-stats-tracker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Advanced statistics tracker for WaniKani",
   "main": "index.html",
   "scripts": {
