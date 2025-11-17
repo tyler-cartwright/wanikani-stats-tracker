@@ -104,7 +104,7 @@ export class Dashboard {
         return `
             <div class="quick-stats">
                 <div class="stat-card stat-card-primary">
-                    <div class="stat-icon">���</div>
+                    <div class="stat-icon">📝</div>
                     <div class="stat-content">
                         <div class="stat-value">${currentReviews}</div>
                         <div class="stat-label">Reviews Now</div>
@@ -112,7 +112,7 @@ export class Dashboard {
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-icon">���</div>
+                    <div class="stat-icon">📝</div>
                     <div class="stat-content">
                         <div class="stat-value">${lessonsAvailable}</div>
                         <div class="stat-label">Lessons Available</div>
@@ -136,7 +136,7 @@ export class Dashboard {
                 </div>
                 
                 <div class="stat-card ${leechAnalysis.stats.totalLeeches > 0 ? 'stat-card-danger' : 'stat-card-success'}">
-                    <div class="stat-icon">${leechAnalysis.stats.totalLeeches > 0 ? '���' : '✨'}</div>
+                    <div class="stat-icon">${leechAnalysis.stats.totalLeeches > 0 ? '🐛' : '✨'}</div>
                     <div class="stat-content">
                         <div class="stat-value">${leechAnalysis.stats.totalLeeches}</div>
                         <div class="stat-label">Leeches</div>
@@ -181,8 +181,8 @@ export class Dashboard {
                     
                     <div class="progress-section">
                         <div class="progress-header">
-                            <span class="progress-label">Kanji (${levelProgress.kanji.neededToPass} needed)</span>
-                            <span class="progress-count">${levelProgress.kanji.atGuru}/${levelProgress.kanji.total}</span>
+                            <span class="progress-label">Kanji (${levelProgress.kanji.neededToPass} to pass)</span>
+                            <span class="progress-count">${levelProgress.kanji.atGuru}/${levelProgress.kanji.neededToPass}</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill progress-fill-kanji" style="width: ${kanjiPercent}%"></div>
@@ -204,8 +204,8 @@ export class Dashboard {
                 
                 ${levelProgress.overall.daysSinceLevelStart !== null ? `
                     <div class="level-progress-footer">
-                        <span>��� ${levelProgress.overall.daysSinceLevelStart} days on this level</span>
-                        <span>��� ${levelProgress.kanji.remainingToPass} kanji to level up</span>
+                        <span>📅 ${levelProgress.overall.daysSinceLevelStart} days on this level</span>
+                        <span>🎯 ${levelProgress.kanji.remainingToPass} kanji to level up</span>
                     </div>
                 ` : ''}
             </div>
@@ -314,7 +314,7 @@ export class Dashboard {
     renderBurnedItems(burnedStats) {
         return `
             <div class="card burned-card">
-                <h2 class="card-title">Burned Items ���</h2>
+                <h2 class="card-title">Burned Items 🔥</h2>
                 
                 <div class="burned-main">
                     <div class="burned-total">${burnedStats.total}</div>
@@ -327,11 +327,11 @@ export class Dashboard {
                         <span class="burned-type-count">${burnedStats.byType.radical}</span>
                     </div>
                     <div class="burned-type">
-                        <span class="burned-type-icon">���️</span>
+                        <span class="burned-type-icon">📘</span>
                         <span class="burned-type-count">${burnedStats.byType.kanji}</span>
                     </div>
                     <div class="burned-type">
-                        <span class="burned-type-icon">���</span>
+                        <span class="burned-type-icon">📙</span>
                         <span class="burned-type-count">${burnedStats.byType.vocabulary}</span>
                     </div>
                 </div>
@@ -384,8 +384,8 @@ export class Dashboard {
                 </div>
                 
                 <div class="forecast-legend">
-                    <span>�� Time (24h format)</span>
-                    <span>��� Reviews per hour</span>
+                    <span>⏰ Time (24h format)</span>
+                    <span>📊 Reviews per hour</span>
                 </div>
             </div>
         `;
@@ -398,7 +398,7 @@ export class Dashboard {
         if (leechAnalysis.stats.totalLeeches === 0) {
             return `
                 <div class="card success-card">
-                    <h2 class="card-title">��� No Leeches Detected!</h2>
+                    <h2 class="card-title">✨ No Leeches Detected!</h2>
                     <p class="success-message">Your accuracy is excellent. Keep up the great work!</p>
                 </div>
             `;
@@ -407,7 +407,7 @@ export class Dashboard {
         return `
             <div class="card leech-summary-card">
                 <div class="card-header">
-                    <h2 class="card-title">��� Leech Summary</h2>
+                    <h2 class="card-title">🐛 Leech Summary</h2>
                     <button class="btn-primary" onclick="window.navigateTo('leeches')">
                         View Details →
                     </button>
@@ -436,7 +436,7 @@ export class Dashboard {
                     
                     ${leechAnalysis.stats.rootCauses > 0 ? `
                         <div class="leech-stat">
-                            <div class="leech-stat-value">��� ${leechAnalysis.stats.rootCauses}</div>
+                            <div class="leech-stat-value">🔍 ${leechAnalysis.stats.rootCauses}</div>
                             <div class="leech-stat-label">Root Causes</div>
                         </div>
                     ` : ''}
@@ -623,11 +623,11 @@ export class Dashboard {
 
     getWorkloadIcon(level) {
         const icons = {
-            light: '���',
-            moderate: '���',
-            heavy: '���'
+            light: '🌤️',
+            moderate: '⚖️',
+            heavy: '⚠️'
         };
-        return icons[level] || '���';
+        return icons[level] || '📊';
     }
 
     getAccuracyClass(accuracy) {

@@ -258,7 +258,7 @@ function renderProgressView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">��� Progress Tracking</h1>
+            <h1 class="dashboard-title">📊 Progress Tracking</h1>
             
             <div class="card">
                 <h2 class="card-title">Level Timeline</h2>
@@ -291,7 +291,7 @@ function renderAccuracyView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">��� Accuracy Analysis</h1>
+            <h1 class="dashboard-title">🎯 Accuracy Analysis</h1>
             ${accuracyDeepDive.render()}
         </div>
     `;
@@ -387,11 +387,11 @@ function renderLeechesView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">��� Leech Management</h1>
+            <h1 class="dashboard-title">🐛 Leech Management</h1>
             
             ${rootCauses.length > 0 ? `
                 <div class="card">
-                    <h2 class="card-title">��� Root Cause Components</h2>
+                    <h2 class="card-title">🔍 Root Cause Components</h2>
                     <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
                         These components are causing problems in multiple items. Study these first!
                     </p>
@@ -411,7 +411,7 @@ function renderLeechesView() {
             ` : ''}
             
             <div class="card">
-                <h2 class="card-title">��� Priority Study List (Top 20)</h2>
+                <h2 class="card-title">📌 Priority Study List (Top 20)</h2>
                 <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
                     ${topLeeches.map(leech => {
                         const char = leech.subject?.data?.characters || 'N/A';
@@ -498,7 +498,7 @@ function renderLeechesView() {
 function renderReviewsView() {
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">��� Review History</h1>
+            <h1 class="dashboard-title">📖 Review History</h1>
             <div class="card">
                 <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
                     Review history visualization coming in Phase 7!<br>
