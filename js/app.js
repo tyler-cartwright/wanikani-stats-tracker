@@ -10,6 +10,7 @@ import navigation from './components/navigation.js';
 import Dashboard from './components/dashboard.js';
 import AssignmentsTable from './components/assignments-table.js';
 import LevelTimeline from './components/level-timeline.js';
+import Level60Timeline from './components/level-60-timeline.js';
 import ItemDetail from './components/item-detail.js';
 import AccuracyDeepDive from './components/accuracy-deep-dive.js';
 import './components/theme-toggle.js';
@@ -259,23 +260,29 @@ function renderDashboard() {
 function renderProgressView() {
     assignmentsTable = new AssignmentsTable(appData.assignments, appData.subjects);
     const timeline = new LevelTimeline(appData.levelProgressions, appData.user);
-    
+    const level60Timeline = new Level60Timeline(appData.levelProgressions, appData.user);
+
     mainContent.innerHTML = `
         <div class="dashboard">
             <h1 class="dashboard-title">📊 Progress Tracking</h1>
-            
+
             <div class="card">
                 <h2 class="card-title">Level Timeline</h2>
                 ${timeline.render()}
             </div>
-            
+
+            <div class="card" style="margin-top: var(--spacing-lg);">
+                <h2 class="card-title">🎯 Journey to Level 60</h2>
+                ${level60Timeline.render()}
+            </div>
+
             <div class="card" style="margin-top: var(--spacing-lg);">
                 <h2 class="card-title">All Assignments</h2>
                 <div id="assignments-table-container"></div>
             </div>
         </div>
     `;
-    
+
     // Render table after DOM is ready
     setTimeout(() => {
         const container = document.getElementById('assignments-table-container');
