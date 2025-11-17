@@ -55,21 +55,35 @@ export function calculateGuruCandidates(assignments) {
     console.log('[GuruCandidates] - Available now:', availableNow.length);
     console.log('[GuruCandidates] - Available later today:', availableLater.length);
 
-    // Find next available time for later reviews
-    let nextAvailableTime = null;
+    // Find next batch of reviews (items available within next hour window)
+    let nextBatch = null;
     if (availableLater.length > 0) {
-        const nextReview = availableLater.reduce((earliest, assignment) => {
+        // Find the earliest review time
+        const earliestTime = availableLater.reduce((earliest, assignment) => {
             const availableAt = new Date(assignment.data.available_at);
             return !earliest || availableAt < earliest ? availableAt : earliest;
         }, null);
-        nextAvailableTime = nextReview;
+
+        if (earliestTime) {
+            // Group reviews within 5 minutes of earliest time (same "batch")
+            const batchWindow = 5 * 60 * 1000; // 5 minutes in milliseconds
+            const batchItems = availableLater.filter(a => {
+                const availableAt = new Date(a.data.available_at);
+                return Math.abs(availableAt - earliestTime) <= batchWindow;
+            });
+
+            nextBatch = {
+                time: earliestTime,
+                count: batchItems.length
+            };
+        }
     }
 
     return {
         total: guruCandidates.length,
         availableNow: availableNow.length,
         availableLater: availableLater.length,
-        nextAvailableTime,
+        nextBatch,
         totalApprenticeIV: apprenticeIV.length
     };
 }

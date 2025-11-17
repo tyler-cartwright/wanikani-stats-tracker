@@ -627,7 +627,7 @@ export class Dashboard {
      * Render Guru candidates card
      */
     renderGuruCandidates(guruCandidates) {
-        const { total, availableNow, availableLater, nextAvailableTime } = guruCandidates;
+        const { total, availableNow, availableLater, nextBatch } = guruCandidates;
 
         // Determine card styling based on number of candidates
         const hasMany = total >= 20;
@@ -662,11 +662,12 @@ export class Dashboard {
                                 </span>
                             </div>
                         ` : ''}
-                        ${availableLater > 0 ? `
+                        ${nextBatch ? `
                             <div class="guru-breakdown-item">
                                 <span class="guru-breakdown-icon">⏰</span>
                                 <span class="guru-breakdown-text">
-                                    <strong>${availableLater}</strong> available in ${formatTimeUntil(nextAvailableTime)}
+                                    <strong>${nextBatch.count}</strong> available in ${formatTimeUntil(nextBatch.time)}
+                                    ${availableLater > nextBatch.count ? ` • ${availableLater - nextBatch.count} more later` : ''}
                                 </span>
                             </div>
                         ` : ''}
