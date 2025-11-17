@@ -14,13 +14,21 @@ export async function fetchReviewStatistics(options = {}, onProgress = null) {
     try {
         // Check for incremental update
         const lastSync = await db.metadata('review_statistics_last_sync');
-        
-        if (lastSync && !options.forceRefresh) {
-            console.log('[Review Statistics API] Fetching updates since', lastSync);
+        const cachedCount = await db.count('review_statistics');
+
+        // Only use incremental update if we have data AND not forcing refresh
+        if (lastSync && cachedCount > 0 && !options.forceRefresh) {
+            console.log(`[Review Statistics API] Have ${cachedCount} cached, fetching updates since`, lastSync);
             options.params = {
                 ...options.params,
                 updated_after: lastSync
             };
+        } else {
+            if (options.forceRefresh) {
+                console.log('[Review Statistics API] Force refresh - fetching all review statistics');
+            } else {
+                console.log('[Review Statistics API] First fetch - getting all review statistics');
+            }
         }
 
         // Fetch from API

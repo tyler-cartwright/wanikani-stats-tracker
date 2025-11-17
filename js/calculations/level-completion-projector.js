@@ -111,7 +111,8 @@ export function projectLevelCompletion(assignments, levelProgressions, user, sub
  */
 function getRecentCompletedLevels(levelProgressions, count) {
     const completed = levelProgressions
-        .filter(lp => lp.data.passed_at && lp.data.started_at)
+        // Only include completed (passed) levels that weren't abandoned (from resets)
+        .filter(lp => lp.data.passed_at && lp.data.started_at && !lp.data.abandoned_at)
         .map(lp => ({
             level: lp.data.level,
             startedAt: new Date(lp.data.started_at),
@@ -120,7 +121,7 @@ function getRecentCompletedLevels(levelProgressions, count) {
         }))
         .sort((a, b) => b.level - a.level) // Sort by level descending
         .slice(0, count);
-    
+
     return completed;
 }
 
@@ -175,7 +176,8 @@ function calculateStandardDeviation(values) {
  */
 export function getAllLevelDurations(levelProgressions) {
     return levelProgressions
-        .filter(lp => lp.data.passed_at && lp.data.started_at)
+        // Only include completed (passed) levels that weren't abandoned (from resets)
+        .filter(lp => lp.data.passed_at && lp.data.started_at && !lp.data.abandoned_at)
         .map(lp => ({
             level: lp.data.level,
             duration: calculateDuration(lp.data.started_at, lp.data.passed_at),

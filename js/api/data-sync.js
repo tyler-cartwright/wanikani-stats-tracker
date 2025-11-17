@@ -72,7 +72,7 @@ export async function initialDataLoad(onProgress = null) {
 
         // Step 6: Fetch level progressions (historical data)
         updateProgress('Loading level history...');
-        const levelProgressions = await fetchLevelProgressions();
+        const levelProgressions = await fetchLevelProgressions({});
 
         updateProgress('Complete!');
 
