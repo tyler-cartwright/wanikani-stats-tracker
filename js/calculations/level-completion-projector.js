@@ -12,15 +12,21 @@
 export function projectLevelCompletion(assignments, levelProgressions, user, subjects = []) {
     const currentLevel = user.data.level;
 
-    // Get current level assignments by looking up subject levels
+    // Get ALL kanji subjects for current level (including locked items)
+    const allKanjiForLevel = subjects.filter(
+        s => s.data.level === currentLevel && s.object === 'kanji'
+    );
+
+    // Get current level assignments to count how many are at Guru
     const levelAssignments = assignments.filter(assignment => {
         const subject = subjects.find(s => s.id === assignment.data.subject_id);
         return subject && subject.data.level === currentLevel;
     });
 
-    const kanji = levelAssignments.filter(a => a.data.subject_type === 'kanji');
-    const kanjiAtGuru = kanji.filter(a => a.data.srs_stage >= 5).length;
-    const kanjiNeeded = Math.ceil(kanji.length * 0.9);
+    const kanjiAtGuru = levelAssignments.filter(
+        a => a.data.subject_type === 'kanji' && a.data.srs_stage >= 5
+    ).length;
+    const kanjiNeeded = Math.ceil(allKanjiForLevel.length * 0.9);
     const kanjiRemaining = Math.max(0, kanjiNeeded - kanjiAtGuru);
     
     // Calculate historical average
@@ -99,7 +105,7 @@ export function projectLevelCompletion(assignments, levelProgressions, user, sub
             current: kanjiAtGuru,
             needed: kanjiNeeded,
             remaining: kanjiRemaining,
-            percentage: kanji.length > 0 ? (kanjiAtGuru / kanjiNeeded * 100).toFixed(1) : 0
+            percentage: allKanjiForLevel.length > 0 ? (kanjiAtGuru / kanjiNeeded * 100).toFixed(1) : 0
         },
         timing: {
             daysSinceLevelStart,
