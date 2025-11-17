@@ -6,7 +6,8 @@ import { calculateLevelProgress } from '../calculations/level-progress.js';
 import { calculateAccuracyStats } from '../calculations/accuracy-analyzer.js';
 import { calculateBurnedStats } from '../calculations/burned-items-tracker.js';
 import { generate24HourForecast, getCurrentReviewCount } from '../calculations/review-forecast.js';
-import { calculateWorkload } from '../calculations/workload-calculator.js';
+import { calculateWorkload, calculateSustainableLessonPace } from '../calculations/workload-calculator.js';
+import { projectLevelCompletion } from '../calculations/level-completion-projector.js';
 
 export class Dashboard {
     constructor(appData) {
@@ -18,23 +19,27 @@ export class Dashboard {
      * @returns {string} HTML string
      */
     render() {
-        const { user, summary, assignments, reviewStats, subjects, leechAnalysis } = this.appData;
-        
-        // Calculate all statistics - NOW PASSING SUBJECTS TO LEVEL PROGRESS
+        const { user, summary, assignments, reviewStats, subjects, leechAnalysis, levelProgressions } = this.appData;
+
+        // Calculate all statistics - NOW PASSING SUBJECTS AND LEVEL PROGRESSIONS TO LEVEL PROGRESS
         const srsDistribution = calculateSRSDistribution(assignments);
-        const levelProgress = calculateLevelProgress(assignments, user, subjects);
+        const levelProgress = calculateLevelProgress(assignments, user, subjects, levelProgressions || []);
         const accuracyStats = calculateAccuracyStats(reviewStats);
         const burnedStats = calculateBurnedStats(assignments);
         const currentReviews = getCurrentReviewCount(summary);
         const forecast = generate24HourForecast(summary);
         const workload = calculateWorkload(assignments, summary);
+        const levelProjection = projectLevelCompletion(assignments, levelProgressions || [], user, subjects);
+        const lessonPace = calculateSustainableLessonPace(assignments, reviewStats);
 
         console.log('Dashboard Data:', {
             srsDistribution,
             levelProgress,
             assignments: assignments.length,
             subjects: subjects.length,
-            userLevel: user.data.level
+            userLevel: user.data.level,
+            levelProjection,
+            lessonPace
         });
 
         return `
@@ -42,8 +47,19 @@ export class Dashboard {
                 ${this.renderHeader(user)}
                 ${this.renderQuickStats(currentReviews, summary, workload, leechAnalysis)}
                 ${this.renderLevelProgress(levelProgress)}
-                
-                <div class="dashboard-grid">
+
+                <!-- Level Projection & Workload Grid -->
+                <div class="dashboard-grid-2col">
+                    <div class="dashboard-col-2">
+                        ${this.renderLevelProjection(levelProjection)}
+                    </div>
+                    <div class="dashboard-col-1">
+                        ${this.renderWorkloadAnalysis(workload, lessonPace)}
+                    </div>
+                </div>
+
+                <!-- SRS, Accuracy & Burned Items Grid -->
+                <div class="dashboard-grid-2col">
                     <div class="dashboard-col-2">
                         ${this.renderSRSDistribution(srsDistribution)}
                     </div>
@@ -52,7 +68,8 @@ export class Dashboard {
                         ${this.renderBurnedItems(burnedStats)}
                     </div>
                 </div>
-                
+
+                <!-- Review Forecast & Leech Summary -->
                 ${this.renderReviewForecast(forecast)}
                 ${this.renderLeechSummary(leechAnalysis)}
             </div>
@@ -89,7 +106,7 @@ export class Dashboard {
         return `
             <div class="quick-stats">
                 <div class="stat-card stat-card-primary">
-                    <div class="stat-icon">Ì≥ö</div>
+                    <div class="stat-icon">üìù</div>
                     <div class="stat-content">
                         <div class="stat-value">${currentReviews}</div>
                         <div class="stat-label">Reviews Now</div>
@@ -97,7 +114,7 @@ export class Dashboard {
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-icon">Ì≥ñ</div>
+                    <div class="stat-icon">üìù</div>
                     <div class="stat-content">
                         <div class="stat-value">${lessonsAvailable}</div>
                         <div class="stat-label">Lessons Available</div>
@@ -121,7 +138,7 @@ export class Dashboard {
                 </div>
                 
                 <div class="stat-card ${leechAnalysis.stats.totalLeeches > 0 ? 'stat-card-danger' : 'stat-card-success'}">
-                    <div class="stat-icon">${leechAnalysis.stats.totalLeeches > 0 ? 'Ì¥•' : '‚ú®'}</div>
+                    <div class="stat-icon">${leechAnalysis.stats.totalLeeches > 0 ? 'üêõ' : '‚ú®'}</div>
                     <div class="stat-content">
                         <div class="stat-value">${leechAnalysis.stats.totalLeeches}</div>
                         <div class="stat-label">Leeches</div>
@@ -136,11 +153,10 @@ export class Dashboard {
      */
     renderLevelProgress(levelProgress) {
         console.log('Level Progress Data:', levelProgress);
-        
-        const kanjiPercent = levelProgress.kanji.neededToPass > 0
-            ? (levelProgress.kanji.atGuru / levelProgress.kanji.neededToPass * 100)
-            : 0;
+
+        // All percentages based on total items (not level-up requirement)
         const radicalsPercent = levelProgress.radicals.percentage;
+        const kanjiPercent = levelProgress.kanji.percentage;
         const vocabPercent = levelProgress.vocabulary.percentage;
 
         return `
@@ -189,8 +205,13 @@ export class Dashboard {
                 
                 ${levelProgress.overall.daysSinceLevelStart !== null ? `
                     <div class="level-progress-footer">
-                        <span>Ì≥Ö ${levelProgress.overall.daysSinceLevelStart} days on this level</span>
-                        <span>ÌæØ ${levelProgress.kanji.remainingToPass} kanji to level up</span>
+                        <span>üìÖ ${levelProgress.overall.daysSinceLevelStart} days on this level</span>
+                        <span
+                            title="WaniKani requires 90% of kanji (${levelProgress.kanji.neededToPass} out of ${levelProgress.kanji.total}) to reach Guru or higher to level up"
+                            style="cursor: help; border-bottom: 1px dotted var(--text-secondary);"
+                        >
+                            üéØ ${levelProgress.kanji.remainingToPass} kanji to level up
+                        </span>
                     </div>
                 ` : ''}
             </div>
@@ -299,7 +320,7 @@ export class Dashboard {
     renderBurnedItems(burnedStats) {
         return `
             <div class="card burned-card">
-                <h2 class="card-title">Burned Items Ì¥•</h2>
+                <h2 class="card-title">Burned Items üî•</h2>
                 
                 <div class="burned-main">
                     <div class="burned-total">${burnedStats.total}</div>
@@ -312,11 +333,11 @@ export class Dashboard {
                         <span class="burned-type-count">${burnedStats.byType.radical}</span>
                     </div>
                     <div class="burned-type">
-                        <span class="burned-type-icon">Ì∏∑Ô∏è</span>
+                        <span class="burned-type-icon">üìò</span>
                         <span class="burned-type-count">${burnedStats.byType.kanji}</span>
                     </div>
                     <div class="burned-type">
-                        <span class="burned-type-icon">Ì≥ù</span>
+                        <span class="burned-type-icon">üìô</span>
                         <span class="burned-type-count">${burnedStats.byType.vocabulary}</span>
                     </div>
                 </div>
@@ -369,8 +390,8 @@ export class Dashboard {
                 </div>
                 
                 <div class="forecast-legend">
-                    <span>ÔøΩÔøΩ Time (24h format)</span>
-                    <span>Ì≥ä Reviews per hour</span>
+                    <span>‚è∞ Time (24h format)</span>
+                    <span>üìä Reviews per hour</span>
                 </div>
             </div>
         `;
@@ -383,7 +404,7 @@ export class Dashboard {
         if (leechAnalysis.stats.totalLeeches === 0) {
             return `
                 <div class="card success-card">
-                    <h2 class="card-title">Ìæâ No Leeches Detected!</h2>
+                    <h2 class="card-title">‚ú® No Leeches Detected!</h2>
                     <p class="success-message">Your accuracy is excellent. Keep up the great work!</p>
                 </div>
             `;
@@ -392,7 +413,7 @@ export class Dashboard {
         return `
             <div class="card leech-summary-card">
                 <div class="card-header">
-                    <h2 class="card-title">Ì¥• Leech Summary</h2>
+                    <h2 class="card-title">üêõ Leech Summary</h2>
                     <button class="btn-primary" onclick="window.navigateTo('leeches')">
                         View Details ‚Üí
                     </button>
@@ -421,7 +442,7 @@ export class Dashboard {
                     
                     ${leechAnalysis.stats.rootCauses > 0 ? `
                         <div class="leech-stat">
-                            <div class="leech-stat-value">ÌæØ ${leechAnalysis.stats.rootCauses}</div>
+                            <div class="leech-stat-value">üîç ${leechAnalysis.stats.rootCauses}</div>
                             <div class="leech-stat-label">Root Causes</div>
                         </div>
                     ` : ''}
@@ -430,7 +451,181 @@ export class Dashboard {
         `;
     }
 
+    /**
+     * Render level completion projection
+     */
+    renderLevelProjection(projection) {
+        const { kanjiProgress, timing, historicalData, projectionConfidence } = projection;
+
+        // Get confidence badge color
+        const confidenceBadgeClass = {
+            high: 'badge-success',
+            medium: 'badge-warning',
+            low: 'badge-error'
+        }[projectionConfidence] || 'badge-warning';
+
+        // Get pace indicator
+        const paceInfo = {
+            faster: { icon: 'üöÄ', text: 'Faster than average', class: 'projection-faster' },
+            'on-track': { icon: '‚úì', text: 'On track', class: 'projection-on-track' },
+            slower: { icon: 'üêå', text: 'Slower than average', class: 'projection-slower' }
+        }[timing.paceComparison] || { icon: '‚Äî', text: 'No data', class: '' };
+
+        return `
+            <div class="card projection-card">
+                <div class="card-header">
+                    <h2 class="card-title">üìä Level ${projection.currentLevel} Projection</h2>
+                    <span class="card-badge ${confidenceBadgeClass}">
+                        ${projectionConfidence.toUpperCase()} Confidence
+                    </span>
+                </div>
+
+                <div class="projection-main">
+                    ${timing.estimatedCompletionDate ? `
+                        <div class="projection-date-section">
+                            <div class="projection-label">Estimated Level Up</div>
+                            <div class="projection-date">${this.formatDate(timing.estimatedCompletionDate)}</div>
+                            <div class="projection-sublabel">
+                                ${timing.estimatedDaysRemaining === 0 ? 'Today!' :
+                                  timing.estimatedDaysRemaining === 1 ? 'Tomorrow' :
+                                  `In ${timing.estimatedDaysRemaining} days`}
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="projection-date-section">
+                            <div class="projection-label">Estimated Level Up</div>
+                            <div class="projection-date">‚Äî</div>
+                            <div class="projection-sublabel">Insufficient data</div>
+                        </div>
+                    `}
+                </div>
+
+                <div class="projection-stats">
+                    <div class="projection-stat">
+                        <div class="projection-stat-label">Kanji Progress</div>
+                        <div class="projection-stat-value">${kanjiProgress.current}/${kanjiProgress.needed}</div>
+                        <div class="projection-stat-bar">
+                            <div class="projection-stat-fill" style="width: ${kanjiProgress.percentage}%"></div>
+                        </div>
+                        <div class="projection-stat-sublabel">${kanjiProgress.remaining} remaining</div>
+                    </div>
+
+                    <div class="projection-stat">
+                        <div class="projection-stat-label">Current Pace</div>
+                        <div
+                            class="projection-stat-value ${paceInfo.class}"
+                            title="Compares your current level progress to your historical average. Faster = under 80% of average, On Track = 80-120% of average, Slower = over 120% of average"
+                            style="cursor: help;"
+                        >
+                            ${paceInfo.icon} ${paceInfo.text}
+                        </div>
+                        ${timing.daysSinceLevelStart !== null ? `
+                            <div class="projection-stat-sublabel">
+                                ${timing.daysSinceLevelStart} days so far
+                                ${timing.averageDaysPerLevel ? ` (avg: ${timing.averageDaysPerLevel} days)` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${historicalData.levelsAnalyzed > 0 ? `
+                    <div class="projection-footer">
+                        <span
+                            title="Projection is based on your average completion time for the last ${historicalData.levelsAnalyzed} levels. Confidence varies based on consistency of your pace."
+                            style="cursor: help; border-bottom: 1px dotted var(--text-secondary);"
+                        >
+                            üìà Based on ${historicalData.levelsAnalyzed} recent levels
+                        </span>
+                        ${historicalData.fastestLevel && historicalData.slowestLevel ? `
+                            <span
+                                title="Your fastest and slowest completed levels from recent history"
+                                style="cursor: help; border-bottom: 1px dotted var(--text-secondary);"
+                            >
+                                ‚è±Ô∏è Fastest: ${historicalData.fastestLevel}d ‚Ä¢ Slowest: ${historicalData.slowestLevel}d
+                            </span>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    /**
+     * Render workload analysis
+     */
+    renderWorkloadAnalysis(workload, lessonPace) {
+        // Get workload level styling
+        const workloadClasses = {
+            light: 'workload-light',
+            moderate: 'workload-moderate',
+            heavy: 'workload-heavy'
+        }[workload.workloadLevel] || '';
+
+        const workloadColors = {
+            light: 'var(--color-success)',
+            moderate: 'var(--color-warning)',
+            heavy: 'var(--color-error)'
+        }[workload.workloadLevel] || 'var(--color-info)';
+
+        return `
+            <div class="card workload-card">
+                <h2 class="card-title">‚öñÔ∏è Workload Analysis</h2>
+
+                <div class="workload-main">
+                    <div class="workload-level-indicator ${workloadClasses}">
+                        <div class="workload-level-icon">${this.getWorkloadIcon(workload.workloadLevel)}</div>
+                        <div class="workload-level-text">${this.capitalize(workload.workloadLevel)}</div>
+                    </div>
+                </div>
+
+                <div class="workload-breakdown">
+                    <div class="workload-item">
+                        <span class="workload-item-label">Apprentice Items</span>
+                        <span class="workload-item-value">${workload.apprenticeItems}</span>
+                    </div>
+                    <div class="workload-item">
+                        <span class="workload-item-label">Reviews Now</span>
+                        <span class="workload-item-value">${workload.reviewsAvailable}</span>
+                    </div>
+                    <div class="workload-item">
+                        <span class="workload-item-label">Next 24h</span>
+                        <span class="workload-item-value">${workload.reviewsNext24Hours}</span>
+                    </div>
+                </div>
+
+                <div class="workload-recommendation">
+                    <div class="recommendation-icon">üí°</div>
+                    <div class="recommendation-text">${workload.recommendation}</div>
+                </div>
+
+                <div class="lesson-pace-section">
+                    <div class="lesson-pace-header">
+                        <span class="lesson-pace-label">Sustainable Pace</span>
+                        <span class="lesson-pace-value">${lessonPace.recommendedLessonsPerDay} lessons/day</span>
+                    </div>
+                    <div class="lesson-pace-reasoning">${lessonPace.reasoning}</div>
+                </div>
+
+                <div class="workload-gauge">
+                    <div class="gauge-bar">
+                        <div class="gauge-fill" style="width: ${Math.min(workload.apprenticeItems / 200 * 100, 100)}%; background: ${workloadColors}"></div>
+                    </div>
+                    <div class="gauge-labels">
+                        <span>0</span>
+                        <span>100</span>
+                        <span>200+</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     // Helper methods
+
+    formatDate(date) {
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        return new Date(date).toLocaleDateString('en-US', options);
+    }
 
     formatTimeUntil(date) {
         const now = new Date();
@@ -450,11 +645,11 @@ export class Dashboard {
 
     getWorkloadIcon(level) {
         const icons = {
-            light: 'Ì∏ä',
-            moderate: 'Ì∏ê',
-            heavy: 'Ì∏∞'
+            light: 'üå§Ô∏è',
+            moderate: '‚öñÔ∏è',
+            heavy: '‚ö†Ô∏è'
         };
-        return icons[level] || 'Ì≥ä';
+        return icons[level] || 'üìä';
     }
 
     getAccuracyClass(accuracy) {

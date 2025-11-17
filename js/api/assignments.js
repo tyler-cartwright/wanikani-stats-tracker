@@ -14,14 +14,21 @@ export async function fetchAssignments(options = {}, onProgress = null) {
     try {
         // Check for incremental update
         const lastSync = await db.metadata('assignments_last_sync');
-        
-        // If we have cached data and no force refresh, try incremental update
-        if (lastSync && !options.forceRefresh) {
-            console.log('[Assignments API] Fetching updates since', lastSync);
+        const cachedCount = await db.count('assignments');
+
+        // Only use incremental update if we have data AND not forcing refresh
+        if (lastSync && cachedCount > 0 && !options.forceRefresh) {
+            console.log(`[Assignments API] Have ${cachedCount} cached, fetching updates since`, lastSync);
             options.params = {
                 ...options.params,
                 updated_after: lastSync
             };
+        } else {
+            if (options.forceRefresh) {
+                console.log('[Assignments API] Force refresh - fetching all assignments');
+            } else {
+                console.log('[Assignments API] First fetch - getting all assignments');
+            }
         }
 
         // Fetch from API

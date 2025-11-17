@@ -16,9 +16,13 @@
     
     /* Semantic Colors */
     --color-success: #00aa41;
+    --color-success-light: #4caf50;
     --color-warning: #ff9800;
+    --color-warning-light: #ffc107;
     --color-error: #f44336;
+    --color-error-light: #ef5350;
     --color-info: #2196f3;
+    --color-info-light: #64b5f6;
     
     /* Backgrounds */
     --bg-primary: #ffffff;

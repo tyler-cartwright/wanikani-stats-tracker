@@ -40,11 +40,35 @@ export class Navigation {
                     </div>
                     
                     <div class="nav-actions">
-                        <button class="nav-link" onclick="window.refreshData()" title="Refresh Data">
-                            Refresh WaniKani Data
+                        <div class="nav-dropdown">
+                            <button class="nav-link" onclick="window.toggleExportMenu()" title="Export Data">
+                                <span class="nav-icon">📥</span>
+                                Export
+                            </button>
+                            <div id="export-dropdown" class="dropdown-menu hidden">
+                                <button class="dropdown-item" onclick="window.exportData('assignments')">
+                                    📋 Assignments (CSV)
+                                </button>
+                                <button class="dropdown-item" onclick="window.exportData('review-stats')">
+                                    📊 Review Stats (CSV)
+                                </button>
+                                <button class="dropdown-item" onclick="window.exportData('leeches')">
+                                    🐛 Leeches (CSV)
+                                </button>
+                                <button class="dropdown-item" onclick="window.exportData('level-progressions')">
+                                    📈 Level Progress (CSV)
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item" onclick="window.exportData('all-json')">
+                                    💾 Full Backup (JSON)
+                                </button>
+                            </div>
+                        </div>
+                        <button class="nav-link" onclick="window.refreshData()" title="Hard Reload: Clear cache and re-fetch all data">
+                            🔄 Hard Reload
                         </button>
                         <button class="nav-link" onclick="window.logout()" title="Logout">
-                            Logout from WK Stats
+                            🚪 Logout
                         </button>
                     </div>
                 </div>

@@ -4,12 +4,12 @@ Advanced statistics and analytics PWA for WaniKani with offline support, leech d
 
 ## Features
 
-- í³Š Comprehensive statistics dashboard
-- í´ Advanced leech detection with confusion pair analysis
-- í³ˆ Predictive analytics and completion forecasting
-- í³± Mobile-first PWA with offline support
-- í¾¯ Goal setting and achievement tracking
-- í¼™ Dark mode support
+- ğŸ“Š Comprehensive statistics dashboard
+- ğŸ” Advanced leech detection with confusion pair analysis
+- ğŸ“ˆ Predictive analytics and completion forecasting
+- ğŸ“± Mobile-first PWA with offline support
+- ğŸ¯ Goal setting and achievement tracking
+- ğŸŒ™ Dark mode support
 
 ## Setup
 

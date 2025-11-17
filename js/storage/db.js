@@ -236,6 +236,43 @@ class Database {
     }
 
     /**
+     * Clear all data from all stores (hard reset)
+     * @returns {Promise<void>}
+     */
+    async clearAll() {
+        const db = await this.init();
+        const storeNames = Array.from(db.objectStoreNames);
+
+        console.log('[DB] Clearing all stores:', storeNames);
+
+        return new Promise((resolve, reject) => {
+            // Use a single transaction to clear all stores
+            const transaction = db.transaction(storeNames, 'readwrite');
+
+            transaction.oncomplete = () => {
+                console.log('[DB] All stores cleared successfully');
+                resolve();
+            };
+
+            transaction.onerror = () => {
+                console.error('[DB] Failed to clear stores:', transaction.error);
+                reject(transaction.error);
+            };
+
+            // Clear each store within the transaction
+            for (const storeName of storeNames) {
+                try {
+                    const store = transaction.objectStore(storeName);
+                    store.clear();
+                    console.log(`[DB] Clearing ${storeName} store...`);
+                } catch (error) {
+                    console.error(`[DB] Error clearing ${storeName}:`, error);
+                }
+            }
+        });
+    }
+
+    /**
      * Count records in a store
      * @param {string} storeName - Name of the object store
      * @returns {Promise<number>}

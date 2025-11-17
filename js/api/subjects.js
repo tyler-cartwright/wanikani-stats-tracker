@@ -20,18 +20,25 @@ export async function fetchSubjects(options = {}, onProgress = null) {
         if (cachedCount > 0 && lastSync && !options.forceRefresh) {
             const cacheAge = Date.now() - new Date(lastSync).getTime();
             const oneWeek = 7 * 24 * 60 * 60 * 1000;
-            
+
             if (cacheAge < oneWeek) {
-                console.log('[Subjects API] Using cached subjects (recent)');
+                const ageDays = Math.floor(cacheAge / (24 * 60 * 60 * 1000));
+                console.log(`[Subjects API] Using cached subjects (${cachedCount} items, ${ageDays} days old)`);
                 return await db.getAll('subjects');
             }
-            
+
             // Try incremental update
-            console.log('[Subjects API] Fetching updates since', lastSync);
+            console.log(`[Subjects API] Have ${cachedCount} cached, fetching updates since`, lastSync);
             options.params = {
                 ...options.params,
                 updated_after: lastSync
             };
+        } else {
+            if (options.forceRefresh) {
+                console.log('[Subjects API] Force refresh - fetching all subjects');
+            } else if (cachedCount === 0) {
+                console.log('[Subjects API] First fetch - getting all subjects');
+            }
         }
 
         // Fetch from API

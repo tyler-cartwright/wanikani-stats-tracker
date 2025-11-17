@@ -12,6 +12,13 @@ import AssignmentsTable from './components/assignments-table.js';
 import LevelTimeline from './components/level-timeline.js';
 import ItemDetail from './components/item-detail.js';
 import AccuracyDeepDive from './components/accuracy-deep-dive.js';
+import {
+    exportAssignmentsCSV,
+    exportReviewStatsCSV,
+    exportLeechesCSV,
+    exportAllDataJSON,
+    exportLevelProgressionsCSV
+} from './utils/data-exporter.js';
 
 console.log('[App] Imports successful!');
 console.log('WaniKani Stats Tracker - Initializing...');
@@ -251,7 +258,7 @@ function renderProgressView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">Ì≥à Progress Tracking</h1>
+            <h1 class="dashboard-title">üìä Progress Tracking</h1>
             
             <div class="card">
                 <h2 class="card-title">Level Timeline</h2>
@@ -284,7 +291,7 @@ function renderAccuracyView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">ÌæØ Accuracy Analysis</h1>
+            <h1 class="dashboard-title">üéØ Accuracy Analysis</h1>
             ${accuracyDeepDive.render()}
         </div>
     `;
@@ -323,10 +330,28 @@ window.closeItemDetail = function() {
 // Table filter and sort handlers
 window.updateTableFilter = function(filterType, value) {
     if (!assignmentsTable) return;
+
+    // Remember the focused element and cursor position before re-render
+    const activeElement = document.activeElement;
+    const activeId = activeElement?.id;
+    const cursorPosition = activeElement?.selectionStart;
+
     assignmentsTable.filters[filterType] = value;
     const container = document.getElementById('assignments-table-container');
     if (container) {
         container.innerHTML = assignmentsTable.render();
+
+        // Restore focus and cursor position after re-render
+        if (activeId) {
+            const elementToFocus = document.getElementById(activeId);
+            if (elementToFocus) {
+                elementToFocus.focus();
+                // Restore cursor position for text inputs
+                if (elementToFocus.setSelectionRange && cursorPosition !== undefined) {
+                    elementToFocus.setSelectionRange(cursorPosition, cursorPosition);
+                }
+            }
+        }
     }
 };
 
@@ -356,19 +381,35 @@ window.resetTableFilters = function() {
 
 window.sortTable = function(column) {
     if (!assignmentsTable) return;
-    
+
+    // Remember the focused element before re-render
+    const activeElement = document.activeElement;
+    const activeId = activeElement?.id;
+    const cursorPosition = activeElement?.selectionStart;
+
     if (assignmentsTable.currentSort.column === column) {
         // Toggle direction
-        assignmentsTable.currentSort.direction = 
+        assignmentsTable.currentSort.direction =
             assignmentsTable.currentSort.direction === 'asc' ? 'desc' : 'asc';
     } else {
         assignmentsTable.currentSort.column = column;
         assignmentsTable.currentSort.direction = 'asc';
     }
-    
+
     const container = document.getElementById('assignments-table-container');
     if (container) {
         container.innerHTML = assignmentsTable.render();
+
+        // Restore focus after re-render (in case user had search input focused)
+        if (activeId) {
+            const elementToFocus = document.getElementById(activeId);
+            if (elementToFocus) {
+                elementToFocus.focus();
+                if (elementToFocus.setSelectionRange && cursorPosition !== undefined) {
+                    elementToFocus.setSelectionRange(cursorPosition, cursorPosition);
+                }
+            }
+        }
     }
 };
 
@@ -380,11 +421,11 @@ function renderLeechesView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">Ì¥• Leech Management</h1>
+            <h1 class="dashboard-title">üêõ Leech Management</h1>
             
             ${rootCauses.length > 0 ? `
                 <div class="card">
-                    <h2 class="card-title">ÌæØ Root Cause Components</h2>
+                    <h2 class="card-title">üîç Root Cause Components</h2>
                     <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
                         These components are causing problems in multiple items. Study these first!
                     </p>
@@ -404,7 +445,7 @@ function renderLeechesView() {
             ` : ''}
             
             <div class="card">
-                <h2 class="card-title">Ì≥ã Priority Study List (Top 20)</h2>
+                <h2 class="card-title">üìå Priority Study List (Top 20)</h2>
                 <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
                     ${topLeeches.map(leech => {
                         const char = leech.subject?.data?.characters || 'N/A';
@@ -491,7 +532,7 @@ function renderLeechesView() {
 function renderReviewsView() {
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">Ì≥ö Review History</h1>
+            <h1 class="dashboard-title">üìñ Review History</h1>
             <div class="card">
                 <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
                     Review history visualization coming in Phase 7!<br>
@@ -507,25 +548,44 @@ function renderReviewsView() {
 // Refresh data
 window.refreshData = async function() {
     if (!appData) return;
-    
-    const confirmed = confirm('Refresh data from WaniKani? This may take a moment.');
+
+    const confirmed = confirm('‚ö†Ô∏è Hard Reload: This will clear all cached data and re-fetch everything from WaniKani. This may take a few minutes. Continue?');
     if (!confirmed) return;
-    
+
     // Show loading
     if (loadingScreen) {
         loadingScreen.classList.remove('hidden');
-        loadingMessage.textContent = 'Refreshing data...';
     }
-    
+    if (loadingMessage) {
+        loadingMessage.textContent = 'Clearing cached data...';
+    }
+
     try {
-        const result = await quickRefresh();
-        
+        // Step 1: Clear all cached data from IndexedDB
+        console.log('[App] Clearing all cached data...');
+        await db.clearAll();
+        console.log('[App] All cached data cleared successfully');
+
+        // Step 2: Fetch all data from scratch
+        if (loadingMessage) {
+            loadingMessage.textContent = 'Fetching fresh data from WaniKani...';
+        }
+
+        const result = await initialDataLoad((step, totalSteps, message) => {
+            if (loadingMessage) {
+                loadingMessage.textContent = `${message} (${step}/${totalSteps})`;
+            }
+        });
+
         if (result.success) {
-            // Update app data
+            // Update app data with fresh data
+            appData.user = result.user;
             appData.summary = result.summary;
             appData.assignments = result.assignments;
             appData.reviewStats = result.reviewStats;
-            
+            appData.subjects = result.subjects;
+            appData.levelProgressions = result.levelProgressions;
+
             // Merge accuracy data
             appData.assignments = appData.assignments.map(assignment => {
                 const stats = appData.reviewStats.find(s => s.data.subject_id === assignment.data.subject_id);
@@ -534,25 +594,28 @@ window.refreshData = async function() {
                     accuracy: stats?.data?.percentage_correct
                 };
             });
-            
+
             // Re-analyze leeches
+            if (loadingMessage) {
+                loadingMessage.textContent = 'Analyzing leeches...';
+            }
             const leechAnalysis = await getCompleteLeechAnalysis(
                 result.reviewStats,
-                appData.subjects,
+                result.subjects,
                 result.assignments
             );
             appData.leechAnalysis = leechAnalysis;
-            
+
             // Re-render current view
             navigateTo(currentView);
-            
-            alert('Data refreshed successfully!');
+
+            alert('‚úÖ Data reloaded successfully from scratch!');
         } else {
-            alert('Failed to refresh data: ' + result.error);
+            alert('‚ùå Failed to reload data: ' + result.error);
         }
     } catch (error) {
-        console.error('[App] Refresh failed:', error);
-        alert('Failed to refresh data. Please try again.');
+        console.error('[App] Hard reload failed:', error);
+        alert('‚ùå Failed to reload data. Please try logging out and back in.');
     } finally {
         if (loadingScreen) {
             loadingScreen.classList.add('hidden');
@@ -568,6 +631,57 @@ window.logout = function() {
         window.location.reload();
     }
 };
+
+// Export functions
+window.exportData = function(type) {
+    if (!appData) {
+        alert('No data available to export');
+        return;
+    }
+
+    try {
+        switch(type) {
+            case 'assignments':
+                exportAssignmentsCSV(appData.assignments, appData.subjects);
+                break;
+            case 'review-stats':
+                exportReviewStatsCSV(appData.reviewStats, appData.subjects);
+                break;
+            case 'leeches':
+                exportLeechesCSV(appData.leechAnalysis, appData.subjects);
+                break;
+            case 'level-progressions':
+                exportLevelProgressionsCSV(appData.levelProgressions);
+                break;
+            case 'all-json':
+                exportAllDataJSON(appData);
+                break;
+            default:
+                alert('Unknown export type');
+        }
+    } catch (error) {
+        console.error('[App] Export failed:', error);
+        alert('Export failed: ' + error.message);
+    }
+};
+
+// Toggle export menu
+window.toggleExportMenu = function() {
+    const menu = document.getElementById('export-dropdown');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    }
+};
+
+// Close export menu when clicking outside
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('export-dropdown');
+    const button = event.target.closest('[onclick*="toggleExportMenu"]');
+
+    if (menu && !menu.contains(event.target) && !button) {
+        menu.classList.add('hidden');
+    }
+});
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
