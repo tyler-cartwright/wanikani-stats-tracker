@@ -181,8 +181,8 @@ export class Dashboard {
                     
                     <div class="progress-section">
                         <div class="progress-header">
-                            <span class="progress-label">Kanji (${levelProgress.kanji.neededToPass} to pass)</span>
-                            <span class="progress-count">${levelProgress.kanji.atGuru}/${levelProgress.kanji.neededToPass}</span>
+                            <span class="progress-label">Kanji (${levelProgress.kanji.neededToPass} needed)</span>
+                            <span class="progress-count">${levelProgress.kanji.atGuru}/${levelProgress.kanji.total}</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill progress-fill-kanji" style="width: ${kanjiPercent}%"></div>
