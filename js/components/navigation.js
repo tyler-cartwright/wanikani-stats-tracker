@@ -8,8 +8,7 @@ export class Navigation {
             dashboard: 'Dashboard',
             leeches: 'Leeches',
             progress: 'Progress',
-            accuracy: 'Accuracy',
-            reviews: 'Reviews'
+            accuracy: 'Accuracy'
         };
     }
 
@@ -93,8 +92,7 @@ export class Navigation {
             dashboard: '',
             leeches: '',
             progress: '',
-            accuracy: '',
-            reviews: ''
+            accuracy: ''
         };
         return `<span class="nav-icon">${icons[view] || ''}</span>`;
     }

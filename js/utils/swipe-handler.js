@@ -12,7 +12,7 @@ export class SwipeHandler {
         this.startTime = 0;
         this.elapsedTime = 0;
 
-        this.views = ['dashboard', 'leeches', 'progress', 'accuracy', 'reviews'];
+        this.views = ['dashboard', 'leeches', 'progress', 'accuracy'];
         this.init();
     }
 
