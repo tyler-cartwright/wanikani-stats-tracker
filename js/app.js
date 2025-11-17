@@ -521,16 +521,16 @@ window.refreshData = async function() {
     // Show loading
     if (loadingScreen) {
         loadingScreen.classList.remove('hidden');
+    }
+    if (loadingMessage) {
         loadingMessage.textContent = 'Clearing cached data...';
-        if (loadingProgress) {
-            loadingProgress.classList.remove('hidden');
-        }
     }
 
     try {
         // Step 1: Clear all cached data from IndexedDB
         console.log('[App] Clearing all cached data...');
         await db.clearAll();
+        console.log('[App] All cached data cleared successfully');
 
         // Step 2: Fetch all data from scratch
         if (loadingMessage) {
@@ -585,9 +585,6 @@ window.refreshData = async function() {
     } finally {
         if (loadingScreen) {
             loadingScreen.classList.add('hidden');
-        }
-        if (loadingProgress) {
-            loadingProgress.classList.add('hidden');
         }
     }
 };

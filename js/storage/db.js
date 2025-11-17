@@ -245,12 +245,31 @@ class Database {
 
         console.log('[DB] Clearing all stores:', storeNames);
 
-        // Clear all stores
-        for (const storeName of storeNames) {
-            await this.clear(storeName);
-        }
+        return new Promise((resolve, reject) => {
+            // Use a single transaction to clear all stores
+            const transaction = db.transaction(storeNames, 'readwrite');
 
-        console.log('[DB] All stores cleared successfully');
+            transaction.oncomplete = () => {
+                console.log('[DB] All stores cleared successfully');
+                resolve();
+            };
+
+            transaction.onerror = () => {
+                console.error('[DB] Failed to clear stores:', transaction.error);
+                reject(transaction.error);
+            };
+
+            // Clear each store within the transaction
+            for (const storeName of storeNames) {
+                try {
+                    const store = transaction.objectStore(storeName);
+                    store.clear();
+                    console.log(`[DB] Clearing ${storeName} store...`);
+                } catch (error) {
+                    console.error(`[DB] Error clearing ${storeName}:`, error);
+                }
+            }
+        });
     }
 
     /**
