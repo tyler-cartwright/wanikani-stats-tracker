@@ -49,7 +49,7 @@ export class Dashboard {
                 ${this.renderLevelProgress(levelProgress)}
 
                 <!-- Level Projection & Workload Grid -->
-                <div class="dashboard-grid">
+                <div class="dashboard-grid-2col">
                     <div class="dashboard-col-2">
                         ${this.renderLevelProjection(levelProjection)}
                     </div>
@@ -58,7 +58,8 @@ export class Dashboard {
                     </div>
                 </div>
 
-                <div class="dashboard-grid">
+                <!-- SRS, Accuracy & Burned Items Grid -->
+                <div class="dashboard-grid-2col">
                     <div class="dashboard-col-2">
                         ${this.renderSRSDistribution(srsDistribution)}
                     </div>
@@ -68,6 +69,7 @@ export class Dashboard {
                     </div>
                 </div>
 
+                <!-- Review Forecast & Leech Summary -->
                 ${this.renderReviewForecast(forecast)}
                 ${this.renderLeechSummary(leechAnalysis)}
             </div>

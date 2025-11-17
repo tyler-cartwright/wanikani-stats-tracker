@@ -443,8 +443,16 @@ a:hover {
     color: var(--text-inverse);
 }
 
-/* Dashboard Grid */
+/* Dashboard Grid - Responsive and Dynamic */
 .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Two-column grid for specific layouts */
+.dashboard-grid-2col {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: var(--spacing-lg);
@@ -455,6 +463,17 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-lg);
+}
+
+.dashboard-col-2 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+/* Full width cards */
+.dashboard-full-width {
+    grid-column: 1 / -1;
 }
 
 /* Level Progress */
@@ -798,7 +817,7 @@ a:hover {
     display: flex;
     gap: 4px;
     align-items: flex-end;
-    height: 200px;
+    height: 220px;
     margin-bottom: var(--spacing-md);
     padding: var(--spacing-md) 0;
 }
@@ -810,6 +829,8 @@ a:hover {
     align-items: center;
     justify-content: flex-end;
     min-width: 0;
+    height: 180px;
+    position: relative;
 }
 
 .forecast-bar-fill {
@@ -818,6 +839,10 @@ a:hover {
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     transition: all var(--transition-fast);
     min-height: 4px;
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    right: 0;
 }
 
 .forecast-high {
@@ -908,7 +933,7 @@ a:hover {
         height: auto;
         padding: var(--spacing-md);
     }
-    
+
     .nav-links {
         order: 3;
         width: 100%;
@@ -916,35 +941,44 @@ a:hover {
         padding-top: var(--spacing-md);
         border-top: 1px solid var(--bg-tertiary);
     }
-    
+
     .nav-link span:not(.nav-icon) {
         display: none;
     }
-    
-    .dashboard-grid {
+
+    .dashboard-grid,
+    .dashboard-grid-2col {
         grid-template-columns: 1fr;
     }
-    
+
     .quick-stats {
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     }
-    
+
     .dashboard-header {
         flex-direction: column;
         text-align: center;
         gap: var(--spacing-md);
     }
-    
+
     .srs-chart {
         height: 180px;
     }
-    
+
+    .srs-bar {
+        height: 150px;
+    }
+
     .srs-bar-name {
         font-size: 0.625rem;
     }
-    
+
     .forecast-chart {
-        height: 150px;
+        height: 180px;
+    }
+
+    .forecast-bar {
+        height: 130px;
     }
 }
 
