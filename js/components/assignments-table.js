@@ -46,32 +46,33 @@ export class AssignmentsTable {
             <div class="table-filters">
                 <div class="filter-group">
                     <label>Type</label>
-                    <select id="filter-type" onchange="window.updateTableFilter('type', this.value)">
-                        <option value="all">All Types</option>
-                        <option value="radical">Radicals</option>
-                        <option value="kanji">Kanji</option>
-                        <option value="vocabulary">Vocabulary</option>
+                    <select id="filter-type" onchange="window.updateTableFilter('type', this.value)" value="${this.filters.type}">
+                        <option value="all" ${this.filters.type === 'all' ? 'selected' : ''}>All Types</option>
+                        <option value="radical" ${this.filters.type === 'radical' ? 'selected' : ''}>Radicals</option>
+                        <option value="kanji" ${this.filters.type === 'kanji' ? 'selected' : ''}>Kanji</option>
+                        <option value="vocabulary" ${this.filters.type === 'vocabulary' ? 'selected' : ''}>Vocabulary</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
                     <label>SRS Stage</label>
                     <select id="filter-srs" onchange="window.updateTableFilter('srsStage', this.value)">
-                        <option value="all">All Stages</option>
-                        <option value="apprentice">Apprentice</option>
-                        <option value="guru">Guru</option>
-                        <option value="master">Master</option>
-                        <option value="enlightened">Enlightened</option>
-                        <option value="burned">Burned</option>
+                        <option value="all" ${this.filters.srsStage === 'all' ? 'selected' : ''}>All Stages</option>
+                        <option value="apprentice" ${this.filters.srsStage === 'apprentice' ? 'selected' : ''}>Apprentice</option>
+                        <option value="guru" ${this.filters.srsStage === 'guru' ? 'selected' : ''}>Guru</option>
+                        <option value="master" ${this.filters.srsStage === 'master' ? 'selected' : ''}>Master</option>
+                        <option value="enlightened" ${this.filters.srsStage === 'enlightened' ? 'selected' : ''}>Enlightened</option>
+                        <option value="burned" ${this.filters.srsStage === 'burned' ? 'selected' : ''}>Burned</option>
                     </select>
                 </div>
 
                 <div class="filter-group filter-search">
                     <label>Search</label>
-                    <input 
-                        type="text" 
-                        id="filter-search" 
+                    <input
+                        type="text"
+                        id="filter-search"
                         placeholder="Search by character or meaning..."
+                        value="${this.filters.search}"
                         oninput="window.updateTableFilter('search', this.value)"
                     />
                 </div>
@@ -141,6 +142,7 @@ export class AssignmentsTable {
         const subject = this.subjects.find(s => s.id === item.data.subject_id);
         const character = subject?.data?.characters || 'N/A';
         const meanings = subject?.data?.meanings?.map(m => m.meaning).join(', ') || 'N/A';
+        const level = subject?.data?.level || 'N/A';
         const srsStage = this.getSRSStageName(item.data.srs_stage);
         const accuracy = item.accuracy !== undefined ? `${item.accuracy.toFixed(0)}%` : 'N/A';
 
@@ -151,7 +153,7 @@ export class AssignmentsTable {
                 <td class="cell-type">
                     <span class="type-badge type-${item.data.subject_type}">${this.capitalize(item.data.subject_type)}</span>
                 </td>
-                <td class="cell-level">${item.data.level}</td>
+                <td class="cell-level">${level}</td>
                 <td class="cell-srs">
                     <span class="srs-badge srs-${this.getSRSCategory(item.data.srs_stage)}">${srsStage}</span>
                 </td>
@@ -227,8 +229,11 @@ export class AssignmentsTable {
                     bVal = b.data.subject_type;
                     break;
                 case 'level':
-                    aVal = a.data.level;
-                    bVal = b.data.level;
+                    // Fix: Look up level from subjects, not from assignment
+                    const aLevelSubject = this.subjects.find(s => s.id === a.data.subject_id);
+                    const bLevelSubject = this.subjects.find(s => s.id === b.data.subject_id);
+                    aVal = aLevelSubject?.data?.level || 0;
+                    bVal = bLevelSubject?.data?.level || 0;
                     break;
                 case 'srs':
                     aVal = a.data.srs_stage;
