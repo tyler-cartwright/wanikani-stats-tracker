@@ -1053,7 +1053,13 @@ a:hover {
     border: 2px solid var(--bg-tertiary);
     border-radius: var(--radius-md);
     background: var(--bg-primary);
+    color: var(--text-primary);
     font-size: var(--font-size-sm);
+}
+
+.filter-group select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .table-stats {
@@ -1579,6 +1585,7 @@ a:hover {
     padding: var(--spacing-xs) var(--spacing-md);
     background: var(--bg-secondary);
     border-radius: var(--radius-full);
+    color: var(--text-primary);
     font-size: var(--font-size-sm);
 }
 
@@ -1620,6 +1627,7 @@ a:hover {
 .reading-value {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
 }
 
 .mnemonic-section {
@@ -1651,6 +1659,7 @@ a:hover {
     background: var(--bg-secondary);
     border: 2px solid var(--bg-tertiary);
     border-radius: var(--radius-md);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all var(--transition-fast);
     font-size: var(--font-size-sm);
