@@ -27,10 +27,12 @@ export class Navigation {
                     
                     <div class="nav-links">
                         ${Object.entries(this.views).map(([key, label]) => `
-                            <button 
+                            <button
                                 class="nav-link ${key === this.currentView ? 'active' : ''}"
                                 data-view="${key}"
                                 onclick="window.navigateTo('${key}')"
+                                aria-label="${label}"
+                                title="${label}"
                             >
                                 ${this.getViewIcon(key)}
                                 <span>${label}</span>
@@ -47,9 +49,9 @@ export class Navigation {
                             <span class="theme-icon">${document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'}</span>
                         </button>
                         <div class="nav-dropdown">
-                            <button class="nav-link" onclick="window.toggleExportMenu()" title="Export Data">
+                            <button class="nav-link" onclick="window.toggleExportMenu()" title="Export Data" aria-label="Export Data">
                                 <span class="nav-icon">📥</span>
-                                Export
+                                <span>Export</span>
                             </button>
                             <div id="export-dropdown" class="dropdown-menu hidden">
                                 <button class="dropdown-item" onclick="window.exportData('assignments')">
@@ -70,11 +72,13 @@ export class Navigation {
                                 </button>
                             </div>
                         </div>
-                        <button class="nav-link" onclick="window.refreshData()" title="Hard Reload: Clear cache and re-fetch all data">
-                            🔄 Hard Reload
+                        <button class="nav-link" onclick="window.refreshData()" title="Hard Reload: Clear cache and re-fetch all data" aria-label="Hard Reload">
+                            <span class="nav-icon">🔄</span>
+                            <span>Hard Reload</span>
                         </button>
-                        <button class="nav-link" onclick="window.logout()" title="Logout">
-                            🚪 Logout
+                        <button class="nav-link" onclick="window.logout()" title="Logout" aria-label="Logout">
+                            <span class="nav-icon">🚪</span>
+                            <span>Logout</span>
                         </button>
                     </div>
                 </div>
@@ -89,10 +93,10 @@ export class Navigation {
      */
     getViewIcon(view) {
         const icons = {
-            dashboard: '',
-            leeches: '',
-            progress: '',
-            accuracy: ''
+            dashboard: '📊',
+            leeches: '🐛',
+            progress: '📈',
+            accuracy: '🎯'
         };
         return `<span class="nav-icon">${icons[view] || ''}</span>`;
     }

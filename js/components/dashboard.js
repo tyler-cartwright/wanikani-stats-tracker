@@ -50,26 +50,20 @@ export class Dashboard {
                 ${this.renderQuickStats(currentReviews, summary, workload, leechAnalysis)}
                 ${this.renderLevelProgress(levelProgress)}
 
-                <!-- Level Projection & Workload Grid -->
+                <!-- Level Projection & Guru Candidates Grid -->
                 <div class="dashboard-grid-2col">
-                    <div class="dashboard-col-2">
-                        ${this.renderLevelProjection(levelProjection)}
-                    </div>
-                    <div class="dashboard-col-1">
-                        ${this.renderWorkloadAnalysis(workload, lessonPace)}
-                        ${this.renderGuruCandidates(guruCandidates)}
-                    </div>
+                    ${this.renderLevelProjection(levelProjection)}
+                    ${this.renderGuruCandidates(guruCandidates)}
                 </div>
+
+                <!-- Workload Analysis -->
+                ${this.renderWorkloadAnalysis(workload, lessonPace)}
 
                 <!-- SRS, Accuracy & Burned Items Grid -->
                 <div class="dashboard-grid-2col">
-                    <div class="dashboard-col-2">
-                        ${this.renderSRSDistribution(srsDistribution)}
-                    </div>
-                    <div class="dashboard-col-1">
-                        ${this.renderAccuracySummary(accuracyStats)}
-                        ${this.renderBurnedItems(burnedStats)}
-                    </div>
+                    ${this.renderSRSDistribution(srsDistribution)}
+                    ${this.renderAccuracySummary(accuracyStats)}
+                    ${this.renderBurnedItems(burnedStats)}
                 </div>
 
                 <!-- Review Forecast & Leech Summary -->

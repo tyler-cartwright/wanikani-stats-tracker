@@ -274,6 +274,8 @@ a:hover {
 /* Navigation Dropdown */
 .nav-dropdown {
     position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
 }
 
 .dropdown-menu {
@@ -286,8 +288,37 @@ a:hover {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
     min-width: 220px;
+    max-width: calc(100vw - 2 * var(--spacing-md));
     z-index: var(--z-index-dropdown);
     overflow: hidden;
+}
+
+/* Ensure dropdown stays within viewport on small screens */
+@media (max-width: 767px) {
+    .dropdown-menu {
+        position: fixed;
+        right: var(--spacing-sm);
+        left: var(--spacing-sm);
+        min-width: auto;
+        width: auto;
+    }
+}
+
+/* Tablet dropdown positioning */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .dropdown-menu {
+        right: 0;
+        left: auto;
+        min-width: 220px;
+    }
+}
+
+/* Desktop dropdown positioning */
+@media (min-width: 1024px) {
+    .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
 }
 
 .dropdown-menu.hidden {
@@ -486,21 +517,31 @@ a:hover {
 /* Two-column grid for specific layouts */
 .dashboard-grid-2col {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
 }
 
-.dashboard-col-1 {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
+/* On larger screens, use a more balanced layout */
+@media (min-width: 1024px) {
+    .dashboard-grid-2col {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
 }
 
-.dashboard-col-2 {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
+/* On very large screens, allow up to 3 columns */
+@media (min-width: 1400px) {
+    .dashboard-grid-2col {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    }
+}
+
+/* Allow larger content cards to span multiple columns on wide screens */
+@media (min-width: 1200px) {
+    .projection-card,
+    .srs-card {
+        grid-column: span 2;
+    }
 }
 
 /* Full width cards */
