@@ -2,6 +2,7 @@
   "name": "WaniKani Statistics Tracker",
   "short_name": "WK Stats",
   "description": "Advanced statistics and analytics for WaniKani with leech detection and predictive insights",
+  "version": "0.1.1",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
