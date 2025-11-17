@@ -6,13 +6,18 @@
  * @param {Array} assignments - All assignments
  * @param {Array} levelProgressions - Level progression history
  * @param {Object} user - User data
+ * @param {Array} subjects - All subjects (needed for level lookup)
  * @returns {Object} Projection statistics
  */
-export function projectLevelCompletion(assignments, levelProgressions, user) {
+export function projectLevelCompletion(assignments, levelProgressions, user, subjects = []) {
     const currentLevel = user.data.level;
-    
-    // Get current level assignments
-    const levelAssignments = assignments.filter(a => a.data.level === currentLevel);
+
+    // Get current level assignments by looking up subject levels
+    const levelAssignments = assignments.filter(assignment => {
+        const subject = subjects.find(s => s.id === assignment.data.subject_id);
+        return subject && subject.data.level === currentLevel;
+    });
+
     const kanji = levelAssignments.filter(a => a.data.subject_type === 'kanji');
     const kanjiAtGuru = kanji.filter(a => a.data.srs_stage >= 5).length;
     const kanjiNeeded = Math.ceil(kanji.length * 0.9);

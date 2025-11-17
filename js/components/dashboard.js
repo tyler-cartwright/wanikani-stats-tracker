@@ -29,7 +29,7 @@ export class Dashboard {
         const currentReviews = getCurrentReviewCount(summary);
         const forecast = generate24HourForecast(summary);
         const workload = calculateWorkload(assignments, summary);
-        const levelProjection = projectLevelCompletion(assignments, levelProgressions || [], user);
+        const levelProjection = projectLevelCompletion(assignments, levelProgressions || [], user, subjects);
         const lessonPace = calculateSustainableLessonPace(assignments, reviewStats);
 
         console.log('Dashboard Data:', {
@@ -151,11 +151,10 @@ export class Dashboard {
      */
     renderLevelProgress(levelProgress) {
         console.log('Level Progress Data:', levelProgress);
-        
-        const kanjiPercent = levelProgress.kanji.neededToPass > 0
-            ? (levelProgress.kanji.atGuru / levelProgress.kanji.neededToPass * 100)
-            : 0;
+
+        // All percentages based on total items (not level-up requirement)
         const radicalsPercent = levelProgress.radicals.percentage;
+        const kanjiPercent = levelProgress.kanji.percentage;
         const vocabPercent = levelProgress.vocabulary.percentage;
 
         return `
