@@ -601,20 +601,29 @@ window.refreshData = async function() {
             );
             appData.leechAnalysis = leechAnalysis;
 
+            // Hide loading screen before showing alert
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+
             // Re-render current view
             navigateTo(currentView);
 
             await showAlert('Success', 'Data reloaded successfully from scratch!', { icon: '✅' });
         } else {
+            // Hide loading screen before showing alert
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
             await showAlert('Error', `Failed to reload data: ${result.error}`, { icon: '❌' });
         }
     } catch (error) {
         console.error('[App] Hard reload failed:', error);
-        await showAlert('Error', 'Failed to reload data. Please try logging out and back in.', { icon: '❌' });
-    } finally {
+        // Hide loading screen before showing alert
         if (loadingScreen) {
             loadingScreen.classList.add('hidden');
         }
+        await showAlert('Error', 'Failed to reload data. Please try logging out and back in.', { icon: '❌' });
     }
 };
 
