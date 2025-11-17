@@ -8,9 +8,10 @@ import { SRS_STAGES } from '../utils/constants.js';
  * @param {Array} assignments - All assignments
  * @param {Object} user - User data
  * @param {Array} subjects - All subjects (needed for level lookup)
+ * @param {Array} levelProgressions - Level progressions (for accurate level start time)
  * @returns {Object} Level progress statistics
  */
-export function calculateLevelProgress(assignments, user, subjects) {
+export function calculateLevelProgress(assignments, user, subjects, levelProgressions = []) {
     const currentLevel = user.data.level;
     
     console.log('[LevelProgress] Calculating for level', currentLevel);
@@ -62,10 +63,10 @@ export function calculateLevelProgress(assignments, user, subjects) {
     
     // Check if level is passed
     const isPassed = kanjiAtGuru >= kanjiNeededToPass;
-    
-    // Get level start time
-    const levelStartTime = getLevelStartTime(levelAssignments);
-    const daysSinceLevelStart = levelStartTime 
+
+    // Get level start time from level progressions (use unlocked_at, not assignment started_at)
+    const levelStartTime = getLevelStartTime(currentLevel, levelProgressions, levelAssignments);
+    const daysSinceLevelStart = levelStartTime
         ? calculateDaysSince(levelStartTime)
         : null;
     
@@ -105,26 +106,46 @@ export function calculateLevelProgress(assignments, user, subjects) {
 }
 
 /**
- * Get level start time from assignments
- * @param {Array} levelAssignments - Assignments for a level
+ * Get level start time from level progressions (or fallback to assignments)
+ * @param {number} currentLevel - Current level number
+ * @param {Array} levelProgressions - Level progressions
+ * @param {Array} levelAssignments - Assignments for fallback (if level progressions unavailable)
  * @returns {Date|null}
  */
-function getLevelStartTime(levelAssignments) {
+function getLevelStartTime(currentLevel, levelProgressions, levelAssignments) {
+    // Try to get from level progressions first (use unlocked_at for accurate level duration)
+    if (levelProgressions && levelProgressions.length > 0) {
+        const currentLevelProgressions = levelProgressions.filter(
+            lp => lp.data.level === currentLevel && !lp.data.abandoned_at
+        );
+
+        if (currentLevelProgressions.length > 0) {
+            // Take most recent if multiple exist (shouldn't happen but handle it)
+            const mostRecent = currentLevelProgressions.sort((a, b) =>
+                new Date(b.data.unlocked_at).getTime() - new Date(a.data.unlocked_at).getTime()
+            )[0];
+
+            if (mostRecent.data.unlocked_at) {
+                return new Date(mostRecent.data.unlocked_at);
+            }
+        }
+    }
+
+    // Fallback to earliest assignment started_at (old behavior, less accurate)
     if (levelAssignments.length === 0) {
         return null;
     }
-    
-    // Find earliest started_at time
+
     const startedAssignments = levelAssignments.filter(a => a.data.started_at);
     if (startedAssignments.length === 0) {
         return null;
     }
-    
+
     const earliestStart = startedAssignments.reduce((earliest, assignment) => {
         const startTime = new Date(assignment.data.started_at);
         return startTime < earliest ? startTime : earliest;
     }, new Date(startedAssignments[0].data.started_at));
-    
+
     return earliestStart;
 }
 

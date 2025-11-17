@@ -30,14 +30,28 @@ export function projectLevelCompletion(assignments, levelProgressions, user, sub
     console.log('[LevelProjection] Recent completed levels:', recentLevels);
     console.log('[LevelProjection] Average days per level:', averageDaysPerLevel);
 
-    // Get current level start time
-    const currentLevelProgression = levelProgressions.find(lp => lp.data.level === currentLevel);
-    const currentLevelStart = currentLevelProgression?.data.started_at
-        ? new Date(currentLevelProgression.data.started_at)
+    // Get current level start time - find the NON-ABANDONED progression for current level
+    // If user reset their account, there may be multiple progressions for the same level
+    const currentLevelProgressions = levelProgressions.filter(
+        lp => lp.data.level === currentLevel && !lp.data.abandoned_at
+    );
+
+    // If multiple non-abandoned progressions exist (shouldn't happen but handle it), take the most recent
+    const currentLevelProgression = currentLevelProgressions.length > 0
+        ? currentLevelProgressions.sort((a, b) =>
+            new Date(b.data.unlocked_at).getTime() - new Date(a.data.unlocked_at).getTime()
+          )[0]
         : null;
 
+    // Use unlocked_at (when level became available) instead of started_at (when first lesson was done)
+    // This avoids gaps when user unlocked level but didn't start lessons immediately
+    const currentLevelStart = currentLevelProgression?.data.unlocked_at
+        ? new Date(currentLevelProgression.data.unlocked_at)
+        : null;
+
+    console.log('[LevelProjection] Found', currentLevelProgressions.length, 'non-abandoned progressions for level', currentLevel);
     console.log('[LevelProjection] Current level progression:', currentLevelProgression);
-    console.log('[LevelProjection] Current level start:', currentLevelStart);
+    console.log('[LevelProjection] Current level unlocked at:', currentLevelStart);
     
     let daysSinceLevelStart = null;
     let estimatedDaysRemaining = null;
@@ -112,12 +126,13 @@ export function projectLevelCompletion(assignments, levelProgressions, user, sub
 function getRecentCompletedLevels(levelProgressions, count) {
     const completed = levelProgressions
         // Only include completed (passed) levels that weren't abandoned (from resets)
-        .filter(lp => lp.data.passed_at && lp.data.started_at && !lp.data.abandoned_at)
+        .filter(lp => lp.data.passed_at && lp.data.unlocked_at && !lp.data.abandoned_at)
         .map(lp => ({
             level: lp.data.level,
-            startedAt: new Date(lp.data.started_at),
+            unlockedAt: new Date(lp.data.unlocked_at),
             passedAt: new Date(lp.data.passed_at),
-            duration: calculateDuration(lp.data.started_at, lp.data.passed_at)
+            // Use unlocked_at -> passed_at to include the full level duration (not just when lessons started)
+            duration: calculateDuration(lp.data.unlocked_at, lp.data.passed_at)
         }))
         .sort((a, b) => b.level - a.level) // Sort by level descending
         .slice(0, count);
@@ -177,11 +192,12 @@ function calculateStandardDeviation(values) {
 export function getAllLevelDurations(levelProgressions) {
     return levelProgressions
         // Only include completed (passed) levels that weren't abandoned (from resets)
-        .filter(lp => lp.data.passed_at && lp.data.started_at && !lp.data.abandoned_at)
+        .filter(lp => lp.data.passed_at && lp.data.unlocked_at && !lp.data.abandoned_at)
         .map(lp => ({
             level: lp.data.level,
-            duration: calculateDuration(lp.data.started_at, lp.data.passed_at),
-            startedAt: lp.data.started_at,
+            // Use unlocked_at -> passed_at to include the full level duration (not just when lessons started)
+            duration: calculateDuration(lp.data.unlocked_at, lp.data.passed_at),
+            unlockedAt: lp.data.unlocked_at,
             passedAt: lp.data.passed_at
         }))
         .sort((a, b) => a.level - b.level);

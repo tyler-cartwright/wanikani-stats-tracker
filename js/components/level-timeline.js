@@ -93,7 +93,7 @@ export class LevelTimeline {
      */
     renderTimelineItem(level, avgDuration) {
         const speed = this.getSpeedClass(level.duration, avgDuration);
-        const startDate = new Date(level.startedAt);
+        const startDate = new Date(level.unlockedAt);
         const endDate = new Date(level.passedAt);
 
         return `

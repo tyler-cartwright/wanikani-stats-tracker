@@ -21,9 +21,9 @@ export class Dashboard {
     render() {
         const { user, summary, assignments, reviewStats, subjects, leechAnalysis, levelProgressions } = this.appData;
 
-        // Calculate all statistics - NOW PASSING SUBJECTS TO LEVEL PROGRESS
+        // Calculate all statistics - NOW PASSING SUBJECTS AND LEVEL PROGRESSIONS TO LEVEL PROGRESS
         const srsDistribution = calculateSRSDistribution(assignments);
-        const levelProgress = calculateLevelProgress(assignments, user, subjects);
+        const levelProgress = calculateLevelProgress(assignments, user, subjects, levelProgressions || []);
         const accuracyStats = calculateAccuracyStats(reviewStats);
         const burnedStats = calculateBurnedStats(assignments);
         const currentReviews = getCurrentReviewCount(summary);
