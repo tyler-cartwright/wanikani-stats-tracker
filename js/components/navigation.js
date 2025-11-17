@@ -27,10 +27,12 @@ export class Navigation {
                     
                     <div class="nav-links">
                         ${Object.entries(this.views).map(([key, label]) => `
-                            <button 
+                            <button
                                 class="nav-link ${key === this.currentView ? 'active' : ''}"
                                 data-view="${key}"
                                 onclick="window.navigateTo('${key}')"
+                                aria-label="${label}"
+                                title="${label}"
                             >
                                 ${this.getViewIcon(key)}
                                 <span>${label}</span>
