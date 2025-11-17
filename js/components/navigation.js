@@ -49,9 +49,9 @@ export class Navigation {
                             <span class="theme-icon">${document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'}</span>
                         </button>
                         <div class="nav-dropdown">
-                            <button class="nav-link" onclick="window.toggleExportMenu()" title="Export Data">
+                            <button class="nav-link" onclick="window.toggleExportMenu()" title="Export Data" aria-label="Export Data">
                                 <span class="nav-icon">📥</span>
-                                Export
+                                <span>Export</span>
                             </button>
                             <div id="export-dropdown" class="dropdown-menu hidden">
                                 <button class="dropdown-item" onclick="window.exportData('assignments')">

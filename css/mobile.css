@@ -535,28 +535,26 @@ body {
 @media (min-width: 768px) and (max-width: 1023px) {
     /* Tablet Navigation - iPad mini and similar */
     .nav-container {
-        height: auto;
-        min-height: 64px;
+        height: 64px;
         padding: var(--spacing-sm) var(--spacing-md);
-        flex-wrap: wrap;
-        gap: var(--spacing-sm);
+        flex-wrap: nowrap;
+        gap: var(--spacing-md);
     }
 
     .nav-brand {
         flex-shrink: 0;
-        order: 1;
     }
 
-    /* Page navigation tabs - keep visible and scrollable */
+    /* Page navigation tabs - compact with icon + text */
     .nav-links {
-        order: 2;
-        width: 100%;
+        flex: 1;
         gap: var(--spacing-xs);
         justify-content: flex-start;
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        min-width: 0;
     }
 
     .nav-links::-webkit-scrollbar {
@@ -571,17 +569,17 @@ body {
         min-height: 44px;
     }
 
-    /* Action buttons row */
+    /* Action buttons - icon-only, compact */
     .nav-actions {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: var(--spacing-xs);
         justify-content: flex-end;
-        order: 3;
-        width: 100%;
+        flex-shrink: 0;
     }
 
-    /* Condense nav-actions buttons to icon-only on tablets */
-    .nav-actions .nav-link:not(.nav-dropdown .nav-link) {
+    /* All nav-actions buttons icon-only on tablets (including Export) */
+    .nav-actions .nav-link,
+    .nav-actions .theme-toggle-btn {
         padding: var(--spacing-sm);
         min-width: 44px;
         min-height: 44px;
@@ -600,13 +598,7 @@ body {
     }
 
     .nav-dropdown {
-        flex: 1 1 auto;
         display: flex;
-        justify-content: center;
-    }
-
-    .nav-dropdown .nav-link {
-        width: 100%;
     }
 }
 
