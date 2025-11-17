@@ -8,6 +8,7 @@ import { calculateBurnedStats } from '../calculations/burned-items-tracker.js';
 import { generate24HourForecast, getCurrentReviewCount } from '../calculations/review-forecast.js';
 import { calculateWorkload, calculateSustainableLessonPace } from '../calculations/workload-calculator.js';
 import { projectLevelCompletion } from '../calculations/level-completion-projector.js';
+import { calculateGuruCandidates, formatTimeUntil } from '../calculations/guru-candidates.js';
 
 export class Dashboard {
     constructor(appData) {
@@ -31,6 +32,7 @@ export class Dashboard {
         const workload = calculateWorkload(assignments, summary);
         const levelProjection = projectLevelCompletion(assignments, levelProgressions || [], user, subjects);
         const lessonPace = calculateSustainableLessonPace(assignments, reviewStats);
+        const guruCandidates = calculateGuruCandidates(assignments);
 
         console.log('Dashboard Data:', {
             srsDistribution,
@@ -55,6 +57,7 @@ export class Dashboard {
                     </div>
                     <div class="dashboard-col-1">
                         ${this.renderWorkloadAnalysis(workload, lessonPace)}
+                        ${this.renderGuruCandidates(guruCandidates)}
                     </div>
                 </div>
 
@@ -616,6 +619,71 @@ export class Dashboard {
                         <span>200+</span>
                     </div>
                 </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Render Guru candidates card
+     */
+    renderGuruCandidates(guruCandidates) {
+        const { total, availableNow, availableLater, nextBatch } = guruCandidates;
+
+        // Determine card styling based on number of candidates
+        const hasMany = total >= 20;
+        const hasSome = total >= 10;
+        const statusColor = hasMany ? 'var(--color-success)' : hasSome ? 'var(--color-info)' : 'var(--text-secondary)';
+
+        return `
+            <div class="card guru-candidates-card">
+                <h2 class="card-title">🎯 Today's Guru Candidates</h2>
+                <p class="card-subtitle" style="margin-top: var(--spacing-xs); color: var(--text-secondary);">
+                    Apprentice IV items that can reach Guru today
+                </p>
+
+                <div class="guru-candidates-main">
+                    <div class="guru-count-display" style="border-color: ${statusColor};">
+                        <div class="guru-count-number" style="color: ${statusColor};">
+                            ${total}
+                        </div>
+                        <div class="guru-count-label">
+                            ${total === 1 ? 'Item' : 'Items'} Today
+                        </div>
+                    </div>
+                </div>
+
+                ${total > 0 ? `
+                    <div class="guru-breakdown">
+                        ${availableNow > 0 ? `
+                            <div class="guru-breakdown-item">
+                                <span class="guru-breakdown-icon">✅</span>
+                                <span class="guru-breakdown-text">
+                                    <strong>${availableNow}</strong> available now
+                                </span>
+                            </div>
+                        ` : ''}
+                        ${nextBatch ? `
+                            <div class="guru-breakdown-item">
+                                <span class="guru-breakdown-icon">⏰</span>
+                                <span class="guru-breakdown-text">
+                                    <strong>${nextBatch.count}</strong> available in ${formatTimeUntil(nextBatch.time)}
+                                    ${availableLater > nextBatch.count ? ` • ${availableLater - nextBatch.count} more later` : ''}
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="guru-candidates-tip">
+                        💡 Answer these correctly to move ${total} ${total === 1 ? 'item' : 'items'} from Apprentice IV → Guru I
+                    </div>
+                ` : `
+                    <div class="guru-candidates-empty">
+                        <p>No Apprentice IV items have reviews scheduled today.</p>
+                        <small style="color: var(--text-secondary);">
+                            Check back later or complete more lessons!
+                        </small>
+                    </div>
+                `}
             </div>
         `;
     }

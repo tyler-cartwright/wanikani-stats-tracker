@@ -2,6 +2,7 @@
 // Comprehensive accuracy analysis
 
 import { calculateAccuracyStats, calculateAccuracyByLevel } from '../calculations/accuracy-analyzer.js';
+import { TimePerformance } from './time-performance.js';
 
 export class AccuracyDeepDive {
     constructor(reviewStats, subjects, assignments) {
@@ -10,6 +11,7 @@ export class AccuracyDeepDive {
         this.assignments = assignments;
         this.stats = calculateAccuracyStats(reviewStats);
         this.byLevel = calculateAccuracyByLevel(reviewStats, subjects);
+        this.timePerformance = new TimePerformance(reviewStats);
     }
 
     /**
@@ -27,6 +29,8 @@ export class AccuracyDeepDive {
                 </div>
 
                 ${this.renderByLevel()}
+
+                ${this.timePerformance.render()}
             </div>
         `;
     }

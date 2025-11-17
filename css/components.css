@@ -2285,6 +2285,353 @@ a:hover {
     color: var(--text-secondary);
 }
 
+/* Guru Candidates Card */
+.guru-candidates-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+}
+
+.guru-candidates-main {
+    display: flex;
+    justify-content: center;
+    margin: var(--spacing-lg) 0;
+}
+
+.guru-count-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xl);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    border: 4px solid;
+    min-width: 180px;
+    transition: all var(--transition-base);
+}
+
+.guru-count-display:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.guru-count-number {
+    font-size: 4rem;
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+}
+
+.guru-count-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.guru-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+}
+
+.guru-breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+}
+
+.guru-breakdown-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.guru-breakdown-text {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+}
+
+.guru-breakdown-text strong {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+}
+
+.guru-candidates-tip {
+    padding: var(--spacing-md);
+    background: var(--color-info);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    margin-top: var(--spacing-lg);
+}
+
+.guru-candidates-empty {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+}
+
+.guru-candidates-empty p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+/* Time-of-Day Performance */
+.time-performance-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+}
+
+.time-performance-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+}
+
+.time-preference-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.time-preference-emoji {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.time-preference-text {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+}
+
+.time-stats-grid {
+    display: flex;
+    gap: var(--spacing-xl);
+}
+
+.time-stat {
+    text-align: center;
+}
+
+.time-stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.time-stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.time-heatmap-container {
+    margin: var(--spacing-lg) 0;
+}
+
+.time-heatmap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-lg);
+}
+
+.time-heatmap-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+    cursor: help;
+}
+
+.time-heatmap-cell:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+}
+
+.time-heatmap-cell.low-data {
+    opacity: 0.7;
+    border-style: dashed;
+}
+
+.time-heatmap-hour {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+}
+
+.time-heatmap-value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+}
+
+.time-heatmap-count {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+/* Time performance colors */
+.time-performance-excellent {
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%);
+    color: white;
+}
+
+.time-performance-excellent .time-heatmap-hour,
+.time-performance-excellent .time-heatmap-count {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.time-performance-good {
+    background: linear-gradient(135deg, var(--color-info) 0%, var(--color-info-light) 100%);
+    color: white;
+}
+
+.time-performance-good .time-heatmap-hour,
+.time-performance-good .time-heatmap-count {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.time-performance-average {
+    background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-light) 100%);
+    color: white;
+}
+
+.time-performance-average .time-heatmap-hour,
+.time-performance-average .time-heatmap-count {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.time-performance-poor {
+    background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-light) 100%);
+    color: white;
+}
+
+.time-performance-poor .time-heatmap-hour,
+.time-performance-poor .time-heatmap-count {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.time-performance-no-data {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+}
+
+.time-heatmap-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: center;
+    padding: var(--spacing-md);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+}
+
+.legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+}
+
+.time-performance-insights {
+    margin-top: var(--spacing-lg);
+}
+
+.time-recommendation {
+    padding: var(--spacing-lg);
+    background: var(--color-info);
+    color: white;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+}
+
+.time-insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.time-insight-card {
+    padding: var(--spacing-lg);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    border: 2px solid var(--bg-tertiary);
+}
+
+.time-insight-best {
+    border-color: var(--color-success);
+}
+
+.time-insight-worst {
+    border-color: var(--color-warning);
+}
+
+.time-insight-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-md);
+}
+
+.time-insight-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.time-insight-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    align-items: center;
+}
+
+.time-insight-time {
+    font-weight: var(--font-weight-medium);
+}
+
+.time-insight-accuracy {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+}
+
+.time-insight-count {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.time-reliability-note {
+    padding: var(--spacing-md);
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--color-info);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-lg);
+}
+
 /* Responsive adjustments for new widgets */
 @media (max-width: 768px) {
     .projection-stats {
@@ -2303,5 +2650,22 @@ a:hover {
     .workload-level-indicator {
         min-width: 150px;
         padding: var(--spacing-lg);
+    }
+
+    .time-performance-summary {
+        flex-direction: column;
+    }
+
+    .time-stats-grid {
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    .time-heatmap {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    }
+
+    .time-insights-grid {
+        grid-template-columns: 1fr;
     }
 }
