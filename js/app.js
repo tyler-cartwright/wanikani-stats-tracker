@@ -514,25 +514,44 @@ function renderReviewsView() {
 // Refresh data
 window.refreshData = async function() {
     if (!appData) return;
-    
-    const confirmed = confirm('Refresh data from WaniKani? This may take a moment.');
+
+    const confirmed = confirm('⚠️ Hard Reload: This will clear all cached data and re-fetch everything from WaniKani. This may take a few minutes. Continue?');
     if (!confirmed) return;
-    
+
     // Show loading
     if (loadingScreen) {
         loadingScreen.classList.remove('hidden');
-        loadingMessage.textContent = 'Refreshing data...';
+        loadingMessage.textContent = 'Clearing cached data...';
+        if (loadingProgress) {
+            loadingProgress.classList.remove('hidden');
+        }
     }
-    
+
     try {
-        const result = await quickRefresh();
-        
+        // Step 1: Clear all cached data from IndexedDB
+        console.log('[App] Clearing all cached data...');
+        await db.clearAll();
+
+        // Step 2: Fetch all data from scratch
+        if (loadingMessage) {
+            loadingMessage.textContent = 'Fetching fresh data from WaniKani...';
+        }
+
+        const result = await initialDataLoad((step, totalSteps, message) => {
+            if (loadingMessage) {
+                loadingMessage.textContent = `${message} (${step}/${totalSteps})`;
+            }
+        });
+
         if (result.success) {
-            // Update app data
+            // Update app data with fresh data
+            appData.user = result.user;
             appData.summary = result.summary;
             appData.assignments = result.assignments;
             appData.reviewStats = result.reviewStats;
-            
+            appData.subjects = result.subjects;
+            appData.levelProgressions = result.levelProgressions;
+
             // Merge accuracy data
             appData.assignments = appData.assignments.map(assignment => {
                 const stats = appData.reviewStats.find(s => s.data.subject_id === assignment.data.subject_id);
@@ -541,28 +560,34 @@ window.refreshData = async function() {
                     accuracy: stats?.data?.percentage_correct
                 };
             });
-            
+
             // Re-analyze leeches
+            if (loadingMessage) {
+                loadingMessage.textContent = 'Analyzing leeches...';
+            }
             const leechAnalysis = await getCompleteLeechAnalysis(
                 result.reviewStats,
-                appData.subjects,
+                result.subjects,
                 result.assignments
             );
             appData.leechAnalysis = leechAnalysis;
-            
+
             // Re-render current view
             navigateTo(currentView);
-            
-            alert('Data refreshed successfully!');
+
+            alert('✅ Data reloaded successfully from scratch!');
         } else {
-            alert('Failed to refresh data: ' + result.error);
+            alert('❌ Failed to reload data: ' + result.error);
         }
     } catch (error) {
-        console.error('[App] Refresh failed:', error);
-        alert('Failed to refresh data. Please try again.');
+        console.error('[App] Hard reload failed:', error);
+        alert('❌ Failed to reload data. Please try logging out and back in.');
     } finally {
         if (loadingScreen) {
             loadingScreen.classList.add('hidden');
+        }
+        if (loadingProgress) {
+            loadingProgress.classList.add('hidden');
         }
     }
 };

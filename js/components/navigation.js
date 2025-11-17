@@ -64,8 +64,8 @@ export class Navigation {
                                 </button>
                             </div>
                         </div>
-                        <button class="nav-link" onclick="window.refreshData()" title="Refresh Data">
-                            🔄 Refresh
+                        <button class="nav-link" onclick="window.refreshData()" title="Hard Reload: Clear cache and re-fetch all data">
+                            🔄 Hard Reload
                         </button>
                         <button class="nav-link" onclick="window.logout()" title="Logout">
                             🚪 Logout

@@ -236,6 +236,24 @@ class Database {
     }
 
     /**
+     * Clear all data from all stores (hard reset)
+     * @returns {Promise<void>}
+     */
+    async clearAll() {
+        const db = await this.init();
+        const storeNames = Array.from(db.objectStoreNames);
+
+        console.log('[DB] Clearing all stores:', storeNames);
+
+        // Clear all stores
+        for (const storeName of storeNames) {
+            await this.clear(storeName);
+        }
+
+        console.log('[DB] All stores cleared successfully');
+    }
+
+    /**
      * Count records in a store
      * @param {string} storeName - Name of the object store
      * @returns {Promise<number>}
