@@ -26,12 +26,18 @@ export function projectLevelCompletion(assignments, levelProgressions, user, sub
     // Calculate historical average
     const recentLevels = getRecentCompletedLevels(levelProgressions, 5);
     const averageDaysPerLevel = calculateAverageLevelDuration(recentLevels);
-    
+
+    console.log('[LevelProjection] Recent completed levels:', recentLevels);
+    console.log('[LevelProjection] Average days per level:', averageDaysPerLevel);
+
     // Get current level start time
     const currentLevelProgression = levelProgressions.find(lp => lp.data.level === currentLevel);
-    const currentLevelStart = currentLevelProgression?.data.started_at 
+    const currentLevelStart = currentLevelProgression?.data.started_at
         ? new Date(currentLevelProgression.data.started_at)
         : null;
+
+    console.log('[LevelProjection] Current level progression:', currentLevelProgression);
+    console.log('[LevelProjection] Current level start:', currentLevelStart);
     
     let daysSinceLevelStart = null;
     let estimatedDaysRemaining = null;
@@ -122,13 +128,14 @@ function getRecentCompletedLevels(levelProgressions, count) {
  * Calculate duration between two dates in days
  * @param {string} startDate - Start date ISO string
  * @param {string} endDate - End date ISO string
- * @returns {number} Duration in days
+ * @returns {number} Duration in days (rounded to nearest day)
  */
 function calculateDuration(startDate, endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Use Math.round for more accurate duration (not always rounding up)
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
 }
 
 /**

@@ -204,7 +204,12 @@ export class Dashboard {
                 ${levelProgress.overall.daysSinceLevelStart !== null ? `
                     <div class="level-progress-footer">
                         <span>📅 ${levelProgress.overall.daysSinceLevelStart} days on this level</span>
-                        <span>🎯 ${levelProgress.kanji.remainingToPass} kanji to level up</span>
+                        <span
+                            title="WaniKani requires 90% of kanji (${levelProgress.kanji.neededToPass} out of ${levelProgress.kanji.total}) to reach Guru or higher to level up"
+                            style="cursor: help; border-bottom: 1px dotted var(--text-secondary);"
+                        >
+                            🎯 ${levelProgress.kanji.remainingToPass} kanji to level up
+                        </span>
                     </div>
                 ` : ''}
             </div>
@@ -505,7 +510,13 @@ export class Dashboard {
 
                     <div class="projection-stat">
                         <div class="projection-stat-label">Current Pace</div>
-                        <div class="projection-stat-value ${paceInfo.class}">${paceInfo.icon} ${paceInfo.text}</div>
+                        <div
+                            class="projection-stat-value ${paceInfo.class}"
+                            title="Compares your current level progress to your historical average. Faster = under 80% of average, On Track = 80-120% of average, Slower = over 120% of average"
+                            style="cursor: help;"
+                        >
+                            ${paceInfo.icon} ${paceInfo.text}
+                        </div>
                         ${timing.daysSinceLevelStart !== null ? `
                             <div class="projection-stat-sublabel">
                                 ${timing.daysSinceLevelStart} days so far
@@ -517,9 +528,19 @@ export class Dashboard {
 
                 ${historicalData.levelsAnalyzed > 0 ? `
                     <div class="projection-footer">
-                        <span>📈 Based on ${historicalData.levelsAnalyzed} recent levels</span>
+                        <span
+                            title="Projection is based on your average completion time for the last ${historicalData.levelsAnalyzed} levels. Confidence varies based on consistency of your pace."
+                            style="cursor: help; border-bottom: 1px dotted var(--text-secondary);"
+                        >
+                            📈 Based on ${historicalData.levelsAnalyzed} recent levels
+                        </span>
                         ${historicalData.fastestLevel && historicalData.slowestLevel ? `
-                            <span>⏱️ Fastest: ${historicalData.fastestLevel}d • Slowest: ${historicalData.slowestLevel}d</span>
+                            <span
+                                title="Your fastest and slowest completed levels from recent history"
+                                style="cursor: help; border-bottom: 1px dotted var(--text-secondary);"
+                            >
+                                ⏱️ Fastest: ${historicalData.fastestLevel}d • Slowest: ${historicalData.slowestLevel}d
+                            </span>
                         ` : ''}
                     </div>
                 ` : ''}
