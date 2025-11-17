@@ -222,6 +222,38 @@ a:hover {
 .nav-actions {
     display: flex;
     gap: var(--spacing-sm);
+    align-items: center;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    padding: var(--spacing-sm);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.theme-icon {
+    font-size: 1.25rem;
+    line-height: 1;
 }
 
 .nav-action {
@@ -1021,7 +1053,13 @@ a:hover {
     border: 2px solid var(--bg-tertiary);
     border-radius: var(--radius-md);
     background: var(--bg-primary);
+    color: var(--text-primary);
     font-size: var(--font-size-sm);
+}
+
+.filter-group select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .table-stats {
@@ -1547,6 +1585,7 @@ a:hover {
     padding: var(--spacing-xs) var(--spacing-md);
     background: var(--bg-secondary);
     border-radius: var(--radius-full);
+    color: var(--text-primary);
     font-size: var(--font-size-sm);
 }
 
@@ -1588,6 +1627,7 @@ a:hover {
 .reading-value {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
 }
 
 .mnemonic-section {
@@ -1619,6 +1659,7 @@ a:hover {
     background: var(--bg-secondary);
     border: 2px solid var(--bg-tertiary);
     border-radius: var(--radius-md);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all var(--transition-fast);
     font-size: var(--font-size-sm);

@@ -8,8 +8,7 @@ export class Navigation {
             dashboard: 'Dashboard',
             leeches: 'Leeches',
             progress: 'Progress',
-            accuracy: 'Accuracy',
-            reviews: 'Reviews'
+            accuracy: 'Accuracy'
         };
     }
 
@@ -40,6 +39,13 @@ export class Navigation {
                     </div>
                     
                     <div class="nav-actions">
+                        <button
+                            class="theme-toggle-btn"
+                            onclick="window.toggleTheme()"
+                            aria-label="Toggle theme"
+                            title="${document.documentElement.getAttribute('data-theme') === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}">
+                            <span class="theme-icon">${document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'}</span>
+                        </button>
                         <div class="nav-dropdown">
                             <button class="nav-link" onclick="window.toggleExportMenu()" title="Export Data">
                                 <span class="nav-icon">📥</span>
@@ -86,8 +92,7 @@ export class Navigation {
             dashboard: '',
             leeches: '',
             progress: '',
-            accuracy: '',
-            reviews: ''
+            accuracy: ''
         };
         return `<span class="nav-icon">${icons[view] || ''}</span>`;
     }

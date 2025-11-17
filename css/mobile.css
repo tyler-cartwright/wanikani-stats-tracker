@@ -1,0 +1,621 @@
+/* Mobile-First Responsive Design
+ * Optimized for 320px+ with progressive enhancement
+ * Touch-friendly: 44px+ tap targets throughout
+ */
+
+/* ==========================================================================
+   Base Mobile Styles (320px+)
+   ========================================================================== */
+
+/* Touch-Friendly Buttons & Links */
+button,
+a,
+.nav-link,
+.stat-card,
+.btn-primary,
+.btn-secondary,
+.card-title[onclick],
+[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    -webkit-tap-highlight-color: rgba(170, 0, 255, 0.2);
+}
+
+/* Prevent text selection on touch */
+.nav-link,
+button,
+[role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Smooth scrolling for mobile */
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile viewport optimization */
+body {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+/* Mobile Navigation */
+@media (max-width: 767px) {
+    .nav-container {
+        flex-direction: column;
+        padding: var(--spacing-sm);
+        gap: var(--spacing-sm);
+    }
+
+    .nav-brand {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-links {
+        width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) 0;
+    }
+
+    .nav-links::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-link {
+        flex-shrink: 0;
+        min-height: 44px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-sm);
+    }
+
+    .nav-link span:not(.nav-icon) {
+        display: inline;
+    }
+
+    .nav-actions {
+        width: 100%;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+    }
+
+    .nav-action,
+    .theme-toggle-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Dashboard & Content Layout */
+@media (max-width: 767px) {
+    .dashboard {
+        padding: var(--spacing-md);
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
+    }
+
+    .dashboard-title {
+        font-size: var(--font-size-2xl);
+    }
+
+    .dashboard-subtitle {
+        font-size: var(--font-size-base);
+    }
+
+    /* Single column layout for all grids */
+    .dashboard-grid,
+    .dashboard-grid-2col {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .quick-stats {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .stat-card {
+        padding: var(--spacing-md);
+        min-height: 80px;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+    }
+
+    .stat-value {
+        font-size: var(--font-size-xl);
+    }
+
+    .stat-label {
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* Cards & Content */
+@media (max-width: 767px) {
+    .card {
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .card-title {
+        font-size: var(--font-size-lg);
+    }
+
+    .card-subtitle {
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* Charts & Visualizations */
+@media (max-width: 767px) {
+    /* SRS Distribution */
+    .srs-chart {
+        height: 150px;
+        gap: var(--spacing-xs);
+    }
+
+    .srs-bar {
+        height: 120px;
+    }
+
+    .srs-bar-name {
+        font-size: 0.625rem;
+    }
+
+    .srs-bar-count {
+        font-size: var(--font-size-sm);
+    }
+
+    /* Review Forecast */
+    .forecast-chart {
+        height: 150px;
+        gap: 2px;
+    }
+
+    .forecast-bar {
+        height: 100px;
+    }
+
+    .forecast-bar-count,
+    .forecast-bar-time {
+        font-size: 0.5rem;
+    }
+
+    /* Time Heatmap */
+    .time-heatmap {
+        grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+        gap: 4px;
+    }
+
+    .time-heatmap-cell {
+        padding: var(--spacing-xs);
+        aspect-ratio: 1;
+    }
+
+    .time-heatmap-hour,
+    .time-heatmap-count {
+        font-size: 0.625rem;
+    }
+
+    .time-heatmap-value {
+        font-size: var(--font-size-sm);
+    }
+
+    /* Level Accuracy Chart */
+    .level-accuracy-chart {
+        height: 220px;
+        padding: var(--spacing-sm);
+    }
+
+    .level-accuracy-bar {
+        height: 150px;
+    }
+}
+
+/* Level Progress */
+@media (max-width: 767px) {
+    .level-progress-grid {
+        gap: var(--spacing-md);
+    }
+
+    .progress-section {
+        gap: var(--spacing-xs);
+    }
+
+    .progress-label {
+        font-size: var(--font-size-sm);
+    }
+
+    .progress-count {
+        font-size: var(--font-size-xs);
+    }
+
+    .progress-percent {
+        font-size: var(--font-size-lg);
+    }
+}
+
+/* Level Projection & Workload */
+@media (max-width: 767px) {
+    .projection-date {
+        font-size: 1.75rem;
+    }
+
+    .projection-stats {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .projection-footer {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        font-size: var(--font-size-xs);
+    }
+
+    .workload-level-indicator {
+        min-width: 120px;
+        padding: var(--spacing-md);
+    }
+
+    .workload-level-icon {
+        font-size: 2.5rem;
+    }
+}
+
+/* Guru Candidates */
+@media (max-width: 767px) {
+    .guru-count-number {
+        font-size: 3rem;
+    }
+
+    .guru-count-display {
+        min-width: 150px;
+        padding: var(--spacing-lg);
+    }
+
+    .guru-breakdown-text {
+        font-size: var(--font-size-sm);
+    }
+}
+
+/* Tables */
+@media (max-width: 767px) {
+    .assignments-table-container {
+        padding: var(--spacing-md);
+    }
+
+    .table-filters {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table {
+        font-size: var(--font-size-sm);
+        min-width: 600px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: var(--spacing-sm);
+    }
+
+    .cell-character {
+        font-size: var(--font-size-lg);
+    }
+
+    .cell-meanings {
+        max-width: 150px;
+    }
+}
+
+/* Accuracy Cards */
+@media (max-width: 767px) {
+    .accuracy-circle {
+        width: 120px;
+        height: 120px;
+        border: 4px solid;
+    }
+
+    .accuracy-value {
+        font-size: 2rem;
+    }
+
+    .accuracy-circle-xl {
+        width: 180px;
+        height: 180px;
+        border: 8px solid;
+    }
+
+    .accuracy-circle-xl .accuracy-value {
+        font-size: 3rem;
+    }
+
+    .accuracy-overview-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
+    }
+
+    .accuracy-overview-split {
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    .accuracy-split-circle {
+        width: 100px;
+        height: 100px;
+        font-size: 1.5rem;
+        border: 4px solid;
+    }
+
+    .accuracy-grid,
+    .time-insights-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Burned Items */
+@media (max-width: 767px) {
+    .burned-total {
+        font-size: 2.5rem;
+    }
+
+    .burned-type-icon {
+        font-size: 1.5rem;
+    }
+
+    .burned-type-count {
+        font-size: var(--font-size-lg);
+    }
+}
+
+/* Timeline */
+@media (max-width: 767px) {
+    .timeline {
+        padding-left: var(--spacing-lg);
+    }
+
+    .timeline::before {
+        left: 8px;
+    }
+
+    .timeline-marker {
+        width: 32px;
+        height: 32px;
+        font-size: var(--font-size-xs);
+    }
+
+    .timeline-marker-current {
+        width: 40px;
+        height: 40px;
+    }
+
+    .timeline-content {
+        padding: var(--spacing-sm);
+    }
+
+    .timeline-title {
+        font-size: var(--font-size-base);
+    }
+
+    .timeline-stats {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+}
+
+/* Item Detail */
+@media (max-width: 767px) {
+    .item-detail-main {
+        flex-direction: column;
+        padding: var(--spacing-lg);
+        text-align: center;
+    }
+
+    .item-character {
+        font-size: 5rem;
+        min-width: auto;
+        padding: var(--spacing-md);
+    }
+
+    .item-title {
+        font-size: var(--font-size-2xl);
+    }
+
+    .item-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .accuracy-circle-large {
+        width: 140px;
+        height: 140px;
+    }
+}
+
+/* Leech Summary */
+@media (max-width: 767px) {
+    .leech-summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .leech-stat {
+        padding: var(--spacing-sm);
+    }
+
+    .leech-stat-value {
+        font-size: var(--font-size-xl);
+    }
+
+    .problem-item {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-sm);
+    }
+
+    .problem-item-character {
+        font-size: 2rem;
+        min-width: auto;
+    }
+
+    .problem-item-accuracy {
+        font-size: var(--font-size-lg);
+    }
+}
+
+/* ==========================================================================
+   Tablet Optimizations (768px+)
+   ========================================================================== */
+
+@media (min-width: 768px) {
+    .dashboard {
+        padding: var(--spacing-lg);
+    }
+
+    .dashboard-grid-2col {
+        grid-template-columns: 2fr 1fr;
+    }
+
+    .quick-stats {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+}
+
+/* ==========================================================================
+   Desktop Optimizations (1024px+)
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+    .dashboard {
+        padding: var(--spacing-xl);
+    }
+
+    .nav-container {
+        max-width: 1400px;
+    }
+
+    /* Hover effects only on desktop */
+    .stat-card:hover,
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .time-heatmap-cell:hover {
+        transform: translateY(-2px);
+    }
+}
+
+/* ==========================================================================
+   Large Desktop (1440px+)
+   ========================================================================== */
+
+@media (min-width: 1440px) {
+    .dashboard {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .main-nav,
+    .nav-actions,
+    button {
+        display: none !important;
+    }
+
+    .card {
+        page-break-inside: avoid;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+    }
+}
+
+/* ==========================================================================
+   Accessibility & Reduced Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid var(--text-primary);
+    }
+
+    button,
+    .nav-link {
+        border: 1px solid currentColor;
+    }
+}
+
+/* ==========================================================================
+   iOS Specific Fixes
+   ========================================================================== */
+
+@supports (-webkit-touch-callout: none) {
+    /* iOS safe area insets */
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .main-nav {
+        padding-top: max(var(--spacing-md), env(safe-area-inset-top));
+    }
+
+    /* Fix iOS zoom on input focus */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
+
+/* ==========================================================================
+   Android Specific Fixes
+   ========================================================================== */
+
+/* Fix Android tap delay */
+a,
+button,
+[role="button"] {
+    touch-action: manipulation;
+}

@@ -12,6 +12,9 @@ import AssignmentsTable from './components/assignments-table.js';
 import LevelTimeline from './components/level-timeline.js';
 import ItemDetail from './components/item-detail.js';
 import AccuracyDeepDive from './components/accuracy-deep-dive.js';
+import './components/theme-toggle.js';
+import './utils/swipe-handler.js';
+import { showConfirm, showAlert } from './utils/custom-modals.js';
 import {
     exportAssignmentsCSV,
     exportReviewStatsCSV,
@@ -169,7 +172,11 @@ async function loadInitialData() {
     const result = await initialDataLoad(updateLoadingProgress);
 
     if (!result.success) {
-        alert(`Failed to load data: ${result.error}\n\nPlease check your internet connection and try again.`);
+        await showAlert(
+            'Failed to Load Data',
+            `${result.error}\n\nPlease check your internet connection and try again.`,
+            { icon: '❌' }
+        );
         showTokenModal();
         return;
     }
@@ -236,9 +243,6 @@ window.navigateTo = function(view) {
             break;
         case 'accuracy':
             renderAccuracyView();
-            break;
-        case 'reviews':
-            renderReviewsView();
             break;
         default:
             renderDashboard();
@@ -528,28 +532,19 @@ function renderLeechesView() {
     `;
 }
 
-// Placeholder view
-function renderReviewsView() {
-    mainContent.innerHTML = `
-        <div class="dashboard">
-            <h1 class="dashboard-title">📖 Review History</h1>
-            <div class="card">
-                <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
-                    Review history visualization coming in Phase 7!<br>
-                    <button class="btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.navigateTo('dashboard')">
-                        Back to Dashboard
-                    </button>
-                </p>
-            </div>
-        </div>
-    `;
-}
-
 // Refresh data
 window.refreshData = async function() {
     if (!appData) return;
 
-    const confirmed = confirm('⚠️ Hard Reload: This will clear all cached data and re-fetch everything from WaniKani. This may take a few minutes. Continue?');
+    const confirmed = await showConfirm(
+        'Hard Reload',
+        'This will clear all cached data and re-fetch everything from WaniKani. This may take a few minutes.',
+        {
+            icon: '🔄',
+            confirmText: 'Continue',
+            cancelText: 'Cancel'
+        }
+    );
     if (!confirmed) return;
 
     // Show loading
@@ -606,26 +601,43 @@ window.refreshData = async function() {
             );
             appData.leechAnalysis = leechAnalysis;
 
+            // Hide loading screen before showing alert
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+
             // Re-render current view
             navigateTo(currentView);
 
-            alert('✅ Data reloaded successfully from scratch!');
+            await showAlert('Success', 'Data reloaded successfully from scratch!', { icon: '✅' });
         } else {
-            alert('❌ Failed to reload data: ' + result.error);
+            // Hide loading screen before showing alert
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+            await showAlert('Error', `Failed to reload data: ${result.error}`, { icon: '❌' });
         }
     } catch (error) {
         console.error('[App] Hard reload failed:', error);
-        alert('❌ Failed to reload data. Please try logging out and back in.');
-    } finally {
+        // Hide loading screen before showing alert
         if (loadingScreen) {
             loadingScreen.classList.add('hidden');
         }
+        await showAlert('Error', 'Failed to reload data. Please try logging out and back in.', { icon: '❌' });
     }
 };
 
 // Logout function
-window.logout = function() {
-    const confirmed = confirm('Are you sure you want to logout? This will clear your saved token.');
+window.logout = async function() {
+    const confirmed = await showConfirm(
+        'Logout',
+        'Are you sure you want to logout? This will clear your saved token.',
+        {
+            icon: '🚪',
+            confirmText: 'Logout',
+            cancelText: 'Cancel'
+        }
+    );
     if (confirmed) {
         tokenManager.clearToken();
         window.location.reload();
@@ -633,9 +645,9 @@ window.logout = function() {
 };
 
 // Export functions
-window.exportData = function(type) {
+window.exportData = async function(type) {
     if (!appData) {
-        alert('No data available to export');
+        await showAlert('No Data', 'No data available to export', { icon: '⚠️' });
         return;
     }
 
@@ -657,11 +669,11 @@ window.exportData = function(type) {
                 exportAllDataJSON(appData);
                 break;
             default:
-                alert('Unknown export type');
+                await showAlert('Error', 'Unknown export type', { icon: '❌' });
         }
     } catch (error) {
         console.error('[App] Export failed:', error);
-        alert('Export failed: ' + error.message);
+        await showAlert('Export Failed', error.message, { icon: '❌' });
     }
 };
 
@@ -704,8 +716,16 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-function showUpdateNotification() {
-    const shouldUpdate = confirm('A new version of WaniKani Stats is available! Would you like to update now?');
+async function showUpdateNotification() {
+    const shouldUpdate = await showConfirm(
+        'Update Available',
+        'A new version of WaniKani Stats is available! Would you like to update now?',
+        {
+            icon: '🔄',
+            confirmText: 'Update Now',
+            cancelText: 'Later'
+        }
+    );
     if (shouldUpdate) {
         if (swRegistration && swRegistration.waiting) {
             swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -740,6 +760,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error('[App] Initialization error:', error);
-        alert(`Initialization failed: ${error.message}`);
+        await showAlert('Initialization Failed', error.message, { icon: '❌' });
     }
 });

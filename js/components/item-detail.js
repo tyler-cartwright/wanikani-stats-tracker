@@ -111,7 +111,7 @@ export class ItemDetail {
                     </div>
                 ` : srsStage === 9 ? `
                     <div class="srs-next-review">
-                        <div class="srs-label">í´¥ Burned!</div>
+                        <div class="srs-label">ðŸ”¥ Burned!</div>
                         <div style="color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
                             This item is complete
                         </div>
