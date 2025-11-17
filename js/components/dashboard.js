@@ -50,12 +50,14 @@ export class Dashboard {
                 ${this.renderQuickStats(currentReviews, summary, workload, leechAnalysis)}
                 ${this.renderLevelProgress(levelProgress)}
 
-                <!-- Level Projection & Workload Grid -->
+                <!-- Level Projection & Guru Candidates Grid -->
                 <div class="dashboard-grid-2col">
                     ${this.renderLevelProjection(levelProjection)}
-                    ${this.renderWorkloadAnalysis(workload, lessonPace)}
                     ${this.renderGuruCandidates(guruCandidates)}
                 </div>
+
+                <!-- Workload Analysis -->
+                ${this.renderWorkloadAnalysis(workload, lessonPace)}
 
                 <!-- SRS, Accuracy & Burned Items Grid -->
                 <div class="dashboard-grid-2col">
