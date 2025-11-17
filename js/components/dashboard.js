@@ -26,7 +26,7 @@ export class Dashboard {
         const srsDistribution = calculateSRSDistribution(assignments);
         const levelProgress = calculateLevelProgress(assignments, user, subjects, levelProgressions || []);
         const accuracyStats = calculateAccuracyStats(reviewStats);
-        const burnedStats = calculateBurnedStats(assignments);
+        const burnedStats = calculateBurnedStats(assignments, subjects);
         const currentReviews = getCurrentReviewCount(summary);
         const forecast = generate24HourForecast(summary);
         const workload = calculateWorkload(assignments, summary);
