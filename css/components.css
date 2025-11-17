@@ -274,6 +274,8 @@ a:hover {
 /* Navigation Dropdown */
 .nav-dropdown {
     position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
 }
 
 .dropdown-menu {
@@ -299,6 +301,23 @@ a:hover {
         left: var(--spacing-sm);
         min-width: auto;
         width: auto;
+    }
+}
+
+/* Tablet dropdown positioning */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .dropdown-menu {
+        right: 0;
+        left: auto;
+        min-width: 220px;
+    }
+}
+
+/* Desktop dropdown positioning */
+@media (min-width: 1024px) {
+    .dropdown-menu {
+        right: 0;
+        left: auto;
     }
 }
 
