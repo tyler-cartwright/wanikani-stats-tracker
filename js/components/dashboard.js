@@ -52,24 +52,16 @@ export class Dashboard {
 
                 <!-- Level Projection & Workload Grid -->
                 <div class="dashboard-grid-2col">
-                    <div class="dashboard-col-2">
-                        ${this.renderLevelProjection(levelProjection)}
-                    </div>
-                    <div class="dashboard-col-1">
-                        ${this.renderWorkloadAnalysis(workload, lessonPace)}
-                        ${this.renderGuruCandidates(guruCandidates)}
-                    </div>
+                    ${this.renderLevelProjection(levelProjection)}
+                    ${this.renderWorkloadAnalysis(workload, lessonPace)}
+                    ${this.renderGuruCandidates(guruCandidates)}
                 </div>
 
                 <!-- SRS, Accuracy & Burned Items Grid -->
                 <div class="dashboard-grid-2col">
-                    <div class="dashboard-col-2">
-                        ${this.renderSRSDistribution(srsDistribution)}
-                    </div>
-                    <div class="dashboard-col-1">
-                        ${this.renderAccuracySummary(accuracyStats)}
-                        ${this.renderBurnedItems(burnedStats)}
-                    </div>
+                    ${this.renderSRSDistribution(srsDistribution)}
+                    ${this.renderAccuracySummary(accuracyStats)}
+                    ${this.renderBurnedItems(burnedStats)}
                 </div>
 
                 <!-- Review Forecast & Leech Summary -->

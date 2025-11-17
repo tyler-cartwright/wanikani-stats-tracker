@@ -494,7 +494,7 @@ body {
     }
 
     .dashboard-grid-2col {
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
 
     .quick-stats {

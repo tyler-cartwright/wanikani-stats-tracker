@@ -486,21 +486,31 @@ a:hover {
 /* Two-column grid for specific layouts */
 .dashboard-grid-2col {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
 }
 
-.dashboard-col-1 {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
+/* On larger screens, use a more balanced layout */
+@media (min-width: 1024px) {
+    .dashboard-grid-2col {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
 }
 
-.dashboard-col-2 {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
+/* On very large screens, allow up to 3 columns */
+@media (min-width: 1400px) {
+    .dashboard-grid-2col {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    }
+}
+
+/* Allow larger content cards to span multiple columns on wide screens */
+@media (min-width: 1200px) {
+    .projection-card,
+    .srs-card {
+        grid-column: span 2;
+    }
 }
 
 /* Full width cards */
