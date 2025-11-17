@@ -2751,3 +2751,289 @@ a:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* Level 60 Timeline Projection */
+.level-60-projection {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+}
+
+.level-60-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xl);
+    margin-bottom: var(--spacing-2xl);
+    padding: var(--spacing-xl);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    position: relative;
+}
+
+.level-60-main-stat {
+    text-align: center;
+}
+
+.level-60-big-number {
+    font-size: 3.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    line-height: 1;
+    margin-bottom: var(--spacing-xs);
+}
+
+.level-60-label {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+}
+
+.level-60-sublabel {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    margin-top: var(--spacing-xs);
+}
+
+.level-60-divider {
+    width: 2px;
+    height: 80px;
+    background: var(--bg-tertiary);
+}
+
+.level-60-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.level-60-summary-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+}
+
+.level-60-summary-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.level-60-summary-content {
+    flex: 1;
+}
+
+.level-60-summary-value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.level-60-summary-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+/* Scenarios */
+.level-60-scenarios {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.level-60-scenarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.level-60-scenario {
+    padding: var(--spacing-lg);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    border: 2px solid var(--bg-tertiary);
+    transition: all 0.2s ease;
+}
+
+.level-60-scenario:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.level-60-scenario-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.level-60-scenario-icon {
+    font-size: 1.5rem;
+}
+
+.level-60-scenario-title {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+}
+
+.level-60-scenario-date {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.level-60-scenario-time {
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.level-60-scenario-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.level-60-scenario-pace {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+/* Milestones */
+.level-60-milestones {
+    margin-bottom: var(--spacing-xl);
+}
+
+.level-60-milestones-list {
+    display: grid;
+    gap: var(--spacing-sm);
+}
+
+.level-60-milestone {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--bg-tertiary);
+}
+
+.level-60-milestone.milestone-completed {
+    border-left-color: var(--color-success);
+    opacity: 0.7;
+}
+
+.level-60-milestone.milestone-projected {
+    border-left-color: var(--color-primary);
+}
+
+.level-60-milestone-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-bold);
+    flex-shrink: 0;
+}
+
+.milestone-completed .level-60-milestone-marker {
+    background: var(--color-success);
+    color: white;
+}
+
+.milestone-projected .level-60-milestone-marker {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.level-60-milestone-content {
+    flex: 1;
+}
+
+.level-60-milestone-level {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.level-60-milestone-date {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+/* Footer */
+.level-60-footer {
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--bg-tertiary);
+}
+
+.level-60-note {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Special states */
+.level-60-complete,
+.level-60-insufficient {
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+}
+
+.level-60-complete-icon,
+.level-60-insufficient-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.level-60-complete-title,
+.level-60-insufficient-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.level-60-complete-message,
+.level-60-insufficient-message {
+    font-size: var(--font-size-md);
+    color: var(--text-secondary);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .level-60-header {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+        padding: var(--spacing-lg);
+    }
+
+    .level-60-divider {
+        width: 80px;
+        height: 2px;
+    }
+
+    .level-60-big-number {
+        font-size: 2.5rem;
+    }
+
+    .level-60-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .level-60-scenarios-grid {
+        grid-template-columns: 1fr;
+    }
+}
