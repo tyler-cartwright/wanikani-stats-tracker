@@ -420,6 +420,12 @@ a:hover {
     margin-bottom: 0;
 }
 
+.card-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+}
+
 .card-badge {
     padding: var(--spacing-xs) var(--spacing-md);
     border-radius: var(--radius-full);
@@ -1593,6 +1599,9 @@ a:hover {
 .accuracy-deep-dive {
     max-width: 1200px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
 }
 
 .accuracy-overview {
@@ -1666,9 +1675,14 @@ a:hover {
 
 .accuracy-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: var(--spacing-lg);
-    margin: var(--spacing-lg) 0;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+    .accuracy-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .accuracy-type-list {
@@ -1797,11 +1811,13 @@ a:hover {
 
 .level-accuracy-chart {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     align-items: flex-end;
-    height: 250px;
+    height: 280px;
     overflow-x: auto;
-    padding: var(--spacing-md) 0;
+    padding: var(--spacing-lg) var(--spacing-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
 }
 
 .level-accuracy-bar-container {
@@ -1809,33 +1825,56 @@ a:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 40px;
+    gap: var(--spacing-xs);
+    min-width: 45px;
 }
 
 .level-accuracy-bar {
     width: 100%;
-    flex: 1;
+    height: 200px;
     display: flex;
     align-items: flex-end;
-    min-height: 20px;
+    justify-content: center;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    position: relative;
 }
 
 .level-accuracy-fill {
     width: 100%;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    transition: height var(--transition-base);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    min-height: 4px;
+}
+
+.level-accuracy-fill.accuracy-excellent {
+    background: linear-gradient(to top, var(--color-success), var(--color-success-light));
+}
+
+.level-accuracy-fill.accuracy-good {
+    background: linear-gradient(to top, var(--color-info), var(--color-info-light));
+}
+
+.level-accuracy-fill.accuracy-fair {
+    background: linear-gradient(to top, var(--color-warning), var(--color-warning-light));
+}
+
+.level-accuracy-fill.accuracy-poor {
+    background: linear-gradient(to top, var(--color-error), var(--color-error-light));
 }
 
 .level-accuracy-label {
     font-size: var(--font-size-xs);
     color: var(--text-secondary);
-    margin-top: var(--spacing-xs);
+    font-weight: var(--font-weight-medium);
+    order: 3;
 }
 
 .level-accuracy-value {
-    font-size: 0.625rem;
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-bold);
-    margin-top: 2px;
+    color: var(--text-primary);
+    order: 1;
 }
 
 .problem-items-list {

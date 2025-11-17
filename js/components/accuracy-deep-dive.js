@@ -1,7 +1,7 @@
 // Accuracy Deep Dive Component
 // Comprehensive accuracy analysis
 
-import { calculateAccuracyStats, getItemsBelowAccuracy, calculateAccuracyByLevel } from '../calculations/accuracy-analyzer.js';
+import { calculateAccuracyStats, calculateAccuracyByLevel } from '../calculations/accuracy-analyzer.js';
 
 export class AccuracyDeepDive {
     constructor(reviewStats, subjects, assignments) {
@@ -9,7 +9,6 @@ export class AccuracyDeepDive {
         this.subjects = subjects;
         this.assignments = assignments;
         this.stats = calculateAccuracyStats(reviewStats);
-        this.belowThreshold = getItemsBelowAccuracy(reviewStats, 75);
         this.byLevel = calculateAccuracyByLevel(reviewStats, subjects);
     }
 
@@ -21,14 +20,13 @@ export class AccuracyDeepDive {
         return `
             <div class="accuracy-deep-dive">
                 ${this.renderOverview()}
-                
+
                 <div class="accuracy-grid">
                     ${this.renderByType()}
                     ${this.renderMeaningVsReading()}
                 </div>
 
                 ${this.renderByLevel()}
-                ${this.renderProblemItems()}
             </div>
         `;
     }
@@ -83,16 +81,16 @@ export class AccuracyDeepDive {
         let color = '';
 
         if (overall >= 90) {
-            message = 'í¾‰ Excellent! You have outstanding accuracy across your reviews.';
+            message = 'ðŸŒŸ Excellent! You have outstanding accuracy across your reviews.';
             color = 'var(--color-success)';
         } else if (overall >= 80) {
-            message = 'í± Good job! Your accuracy is solid. Keep practicing to reach 90%+';
+            message = 'ðŸ‘ Good job! Your accuracy is solid. Keep practicing to reach 90%+';
             color = 'var(--color-info)';
         } else if (overall >= 70) {
             message = 'âš ï¸ Fair accuracy. Consider slowing down your review pace and double-checking answers.';
             color = 'var(--color-warning)';
         } else {
-            message = 'í´´ Low accuracy detected. Focus on problem items and consider reviewing mnemonics.';
+            message = 'âš¡ Low accuracy detected. Focus on problem items and consider reviewing mnemonics.';
             color = 'var(--color-error)';
         }
 
@@ -171,9 +169,9 @@ export class AccuracyDeepDive {
 
                 ${diff > 5 ? `
                     <div class="comparison-insight">
-                        ${meaningBetter 
-                            ? `í³– Your <strong>reading</strong> accuracy is ${diff.toFixed(1)}% lower than meaning. Focus more on reading practice.`
-                            : `í´¤ Your <strong>meaning</strong> accuracy is ${diff.toFixed(1)}% lower than reading. Review mnemonics for meanings.`
+                        ${meaningBetter
+                            ? `ðŸ’¡ Your <strong>reading</strong> accuracy is ${diff.toFixed(1)}% lower than meaning. Focus more on reading practice.`
+                            : `ðŸ’¡ Your <strong>meaning</strong> accuracy is ${diff.toFixed(1)}% lower than reading. Review mnemonics for meanings.`
                         }
                     </div>
                 ` : `
@@ -190,81 +188,42 @@ export class AccuracyDeepDive {
      */
     renderByLevel() {
         const levels = Object.keys(this.byLevel).sort((a, b) => parseInt(a) - parseInt(b));
-        const maxAccuracy = 100;
 
-        return `
-            <div class="card">
-                <h3 class="card-title">Accuracy by Level</h3>
-                
-                <div class="level-accuracy-chart">
-                    ${levels.map(level => {
-                        const data = this.byLevel[level];
-                        const height = data.accuracy;
-                        
-                        return `
-                            <div class="level-accuracy-bar-container" title="Level ${level}: ${data.accuracy.toFixed(1)}%">
-                                <div class="level-accuracy-bar" style="height: ${height}%">
-                                    <div class="level-accuracy-fill ${this.getAccuracyClass(data.accuracy)}"></div>
-                                </div>
-                                <div class="level-accuracy-label">${level}</div>
-                                <div class="level-accuracy-value">${data.accuracy.toFixed(0)}%</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-    }
-
-    /**
-     * Render problem items
-     */
-    renderProblemItems() {
-        if (this.belowThreshold.length === 0) {
+        if (levels.length === 0) {
             return `
-                <div class="card success-card">
-                    <h3 class="card-title">í¾‰ No Problem Items!</h3>
-                    <p>All your items are above 75% accuracy. Excellent work!</p>
+                <div class="card">
+                    <h3 class="card-title">Accuracy by Level</h3>
+                    <p style="text-align: center; color: var(--text-secondary); padding: var(--spacing-xl);">
+                        No review data available yet.
+                    </p>
                 </div>
             `;
         }
 
         return `
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Problem Items (Below 75%)</h3>
-                    <span class="card-badge badge-warning">${this.belowThreshold.length} items</span>
-                </div>
-                
-                <div class="problem-items-list">
-                    ${this.belowThreshold.slice(0, 20).map(item => {
-                        const subject = this.subjects.find(s => s.id === item.subject_id);
-                        const character = subject?.data?.characters || 'N/A';
-                        const meaning = subject?.data?.meanings?.[0]?.meaning || 'N/A';
+                <h3 class="card-title">Accuracy by Level</h3>
+                <p class="card-subtitle" style="margin-top: var(--spacing-xs); color: var(--text-secondary);">
+                    Track your accuracy performance across different levels
+                </p>
+
+                <div class="level-accuracy-chart">
+                    ${levels.map(level => {
+                        const data = this.byLevel[level];
+                        const heightPercent = data.accuracy;
 
                         return `
-                            <div class="problem-item" onclick="window.showItemDetail(${item.subject_id})">
-                                <div class="problem-item-character">${character}</div>
-                                <div class="problem-item-info">
-                                    <div class="problem-item-meaning">${meaning}</div>
-                                    <div class="problem-item-meta">
-                                        <span class="type-badge type-${item.subject_type}">${this.capitalize(item.subject_type)}</span>
-                                        <span class="problem-item-attempts">${item.total_attempts} attempts</span>
-                                    </div>
+                            <div class="level-accuracy-bar-container">
+                                <div class="level-accuracy-value">${data.accuracy.toFixed(0)}%</div>
+                                <div class="level-accuracy-bar" title="Level ${level}: ${data.accuracy.toFixed(1)}% (${data.total} reviews)">
+                                    <div class="level-accuracy-fill ${this.getAccuracyClass(data.accuracy)}"
+                                         style="height: ${heightPercent}%"></div>
                                 </div>
-                                <div class="problem-item-accuracy ${this.getAccuracyClass(item.accuracy)}">
-                                    ${item.accuracy.toFixed(1)}%
-                                </div>
+                                <div class="level-accuracy-label">L${level}</div>
                             </div>
                         `;
                     }).join('')}
                 </div>
-
-                ${this.belowThreshold.length > 20 ? `
-                    <div style="text-align: center; margin-top: var(--spacing-md); color: var(--text-secondary);">
-                        Showing 20 of ${this.belowThreshold.length} items
-                    </div>
-                ` : ''}
             </div>
         `;
     }
