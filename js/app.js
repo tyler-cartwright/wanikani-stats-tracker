@@ -330,10 +330,28 @@ window.closeItemDetail = function() {
 // Table filter and sort handlers
 window.updateTableFilter = function(filterType, value) {
     if (!assignmentsTable) return;
+
+    // Remember the focused element and cursor position before re-render
+    const activeElement = document.activeElement;
+    const activeId = activeElement?.id;
+    const cursorPosition = activeElement?.selectionStart;
+
     assignmentsTable.filters[filterType] = value;
     const container = document.getElementById('assignments-table-container');
     if (container) {
         container.innerHTML = assignmentsTable.render();
+
+        // Restore focus and cursor position after re-render
+        if (activeId) {
+            const elementToFocus = document.getElementById(activeId);
+            if (elementToFocus) {
+                elementToFocus.focus();
+                // Restore cursor position for text inputs
+                if (elementToFocus.setSelectionRange && cursorPosition !== undefined) {
+                    elementToFocus.setSelectionRange(cursorPosition, cursorPosition);
+                }
+            }
+        }
     }
 };
 
@@ -363,19 +381,35 @@ window.resetTableFilters = function() {
 
 window.sortTable = function(column) {
     if (!assignmentsTable) return;
-    
+
+    // Remember the focused element before re-render
+    const activeElement = document.activeElement;
+    const activeId = activeElement?.id;
+    const cursorPosition = activeElement?.selectionStart;
+
     if (assignmentsTable.currentSort.column === column) {
         // Toggle direction
-        assignmentsTable.currentSort.direction = 
+        assignmentsTable.currentSort.direction =
             assignmentsTable.currentSort.direction === 'asc' ? 'desc' : 'asc';
     } else {
         assignmentsTable.currentSort.column = column;
         assignmentsTable.currentSort.direction = 'asc';
     }
-    
+
     const container = document.getElementById('assignments-table-container');
     if (container) {
         container.innerHTML = assignmentsTable.render();
+
+        // Restore focus after re-render (in case user had search input focused)
+        if (activeId) {
+            const elementToFocus = document.getElementById(activeId);
+            if (elementToFocus) {
+                elementToFocus.focus();
+                if (elementToFocus.setSelectionRange && cursorPosition !== undefined) {
+                    elementToFocus.setSelectionRange(cursorPosition, cursorPosition);
+                }
+            }
+        }
     }
 };
 
