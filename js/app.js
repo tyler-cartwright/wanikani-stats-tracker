@@ -12,6 +12,13 @@ import AssignmentsTable from './components/assignments-table.js';
 import LevelTimeline from './components/level-timeline.js';
 import ItemDetail from './components/item-detail.js';
 import AccuracyDeepDive from './components/accuracy-deep-dive.js';
+import {
+    exportAssignmentsCSV,
+    exportReviewStatsCSV,
+    exportLeechesCSV,
+    exportAllDataJSON,
+    exportLevelProgressionsCSV
+} from './utils/data-exporter.js';
 
 console.log('[App] Imports successful!');
 console.log('WaniKani Stats Tracker - Initializing...');
@@ -251,7 +258,7 @@ function renderProgressView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">í³ˆ Progress Tracking</h1>
+            <h1 class="dashboard-title">ï¿½ï¿½ï¿½ Progress Tracking</h1>
             
             <div class="card">
                 <h2 class="card-title">Level Timeline</h2>
@@ -284,7 +291,7 @@ function renderAccuracyView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">í¾¯ Accuracy Analysis</h1>
+            <h1 class="dashboard-title">ï¿½ï¿½ï¿½ Accuracy Analysis</h1>
             ${accuracyDeepDive.render()}
         </div>
     `;
@@ -380,11 +387,11 @@ function renderLeechesView() {
     
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">í´¥ Leech Management</h1>
+            <h1 class="dashboard-title">ï¿½ï¿½ï¿½ Leech Management</h1>
             
             ${rootCauses.length > 0 ? `
                 <div class="card">
-                    <h2 class="card-title">í¾¯ Root Cause Components</h2>
+                    <h2 class="card-title">ï¿½ï¿½ï¿½ Root Cause Components</h2>
                     <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
                         These components are causing problems in multiple items. Study these first!
                     </p>
@@ -404,7 +411,7 @@ function renderLeechesView() {
             ` : ''}
             
             <div class="card">
-                <h2 class="card-title">í³‹ Priority Study List (Top 20)</h2>
+                <h2 class="card-title">ï¿½ï¿½ï¿½ Priority Study List (Top 20)</h2>
                 <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
                     ${topLeeches.map(leech => {
                         const char = leech.subject?.data?.characters || 'N/A';
@@ -491,7 +498,7 @@ function renderLeechesView() {
 function renderReviewsView() {
     mainContent.innerHTML = `
         <div class="dashboard">
-            <h1 class="dashboard-title">í³š Review History</h1>
+            <h1 class="dashboard-title">ï¿½ï¿½ï¿½ Review History</h1>
             <div class="card">
                 <p style="text-align: center; padding: var(--spacing-2xl); color: var(--text-secondary);">
                     Review history visualization coming in Phase 7!<br>
@@ -568,6 +575,57 @@ window.logout = function() {
         window.location.reload();
     }
 };
+
+// Export functions
+window.exportData = function(type) {
+    if (!appData) {
+        alert('No data available to export');
+        return;
+    }
+
+    try {
+        switch(type) {
+            case 'assignments':
+                exportAssignmentsCSV(appData.assignments, appData.subjects);
+                break;
+            case 'review-stats':
+                exportReviewStatsCSV(appData.reviewStats, appData.subjects);
+                break;
+            case 'leeches':
+                exportLeechesCSV(appData.leechAnalysis, appData.subjects);
+                break;
+            case 'level-progressions':
+                exportLevelProgressionsCSV(appData.levelProgressions);
+                break;
+            case 'all-json':
+                exportAllDataJSON(appData);
+                break;
+            default:
+                alert('Unknown export type');
+        }
+    } catch (error) {
+        console.error('[App] Export failed:', error);
+        alert('Export failed: ' + error.message);
+    }
+};
+
+// Toggle export menu
+window.toggleExportMenu = function() {
+    const menu = document.getElementById('export-dropdown');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    }
+};
+
+// Close export menu when clicking outside
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('export-dropdown');
+    const button = event.target.closest('[onclick*="toggleExportMenu"]');
+
+    if (menu && !menu.contains(event.target) && !button) {
+        menu.classList.add('hidden');
+    }
+});
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
