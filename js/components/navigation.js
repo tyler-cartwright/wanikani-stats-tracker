@@ -70,11 +70,13 @@ export class Navigation {
                                 </button>
                             </div>
                         </div>
-                        <button class="nav-link" onclick="window.refreshData()" title="Hard Reload: Clear cache and re-fetch all data">
-                            🔄 Hard Reload
+                        <button class="nav-link" onclick="window.refreshData()" title="Hard Reload: Clear cache and re-fetch all data" aria-label="Hard Reload">
+                            <span class="nav-icon">🔄</span>
+                            <span>Hard Reload</span>
                         </button>
-                        <button class="nav-link" onclick="window.logout()" title="Logout">
-                            🚪 Logout
+                        <button class="nav-link" onclick="window.logout()" title="Logout" aria-label="Logout">
+                            <span class="nav-icon">🚪</span>
+                            <span>Logout</span>
                         </button>
                     </div>
                 </div>

@@ -286,8 +286,20 @@ a:hover {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
     min-width: 220px;
+    max-width: calc(100vw - 2 * var(--spacing-md));
     z-index: var(--z-index-dropdown);
     overflow: hidden;
+}
+
+/* Ensure dropdown stays within viewport on small screens */
+@media (max-width: 767px) {
+    .dropdown-menu {
+        position: fixed;
+        right: var(--spacing-sm);
+        left: var(--spacing-sm);
+        min-width: auto;
+        width: auto;
+    }
 }
 
 .dropdown-menu.hidden {

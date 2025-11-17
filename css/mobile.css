@@ -87,8 +87,25 @@ body {
         gap: var(--spacing-xs);
     }
 
+    .nav-dropdown {
+        flex: 1 1 auto;
+        display: flex;
+        justify-content: center;
+    }
+
+    .nav-dropdown .nav-link {
+        width: 100%;
+    }
+
+    .dropdown-item {
+        min-height: 44px;
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: var(--font-size-base);
+    }
+
     .nav-action,
-    .theme-toggle-btn {
+    .theme-toggle-btn,
+    .nav-link {
         min-width: 44px;
         min-height: 44px;
     }
@@ -487,6 +504,60 @@ body {
 /* ==========================================================================
    Tablet Optimizations (768px+)
    ========================================================================== */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Tablet Navigation - iPad mini and similar */
+    .nav-container {
+        height: auto;
+        min-height: 64px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+    }
+
+    .nav-brand {
+        flex-shrink: 0;
+        order: 1;
+    }
+
+    .nav-links {
+        flex: 1;
+        order: 2;
+        gap: var(--spacing-xs);
+        justify-content: flex-start;
+    }
+
+    .nav-actions {
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+        justify-content: flex-end;
+        order: 3;
+        flex-shrink: 0;
+    }
+
+    .nav-link {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-xs);
+        white-space: nowrap;
+    }
+
+    /* Condense nav-actions buttons to icon-only on tablets */
+    .nav-actions .nav-link:not(.nav-dropdown .nav-link) {
+        padding: var(--spacing-sm);
+    }
+
+    .nav-actions .nav-link span:not(.nav-icon):not(.theme-icon) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+}
 
 @media (min-width: 768px) {
     .dashboard {
