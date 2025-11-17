@@ -6,11 +6,12 @@ import { SRS_STAGES } from '../utils/constants.js';
 /**
  * Calculate burned items statistics
  * @param {Array} assignments - All assignments
+ * @param {Array} subjects - All subjects (total items in course)
  * @returns {Object} Burned items statistics
  */
-export function calculateBurnedStats(assignments) {
+export function calculateBurnedStats(assignments, subjects = null) {
     const burnedAssignments = assignments.filter(a => a.data.srs_stage === SRS_STAGES.BURNED);
-    
+
     // Count by type
     const byType = {
         radical: burnedAssignments.filter(a => a.data.subject_type === 'radical').length,
@@ -18,13 +19,14 @@ export function calculateBurnedStats(assignments) {
         vocabulary: burnedAssignments.filter(a => a.data.subject_type === 'vocabulary').length,
         kana_vocabulary: burnedAssignments.filter(a => a.data.subject_type === 'kana_vocabulary').length
     };
-    
+
     const total = burnedAssignments.length;
-    
-    // Calculate percentage of total items
-    const totalAssignments = assignments.length;
-    const percentage = totalAssignments > 0
-        ? (total / totalAssignments * 100).toFixed(1)
+
+    // Calculate percentage of total items in course (all subjects)
+    // If subjects not provided, fall back to assignments for backward compatibility
+    const totalItems = subjects ? subjects.length : assignments.length;
+    const percentage = totalItems > 0
+        ? (total / totalItems * 100).toFixed(1)
         : 0;
     
     // Calculate burn rate (items burned per day on average)
