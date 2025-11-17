@@ -91,10 +91,10 @@ export class Navigation {
      */
     getViewIcon(view) {
         const icons = {
-            dashboard: '',
-            leeches: '',
-            progress: '',
-            accuracy: ''
+            dashboard: '📊',
+            leeches: '🐛',
+            progress: '📈',
+            accuracy: '🎯'
         };
         return `<span class="nav-icon">${icons[view] || ''}</span>`;
     }
