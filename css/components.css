@@ -3018,6 +3018,7 @@ a:hover {
         flex-direction: column;
         gap: var(--spacing-lg);
         padding: var(--spacing-lg);
+        padding-top: calc(var(--spacing-2xl) + 32px); /* Extra space for absolutely positioned badge */
     }
 
     .level-60-divider {
