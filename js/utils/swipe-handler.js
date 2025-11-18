@@ -7,10 +7,11 @@ export class SwipeHandler {
         this.startY = 0;
         this.distX = 0;
         this.distY = 0;
-        this.threshold = 50; // Minimum swipe distance in pixels
-        this.allowedTime = 300; // Maximum time for swipe in ms
+        this.threshold = 100; // Minimum swipe distance in pixels (increased from 50)
+        this.allowedTime = 250; // Maximum time for swipe in ms (decreased from 300)
         this.startTime = 0;
         this.elapsedTime = 0;
+        this.touchStartElement = null; // Track what element the touch started on
 
         this.views = ['dashboard', 'leeches', 'progress', 'accuracy'];
         this.init();
@@ -23,12 +24,56 @@ export class SwipeHandler {
         const mainContent = document.getElementById('main-content');
         if (!mainContent) return;
 
-        // Touch events
+        // Touch events - use passive: false on touchmove so we can preventDefault if needed
         mainContent.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true });
-        mainContent.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: true });
+        mainContent.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
         mainContent.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: true });
 
-        console.log('[SwipeHandler] Initialized');
+        console.log('[SwipeHandler] Initialized with threshold:', this.threshold, 'allowedTime:', this.allowedTime);
+    }
+
+    /**
+     * Check if element or its parents are scrollable
+     * @param {Element} element - Element to check
+     * @returns {boolean}
+     */
+    isScrollableElement(element) {
+        if (!element || element === document.body) return false;
+
+        const scrollableSelectors = [
+            '.data-table',
+            '.table-container',
+            '.assignments-table-container',
+            '.time-heatmap',
+            '.heatmap-container',
+            '.timeline',
+            '.accuracy-heatmap',
+            'table',
+            '[style*="overflow"]'
+        ];
+
+        // Check if element or any parent matches scrollable selectors
+        let current = element;
+        while (current && current !== document.body) {
+            // Check if element matches any scrollable selector
+            if (scrollableSelectors.some(selector => current.matches && current.matches(selector))) {
+                return true;
+            }
+
+            // Check if element has horizontal scroll
+            const style = window.getComputedStyle(current);
+            const hasHorizontalScroll = style.overflowX === 'scroll' ||
+                                       style.overflowX === 'auto' ||
+                                       current.scrollWidth > current.clientWidth;
+
+            if (hasHorizontalScroll) {
+                return true;
+            }
+
+            current = current.parentElement;
+        }
+
+        return false;
     }
 
     /**
@@ -40,6 +85,7 @@ export class SwipeHandler {
         this.startX = touchObj.pageX;
         this.startY = touchObj.pageY;
         this.startTime = new Date().getTime();
+        this.touchStartElement = e.target;
     }
 
     /**
@@ -47,16 +93,24 @@ export class SwipeHandler {
      * @param {TouchEvent} e - Touch event
      */
     handleTouchMove(e) {
-        // Prevent default only for horizontal swipes
         const touchObj = e.changedTouches[0];
         const distX = Math.abs(touchObj.pageX - this.startX);
         const distY = Math.abs(touchObj.pageY - this.startY);
 
-        // If horizontal swipe is more prominent than vertical, we might want to navigate
-        if (distX > distY && distX > 10) {
-            // Allow horizontal swipe, but still let vertical scroll happen
-            this.distX = touchObj.pageX - this.startX;
-            this.distY = touchObj.pageY - this.startY;
+        this.distX = touchObj.pageX - this.startX;
+        this.distY = touchObj.pageY - this.startY;
+
+        // Don't prevent default if touch started on scrollable element
+        // This allows normal scrolling behavior
+        if (this.isScrollableElement(this.touchStartElement)) {
+            return;
+        }
+
+        // Only prevent default if it looks like a clear horizontal swipe
+        // and not started on a scrollable element
+        if (distX > distY && distX > 30) {
+            // This is likely a navigation swipe, prevent default scroll
+            e.preventDefault();
         }
     }
 
@@ -70,6 +124,12 @@ export class SwipeHandler {
         this.distY = touchObj.pageY - this.startY;
         this.elapsedTime = new Date().getTime() - this.startTime;
 
+        // Don't trigger navigation if touch started on scrollable element
+        if (this.isScrollableElement(this.touchStartElement)) {
+            this.reset();
+            return;
+        }
+
         // Check if swipe qualifies
         if (this.isSwipe()) {
             const direction = this.getSwipeDirection();
@@ -79,11 +139,18 @@ export class SwipeHandler {
             }
         }
 
-        // Reset
+        this.reset();
+    }
+
+    /**
+     * Reset swipe state
+     */
+    reset() {
         this.startX = 0;
         this.startY = 0;
         this.distX = 0;
         this.distY = 0;
+        this.touchStartElement = null;
     }
 
     /**
@@ -94,7 +161,7 @@ export class SwipeHandler {
         return (
             this.elapsedTime <= this.allowedTime &&
             Math.abs(this.distX) >= this.threshold &&
-            Math.abs(this.distY) <= Math.abs(this.distX) * 0.5 // Horizontal swipe must be more prominent
+            Math.abs(this.distY) <= Math.abs(this.distX) * 0.3 // Horizontal swipe must be much more prominent (was 0.5)
         );
     }
 
@@ -110,15 +177,39 @@ export class SwipeHandler {
     }
 
     /**
+     * Get current view from window
+     * @returns {string}
+     */
+    getCurrentView() {
+        // Try multiple ways to get current view
+        if (window.getCurrentView && typeof window.getCurrentView === 'function') {
+            return window.getCurrentView();
+        }
+
+        // Check for active nav link
+        const activeLink = document.querySelector('.nav-link.active');
+        if (activeLink) {
+            const view = activeLink.getAttribute('data-view');
+            if (view) return view;
+        }
+
+        // Default to dashboard
+        return 'dashboard';
+    }
+
+    /**
      * Navigate based on swipe direction
      * @param {string} direction - 'left' or 'right'
      */
     navigate(direction) {
-        // Get current view from navigation or window
-        const currentView = window.navigation?.currentView || 'dashboard';
+        // Get current view
+        const currentView = this.getCurrentView();
         const currentIndex = this.views.indexOf(currentView);
 
-        if (currentIndex === -1) return;
+        if (currentIndex === -1) {
+            console.log('[SwipeHandler] Unknown view:', currentView);
+            return;
+        }
 
         let targetIndex;
         if (direction === 'left') {

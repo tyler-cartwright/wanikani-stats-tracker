@@ -226,12 +226,12 @@ function renderNavigation() {
 window.navigateTo = function(view) {
     currentView = view;
     navigation.setActiveView(view);
-    
+
     if (!mainContent || !appData) return;
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     switch (view) {
         case 'dashboard':
             renderDashboard();
@@ -248,6 +248,11 @@ window.navigateTo = function(view) {
         default:
             renderDashboard();
     }
+};
+
+// Get current view (for swipe handler)
+window.getCurrentView = function() {
+    return currentView;
 };
 
 // Render dashboard
