@@ -142,12 +142,12 @@ export function projectLevel60Date(
   const levelDurations: Array<{ level: number; days: number }> = []
 
   for (const progression of levelProgressions) {
-    if (progression.passed_at && progression.started_at) {
-      const startDate = new Date(progression.started_at)
+    if (progression.passed_at && progression.unlocked_at) {
+      const unlockedDate = new Date(progression.unlocked_at)
       const passedDate = new Date(progression.passed_at)
-      const days = differenceInDays(passedDate, startDate)
+      const days = differenceInDays(passedDate, unlockedDate)
 
-      if (days > 0) {
+      if (days >= 0) {
         levelDurations.push({
           level: progression.level,
           days,
