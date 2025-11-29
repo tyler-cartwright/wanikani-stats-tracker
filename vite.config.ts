@@ -6,7 +6,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/wanikani-stats-tracker-rebuild/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/wanikani-stats-tracker/' : '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'WaniKani Statistics Tracker',
-        short_name: 'WaniKani Stats',
+        name: 'WaniTrack',
+        short_name: 'WaniTrack',
         description: 'Track your WaniKani progress with beautiful statistics and insights',
         theme_color: '#E63946',
         background_color: '#FAF9F6',
