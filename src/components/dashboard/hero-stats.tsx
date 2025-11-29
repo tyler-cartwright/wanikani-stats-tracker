@@ -1,5 +1,4 @@
 import { formatDistanceToNow } from 'date-fns'
-import { Loader2 } from 'lucide-react'
 import { JapaneseLabel } from '@/components/shared/japanese-label'
 import { useUser, useSummary } from '@/lib/api/queries'
 
@@ -11,11 +10,14 @@ export function HeroStats() {
 
   // Calculate current reviews and lessons
   const reviewsAvailable = summary?.reviews
-    .filter((r) => new Date(r.available_at) <= new Date())
-    .reduce((sum, r) => sum + r.subject_ids.length, 0) || 0
+    ? summary.reviews
+        .filter((r) => new Date(r.available_at) <= new Date())
+        .reduce((sum, r) => sum + r.subject_ids.length, 0)
+    : 0
 
   const lessonsAvailable = summary?.lessons
-    .reduce((sum, l) => sum + l.subject_ids.length, 0) || 0
+    ? summary.lessons.reduce((sum, l) => sum + l.subject_ids.length, 0)
+    : 0
 
   // Next review time
   const nextReviewTime = summary?.next_reviews_at
@@ -40,7 +42,7 @@ export function HeroStats() {
       {/* Level - Crimson Pro, Vermillion red */}
       <div className="text-center md:text-left space-y-3">
         <div className="text-3xl font-display font-semibold text-vermillion-500 leading-tight">
-          Level {user?.level || 1}
+          Level {user?.level ?? 1}
         </div>
         <div>
           <div className="text-sm font-medium text-ink-400 dark:text-paper-300">Level</div>

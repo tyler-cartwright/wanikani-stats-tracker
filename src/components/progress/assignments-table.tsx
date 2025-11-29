@@ -2,8 +2,7 @@ import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
 import { SRSBadge } from '@/components/shared/srs-badge'
 import { useAssignments, useSubjects, useReviewStatistics } from '@/lib/api/queries'
-import { getSRSStageName } from '@/lib/api/types'
-import type { Assignment as APIAssignment, Subject, ReviewStatistic } from '@/lib/api/types'
+import { getSRSStageName, type SRSStage } from '@/lib/api/types'
 
 interface EnrichedAssignment {
   id: number
@@ -11,7 +10,7 @@ interface EnrichedAssignment {
   meaning: string
   type: 'Radical' | 'Kanji' | 'Vocabulary'
   level: number
-  srs: 'apprentice' | 'guru' | 'master' | 'enlightened' | 'burned' | 'initiate'
+  srs: SRSStage
   accuracy: number
 }
 
@@ -71,27 +70,30 @@ export function AssignmentsTable() {
         let meaning = ''
         let type: 'Radical' | 'Kanji' | 'Vocabulary' = 'Kanji'
 
-        if (subject.object === 'radical') {
-          character = subject.characters || subject.character_images?.[0]?.url || '?'
+        if ('character_images' in subject) {
+          // Radical
+          character = subject.characters || '?'
           meaning = subject.meanings[0]?.meaning || ''
           type = 'Radical'
-        } else if (subject.object === 'kanji') {
+        } else if ('component_subject_ids' in subject && 'readings' in subject && subject.readings.some((r: any) => 'type' in r)) {
+          // Kanji (has readings with type)
           character = subject.characters || ''
           meaning = subject.meanings[0]?.meaning || ''
           type = 'Kanji'
-        } else if (subject.object === 'vocabulary') {
+        } else {
+          // Vocabulary
           character = subject.characters || ''
           meaning = subject.meanings[0]?.meaning || ''
           type = 'Vocabulary'
         }
 
         return {
-          id: assignment.id,
+          id: subject.id,
           character,
           meaning,
           type,
           level: subject.level,
-          srs: getSRSStageName(assignment.srs_stage) as EnrichedAssignment['srs'],
+          srs: getSRSStageName(assignment.srs_stage),
           accuracy,
         }
       })

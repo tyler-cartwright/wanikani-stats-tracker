@@ -90,7 +90,7 @@ export async function fetchAssignmentsFiltered(
 export async function fetchSubjects(
   token: string,
   onProgress?: (current: number, total: number) => void
-): Promise<Subject[]> {
+): Promise<(Subject & { id: number })[]> {
   return fetchAllPages<Subject>('/subjects', token, onProgress)
 }
 
@@ -106,7 +106,7 @@ export async function fetchSubjectsFiltered(
     hidden?: boolean
   },
   onProgress?: (current: number, total: number) => void
-): Promise<Subject[]> {
+): Promise<(Subject & { id: number })[]> {
   const params = new URLSearchParams()
 
   if (filters?.ids) {

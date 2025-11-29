@@ -39,7 +39,7 @@ export interface RootCauseRadical {
  */
 export function detectLeeches(
   reviewStats: ReviewStatistic[],
-  subjects: Subject[],
+  subjects: (Subject & { id: number })[],
   assignments: Assignment[],
   threshold: { minReviews?: number; maxAccuracy?: number } = {}
 ): LeechItem[] {
@@ -90,8 +90,8 @@ export function detectLeeches(
       // Calculate severity (higher is worse)
       const severity = calculateSeverity(incorrectCount, totalReviews, stat.percentage_correct)
 
-      const character = 'characters' in subject ? subject.characters : '?'
-      const meaning = subject.meanings.find((m) => m.primary)?.meaning || 'Unknown'
+      const character = ('characters' in subject ? subject.characters : null) || '?'
+      const meaning = subject.meanings.find((m) => m.primary)?.meaning ?? 'Unknown'
       const type =
         stat.subject_type === 'kana_vocabulary' ? 'vocabulary' : stat.subject_type
       const level = 'level' in subject ? subject.level : 0

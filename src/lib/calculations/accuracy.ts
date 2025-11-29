@@ -19,7 +19,7 @@ export interface AccuracyMetrics {
  */
 export function calculateAccuracyMetrics(
   reviewStats: ReviewStatistic[],
-  subjects: Subject[]
+  subjects: (Subject & { id: number })[]
 ): AccuracyMetrics {
   // Create subject lookup map
   const subjectMap = new Map<number, Subject & { id: number }>()
@@ -137,9 +137,7 @@ export function calculateAccuracyMetrics(
  * This would need the reviews endpoint which we haven't implemented yet
  * Returning placeholder for now
  */
-export function calculateAccuracyByHour(
-  reviewStats: ReviewStatistic[]
-): Map<number, number> {
+export function calculateAccuracyByHour(): Map<number, number> {
   // This would need actual review data with timestamps
   // For now, return empty map
   // TODO: Implement when reviews endpoint is added

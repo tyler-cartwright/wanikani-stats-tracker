@@ -42,7 +42,7 @@ export function useUser() {
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,
   })
 }
@@ -62,7 +62,7 @@ export function useAssignments() {
     },
     enabled: !!token,
     staleTime: 30 * 1000, // 30 seconds
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   })
 }
@@ -82,7 +82,7 @@ export function useSubjects() {
     },
     enabled: !!token,
     staleTime: 60 * 60 * 1000, // 1 hour
-    cacheTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
     retry: 1,
   })
 }
@@ -102,7 +102,7 @@ export function useLevelProgressions() {
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,
   })
 }
@@ -122,7 +122,7 @@ export function useReviewStatistics() {
     },
     enabled: !!token,
     staleTime: 30 * 1000, // 30 seconds
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   })
 }
@@ -142,7 +142,7 @@ export function useSummary() {
     },
     enabled: !!token,
     staleTime: 10 * 1000, // 10 seconds
-    cacheTime: 60 * 1000, // 1 minute
+    gcTime: 60 * 1000, // 1 minute
     refetchInterval: 30 * 1000, // Refetch every 30 seconds for live updates
     retry: 1,
   })

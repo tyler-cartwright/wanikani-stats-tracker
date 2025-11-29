@@ -1,5 +1,5 @@
 // Level Progress Calculations
-import type { Assignment, Subject, RadicalSubject, KanjiSubject } from '@/lib/api/types'
+import type { Assignment, Subject } from '@/lib/api/types'
 
 export interface LevelProgressData {
   radicals: {
@@ -28,7 +28,7 @@ export interface LevelProgressData {
  */
 export function calculateLevelProgress(
   assignments: Assignment[],
-  subjects: Subject[],
+  subjects: (Subject & { id: number })[],
   currentLevel: number,
   levelStartDate?: string
 ): LevelProgressData {

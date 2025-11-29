@@ -16,7 +16,7 @@ export function LevelProgress() {
         assignments,
         subjects,
         user.level,
-        levelProgressions?.find((lp) => lp.level === user.level)?.started_at
+        levelProgressions?.find((lp) => lp.level === user.level)?.started_at ?? undefined
       )
     : null
 

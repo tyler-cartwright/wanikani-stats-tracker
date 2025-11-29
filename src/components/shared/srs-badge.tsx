@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils/cn'
-
-type SRSStage = 'apprentice' | 'guru' | 'master' | 'enlightened' | 'burned'
+import type { SRSStage } from '@/lib/api/types'
 
 interface SRSBadgeProps {
   stage: SRSStage
@@ -9,6 +8,7 @@ interface SRSBadgeProps {
 }
 
 const stageColors: Record<SRSStage, string> = {
+  initiate: 'bg-srs-apprentice',
   apprentice: 'bg-srs-apprentice',
   guru: 'bg-srs-guru',
   master: 'bg-srs-master',
@@ -17,6 +17,7 @@ const stageColors: Record<SRSStage, string> = {
 }
 
 const stageLabels: Record<SRSStage, string> = {
+  initiate: 'Initiate',
   apprentice: 'Apprentice',
   guru: 'Guru',
   master: 'Master',

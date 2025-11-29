@@ -115,10 +115,10 @@ export async function fetchAllPages<T>(
   let pageCount = 0
 
   while (nextUrl) {
-    const collection = await apiRequest<Collection<T>>(nextUrl, token)
+    const collection: Collection<T> = await apiRequest<Collection<T>>(nextUrl, token)
 
     // Extract data from resources and merge in the id field
-    const pageData = collection.data.map(resource => ({
+    const pageData = collection.data.map((resource) => ({
       ...resource.data,
       id: resource.id,
     }))

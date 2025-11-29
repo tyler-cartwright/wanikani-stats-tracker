@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/wanikani-stats-tracker-rebuild/sw.js', { scope: '/wanikani-stats-tracker-rebuild/' })})}
