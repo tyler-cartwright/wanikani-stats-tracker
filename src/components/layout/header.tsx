@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Flame, Sun, Moon, LogOut, ChevronDown } from 'lucide-react'
+import { Flame, Sun, Moon, Settings, LogOut, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useTheme } from '@/hooks/use-theme'
 import { useUserStore } from '@/stores/user-store'
@@ -112,9 +112,17 @@ export function Header() {
                     onClick={() => setShowMenu(false)}
                   />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-paper-200 dark:bg-ink-200 border border-paper-300 dark:border-ink-300 rounded-lg shadow-lg z-20">
+                    <Link
+                      to="/settings"
+                      onClick={() => setShowMenu(false)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-ink-100 dark:text-paper-100 hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth rounded-t-lg"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-ink-100 dark:text-paper-100 hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth rounded-lg"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-ink-100 dark:text-paper-100 hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth rounded-b-lg"
                     >
                       <LogOut className="w-4 h-4" />
                       Disconnect
