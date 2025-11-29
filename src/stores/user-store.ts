@@ -1,6 +1,7 @@
 // User Store - Manages API token and user data
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { clearDatabase } from '@/lib/db/database'
 import type { User } from '@/lib/api/types'
 
 interface UserState {
@@ -12,7 +13,7 @@ interface UserState {
   // Actions
   setToken: (token: string) => void
   setUser: (user: User) => void
-  clearAuth: () => void
+  clearAuth: () => Promise<void>
   setHasHydrated: (state: boolean) => void
 }
 
@@ -35,11 +36,15 @@ export const useUserStore = create<UserState>()(
           user,
         }),
 
-      clearAuth: () =>
-        set({
-          token: null,
-          user: null,
-        }),
+      clearAuth: async () => {
+        // Clear IndexedDB when logging out
+        try {
+          await clearDatabase()
+        } catch (err) {
+          console.error('Failed to clear database:', err)
+        }
+        set({ token: null, user: null })
+      },
 
       setHasHydrated: (state: boolean) =>
         set({

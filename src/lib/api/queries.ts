@@ -1,37 +1,26 @@
-// TanStack Query Hooks for WaniKani API
+// src/lib/api/queries.ts
 import { useQuery } from '@tanstack/react-query'
 import { useUserStore } from '@/stores/user-store'
-import {
-  fetchUser,
-  fetchAssignments,
-  fetchSubjects,
-  fetchLevelProgressions,
-  fetchReviews,
-  fetchReviewStatistics,
-  fetchSummary,
-} from './endpoints'
-
-// ============================================================================
-// Query Keys
-// ============================================================================
+import { useSyncStore } from '@/stores/sync-store'
+import { fetchUser, fetchSummary } from './endpoints'
+import { getCachedSubjects } from '@/lib/db/repositories/subjects'
+import { getCachedAssignments } from '@/lib/db/repositories/assignments'
+import { getCachedReviewStatistics } from '@/lib/db/repositories/review-statistics'
+import { getCachedLevelProgressions } from '@/lib/db/repositories/level-progressions'
+import { getLastSyncInfo } from '@/lib/sync/sync-manager'
 
 export const queryKeys = {
   user: ['user'] as const,
   assignments: ['assignments'] as const,
   subjects: ['subjects'] as const,
   levelProgressions: ['levelProgressions'] as const,
-  reviews: ['reviews'] as const,
   reviewStatistics: ['reviewStatistics'] as const,
   summary: ['summary'] as const,
+  syncStatus: ['syncStatus'] as const,
 }
 
-// ============================================================================
-// Hooks
-// ============================================================================
-
 /**
- * Fetch user information
- * Refetches rarely (user data doesn't change often)
+ * User - always fetched fresh (small payload, important to be current)
  */
 export function useUser() {
   const token = useUserStore((state) => state.token)
@@ -43,115 +32,14 @@ export function useUser() {
       return fetchUser(token)
     },
     enabled: !!token,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 1,
   })
 }
 
 /**
- * Fetch all assignments
- * Moderate refresh rate (changes when doing lessons/reviews)
- */
-export function useAssignments() {
-  const token = useUserStore((state) => state.token)
-
-  return useQuery({
-    queryKey: queryKeys.assignments,
-    queryFn: () => {
-      if (!token) throw new Error('No API token available')
-      return fetchAssignments(token)
-    },
-    enabled: !!token,
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
-  })
-}
-
-/**
- * Fetch all subjects (radicals, kanji, vocabulary)
- * Refetches rarely (subject data is essentially static)
- */
-export function useSubjects() {
-  const token = useUserStore((state) => state.token)
-
-  return useQuery({
-    queryKey: queryKeys.subjects,
-    queryFn: () => {
-      if (!token) throw new Error('No API token available')
-      return fetchSubjects(token)
-    },
-    enabled: !!token,
-    staleTime: 60 * 60 * 1000, // 1 hour
-    gcTime: 24 * 60 * 60 * 1000, // 24 hours
-    retry: 1,
-  })
-}
-
-/**
- * Fetch level progressions
- * Refetches occasionally (new data when leveling up)
- */
-export function useLevelProgressions() {
-  const token = useUserStore((state) => state.token)
-
-  return useQuery({
-    queryKey: queryKeys.levelProgressions,
-    queryFn: () => {
-      if (!token) throw new Error('No API token available')
-      return fetchLevelProgressions(token)
-    },
-    enabled: !!token,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 1,
-  })
-}
-
-/**
- * Fetch recent reviews (last 1000)
- * Used for time-based analysis
- */
-export function useReviews() {
-  const token = useUserStore((state) => state.token)
-
-  return useQuery({
-    queryKey: queryKeys.reviews,
-    queryFn: () => {
-      if (!token) throw new Error('No API token available')
-      return fetchReviews(token, 1000)
-    },
-    enabled: !!token,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 1,
-  })
-}
-
-/**
- * Fetch review statistics
- * Moderate refresh rate (changes after reviews)
- */
-export function useReviewStatistics() {
-  const token = useUserStore((state) => state.token)
-
-  return useQuery({
-    queryKey: queryKeys.reviewStatistics,
-    queryFn: () => {
-      if (!token) throw new Error('No API token available')
-      return fetchReviewStatistics(token)
-    },
-    enabled: !!token,
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
-  })
-}
-
-/**
- * Fetch summary (current reviews/lessons count)
- * Frequent refresh for live data
+ * Summary - always fetched fresh (changes hourly, small payload)
  */
 export function useSummary() {
   const token = useUserStore((state) => state.token)
@@ -163,45 +51,89 @@ export function useSummary() {
       return fetchSummary(token)
     },
     enabled: !!token,
-    staleTime: 10 * 1000, // 10 seconds
-    gcTime: 60 * 1000, // 1 minute
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds for live updates
+    staleTime: 10 * 1000,
+    gcTime: 60 * 1000,
+    refetchInterval: 30 * 1000,
     retry: 1,
   })
 }
 
 /**
- * Prefetch all data
- * Useful for preloading data when user logs in
+ * Subjects - loaded from IndexedDB cache
  */
-export function usePrefetchAll() {
-  const user = useUser()
-  const assignments = useAssignments()
-  const subjects = useSubjects()
-  const levelProgressions = useLevelProgressions()
-  const reviewStatistics = useReviewStatistics()
-  const summary = useSummary()
+export function useSubjects() {
+  const token = useUserStore((state) => state.token)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  return {
-    user,
-    assignments,
-    subjects,
-    levelProgressions,
-    reviewStatistics,
-    summary,
-    isLoading:
-      user.isLoading ||
-      assignments.isLoading ||
-      subjects.isLoading ||
-      levelProgressions.isLoading ||
-      reviewStatistics.isLoading ||
-      summary.isLoading,
-    isError:
-      user.isError ||
-      assignments.isError ||
-      subjects.isError ||
-      levelProgressions.isError ||
-      reviewStatistics.isError ||
-      summary.isError,
-  }
+  return useQuery({
+    queryKey: queryKeys.subjects,
+    queryFn: getCachedSubjects,
+    enabled: !!token && !isSyncing,
+    staleTime: Infinity, // Never stale - we control freshness via sync
+    gcTime: Infinity,
+    retry: 1,
+  })
+}
+
+/**
+ * Assignments - loaded from IndexedDB cache
+ */
+export function useAssignments() {
+  const token = useUserStore((state) => state.token)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
+
+  return useQuery({
+    queryKey: queryKeys.assignments,
+    queryFn: getCachedAssignments,
+    enabled: !!token && !isSyncing,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 1,
+  })
+}
+
+/**
+ * Review Statistics - loaded from IndexedDB cache
+ */
+export function useReviewStatistics() {
+  const token = useUserStore((state) => state.token)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
+
+  return useQuery({
+    queryKey: queryKeys.reviewStatistics,
+    queryFn: getCachedReviewStatistics,
+    enabled: !!token && !isSyncing,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 1,
+  })
+}
+
+/**
+ * Level Progressions - loaded from IndexedDB cache
+ */
+export function useLevelProgressions() {
+  const token = useUserStore((state) => state.token)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
+
+  return useQuery({
+    queryKey: queryKeys.levelProgressions,
+    queryFn: getCachedLevelProgressions,
+    enabled: !!token && !isSyncing,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 1,
+  })
+}
+
+/**
+ * Sync Status - check if we have cached data
+ */
+export function useSyncStatus() {
+  return useQuery({
+    queryKey: queryKeys.syncStatus,
+    queryFn: getLastSyncInfo,
+    staleTime: 0,
+    gcTime: 0,
+  })
 }

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useUserStore } from './stores/user-store'
 import { AppShell } from './components/layout/app-shell'
 import { ErrorBoundary } from './components/shared/error-boundary'
+import { InitialSync } from './components/shared/initial-sync'
 import { Loader2 } from 'lucide-react'
 
 // Lazy load pages
@@ -64,18 +65,20 @@ function AppContent() {
 
   // Show main app if authenticated
   return (
-    <AppShell>
-      <Suspense fallback={loadingFallback}>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/accuracy" element={<Accuracy />} />
-          <Route path="/leeches" element={<Leeches />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </AppShell>
+    <InitialSync>
+      <AppShell>
+        <Suspense fallback={loadingFallback}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/progress" element={<Progress />} />
+            <Route path="/accuracy" element={<Accuracy />} />
+            <Route path="/leeches" element={<Leeches />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </AppShell>
+    </InitialSync>
   )
 }
 

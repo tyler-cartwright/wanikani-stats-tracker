@@ -7,7 +7,6 @@ import type {
   Assignment,
   Subject,
   LevelProgression,
-  Review,
   ReviewStatistic,
   Summary,
 } from './types'
@@ -35,9 +34,15 @@ export async function fetchUser(token: string): Promise<User> {
  */
 export async function fetchAssignments(
   token: string,
+  updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
-): Promise<Assignment[]> {
-  return fetchAllPages<Assignment>('/assignments', token, onProgress)
+): Promise<(Assignment & { id: number })[]> {
+  const params = new URLSearchParams()
+  if (updatedAfter) {
+    params.append('updated_after', updatedAfter)
+  }
+  const endpoint = params.toString() ? `/assignments?${params}` : '/assignments'
+  return fetchAllPages<Assignment>(endpoint, token, onProgress)
 }
 
 /**
@@ -90,9 +95,15 @@ export async function fetchAssignmentsFiltered(
  */
 export async function fetchSubjects(
   token: string,
+  updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
 ): Promise<(Subject & { id: number })[]> {
-  return fetchAllPages<Subject>('/subjects', token, onProgress)
+  const params = new URLSearchParams()
+  if (updatedAfter) {
+    params.append('updated_after', updatedAfter)
+  }
+  const endpoint = params.toString() ? `/subjects?${params}` : '/subjects'
+  return fetchAllPages<Subject>(endpoint, token, onProgress)
 }
 
 /**
@@ -139,46 +150,15 @@ export async function fetchSubjectsFiltered(
  */
 export async function fetchLevelProgressions(
   token: string,
+  updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
-): Promise<LevelProgression[]> {
-  return fetchAllPages<LevelProgression>('/level_progressions', token, onProgress)
-}
-
-// ============================================================================
-// Reviews
-// ============================================================================
-
-/**
- * Fetch recent reviews (limited to avoid large data)
- * https://docs.api.wanikani.com/20170710/#get-all-reviews
- *
- * Note: Fetches most recent 1000 reviews by default to keep data size manageable
- */
-export async function fetchReviews(
-  token: string,
-  limit: number = 1000,
-  onProgress?: (current: number, total: number) => void
-): Promise<(Review & { id: number })[]> {
-  // Fetch with pagination, but stop after reaching limit
-  const reviews: (Review & { id: number })[] = []
-  let nextUrl: string | null = '/reviews'
-
-  while (nextUrl && reviews.length < limit) {
-    const response = await fetchAllPages<Review>(nextUrl, token, onProgress)
-    reviews.push(...response)
-
-    // Stop if we've reached our limit
-    if (reviews.length >= limit) {
-      break
-    }
-
-    nextUrl = null // Only fetch first page for now to keep it simple
+): Promise<(LevelProgression & { id: number })[]> {
+  const params = new URLSearchParams()
+  if (updatedAfter) {
+    params.append('updated_after', updatedAfter)
   }
-
-  // Return most recent reviews, sorted by date (newest first)
-  return reviews
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, limit)
+  const endpoint = params.toString() ? `/level_progressions?${params}` : '/level_progressions'
+  return fetchAllPages<LevelProgression>(endpoint, token, onProgress)
 }
 
 // ============================================================================
@@ -191,9 +171,15 @@ export async function fetchReviews(
  */
 export async function fetchReviewStatistics(
   token: string,
+  updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
-): Promise<ReviewStatistic[]> {
-  return fetchAllPages<ReviewStatistic>('/review_statistics', token, onProgress)
+): Promise<(ReviewStatistic & { id: number })[]> {
+  const params = new URLSearchParams()
+  if (updatedAfter) {
+    params.append('updated_after', updatedAfter)
+  }
+  const endpoint = params.toString() ? `/review_statistics?${params}` : '/review_statistics'
+  return fetchAllPages<ReviewStatistic>(endpoint, token, onProgress)
 }
 
 /**
