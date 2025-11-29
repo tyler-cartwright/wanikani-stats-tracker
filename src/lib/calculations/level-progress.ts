@@ -24,7 +24,8 @@ export interface LevelProgressData {
 /**
  * Calculate progress for current level
  *
- * Level up requirement: Pass 90% of kanji for the level
+ * Level up requirement: Pass 90% of kanji for the level (Guru or higher)
+ * Progress counts items at Guru I or higher (SRS stage >= 5)
  */
 export function calculateLevelProgress(
   assignments: Assignment[],
@@ -32,55 +33,63 @@ export function calculateLevelProgress(
   currentLevel: number,
   levelStartDate?: string
 ): LevelProgressData {
-  // Create subject lookup map
-  const subjectMap = new Map<number, Subject & { id: number }>()
-  subjects.forEach((subject) => {
-    subjectMap.set(subject.id, subject)
+  // Create assignment lookup map
+  const assignmentMap = new Map<number, Assignment>()
+  assignments.forEach((assignment) => {
+    assignmentMap.set(assignment.subject_id, assignment)
   })
 
-  // Filter assignments and subjects for current level
-  const levelAssignments = assignments.filter((a) => {
-    const subject = subjectMap.get(a.subject_id)
-    return subject && 'level' in subject && subject.level === currentLevel
-  })
-
-  // Count by type
+  // Count ALL subjects in the current level (not just unlocked ones)
   let radicalsTotal = 0
-  let radicalsPassedCount = 0
+  let radicalsGuruCount = 0
   let kanjiTotal = 0
-  let kanjiPassedCount = 0
+  let kanjiGuruCount = 0
   let vocabularyTotal = 0
-  let vocabularyPassedCount = 0
+  let vocabularyGuruCount = 0
 
-  for (const assignment of levelAssignments) {
-    const subject = subjectMap.get(assignment.subject_id)
-    if (!subject || assignment.hidden) continue
+  for (const subject of subjects) {
+    // Skip if not current level
+    if (!('level' in subject) || subject.level !== currentLevel) continue
 
-    // Check if this subject is at the current level
-    if ('level' in subject && subject.level !== currentLevel) continue
+    // Get assignment if it exists
+    const assignment = assignmentMap.get(subject.id)
 
-    const passed = assignment.passed
-
-    switch (assignment.subject_type) {
-      case 'radical':
-        radicalsTotal++
-        if (passed) radicalsPassedCount++
-        break
-      case 'kanji':
+    // Count totals based on subject type
+    if ('character_images' in subject) {
+      // Radical
+      radicalsTotal++
+      // Count as guru if assignment exists, not hidden, and SRS stage >= 5 (Guru I or higher)
+      if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
+        radicalsGuruCount++
+      }
+    } else if ('component_subject_ids' in subject && 'readings' in subject) {
+      // Check if it's kanji (has readings with type property)
+      const hasKanjiReadings = subject.readings.some((r: any) => 'type' in r)
+      if (hasKanjiReadings) {
+        // Kanji
         kanjiTotal++
-        if (passed) kanjiPassedCount++
-        break
-      case 'vocabulary':
-      case 'kana_vocabulary':
+        if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
+          kanjiGuruCount++
+        }
+      } else {
+        // Vocabulary
         vocabularyTotal++
-        if (passed) vocabularyPassedCount++
-        break
+        if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
+          vocabularyGuruCount++
+        }
+      }
+    } else {
+      // Kana vocabulary (no component_subject_ids)
+      vocabularyTotal++
+      if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
+        vocabularyGuruCount++
+      }
     }
   }
 
   // Calculate kanji needed to level up (90% of total kanji)
   const kanjiNeededForLevelUp = Math.ceil(kanjiTotal * 0.9)
-  const kanjiNeeded = Math.max(0, kanjiNeededForLevelUp - kanjiPassedCount)
+  const kanjiNeeded = Math.max(0, kanjiNeededForLevelUp - kanjiGuruCount)
 
   // Calculate days on level
   let daysOnLevel = 0
@@ -93,20 +102,20 @@ export function calculateLevelProgress(
 
   return {
     radicals: {
-      current: radicalsPassedCount,
+      current: radicalsGuruCount,
       total: radicalsTotal,
-      percentage: radicalsTotal > 0 ? Math.round((radicalsPassedCount / radicalsTotal) * 100) : 0,
+      percentage: radicalsTotal > 0 ? Math.round((radicalsGuruCount / radicalsTotal) * 100) : 0,
     },
     kanji: {
-      current: kanjiPassedCount,
+      current: kanjiGuruCount,
       total: kanjiTotal,
-      percentage: kanjiTotal > 0 ? Math.round((kanjiPassedCount / kanjiTotal) * 100) : 0,
+      percentage: kanjiTotal > 0 ? Math.round((kanjiGuruCount / kanjiTotal) * 100) : 0,
     },
     vocabulary: {
-      current: vocabularyPassedCount,
+      current: vocabularyGuruCount,
       total: vocabularyTotal,
       percentage:
-        vocabularyTotal > 0 ? Math.round((vocabularyPassedCount / vocabularyTotal) * 100) : 0,
+        vocabularyTotal > 0 ? Math.round((vocabularyGuruCount / vocabularyTotal) * 100) : 0,
     },
     kanjiNeededToLevelUp: kanjiNeeded,
     daysOnLevel,
