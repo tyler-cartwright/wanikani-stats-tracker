@@ -4,9 +4,27 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
+// Dynamically determine base path from repository
+const getBasePath = () => {
+  if (process.env.NODE_ENV !== 'production') return '/'
+
+  // Try to get from GITHUB_REPOSITORY env var (format: owner/repo)
+  const githubRepo = process.env.GITHUB_REPOSITORY
+  if (githubRepo) {
+    const repoName = githubRepo.split('/')[1]
+    return `/${repoName}/`
+  }
+
+  // Fallback to reading from package.json directory name
+  const dirName = path.basename(process.cwd())
+  return `/${dirName}/`
+}
+
+const base = getBasePath()
+
 // https://vite.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/wanikani-stats-tracker/' : '/',
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -20,15 +38,16 @@ export default defineConfig({
         theme_color: '#E63946',
         background_color: '#FAF9F6',
         display: 'standalone',
+        start_url: base,
         icons: [
           {
-            src: '/icon-192.png',
+            src: `${base}icon-192.png`,
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable',
           },
           {
-            src: '/icon-512.png',
+            src: `${base}icon-512.png`,
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',

@@ -14,6 +14,10 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
+
+# Personal notes and roadmaps
+cc-roadmap.md
 
 # Editor directories and files
 .vscode/*
