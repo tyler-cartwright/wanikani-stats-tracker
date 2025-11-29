@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Flame, Sun, Moon, LogOut, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useTheme } from '@/hooks/use-theme'
 import { useUserStore } from '@/stores/user-store'
+import { fetchUser } from '@/lib/api/endpoints'
 
 const navItems = [
   { path: '/', label: 'Dashboard' },
@@ -15,8 +16,25 @@ const navItems = [
 export function Header() {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
-  const { clearAuth, user } = useUserStore()
+  const { clearAuth, user, token, setUser } = useUserStore()
   const [showMenu, setShowMenu] = useState(false)
+
+  // Refetch user data if we have a token but no user data
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (token && !user) {
+        try {
+          const userData = await fetchUser(token)
+          setUser(userData)
+        } catch (error) {
+          console.error('Failed to fetch user data:', error)
+          // Token might be invalid, clear auth
+          clearAuth()
+        }
+      }
+    }
+    loadUserData()
+  }, [token, user, setUser, clearAuth])
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to disconnect? You\'ll need to re-enter your API token.')) {
