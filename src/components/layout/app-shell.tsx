@@ -31,7 +31,7 @@ export function AppShell({ children }: AppShellProps) {
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100">
-                  WK Stats
+                  WaniTrack
                 </span>
               </div>
               <div className="w-10" /> {/* Spacer for centering */}

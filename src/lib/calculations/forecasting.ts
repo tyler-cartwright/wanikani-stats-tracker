@@ -40,35 +40,53 @@ export interface Level60Projection {
 export function calculateReviewForecast(summary: Summary): ReviewForecast {
   const now = new Date()
 
-  // Group reviews by time bucket
-  const reviewsByHour = new Map<number, number>()
-
-  for (const review of summary.reviews) {
-    const availableAt = new Date(review.available_at)
-    const hoursFromNow = Math.floor(
-      (availableAt.getTime() - now.getTime()) / (1000 * 60 * 60)
-    )
-
-    if (hoursFromNow >= 0 && hoursFromNow < 24) {
-      const currentCount = reviewsByHour.get(hoursFromNow) || 0
-      reviewsByHour.set(hoursFromNow, currentCount + review.subject_ids.length)
-    }
-  }
-
-  // Calculate cumulative counts
+  // Count reviews by availability
   let current = 0
   let next2h = 0
   let next6h = 0
   let next12h = 0
   let next24h = 0
 
-  reviewsByHour.forEach((count, hour) => {
-    if (hour === 0) current += count
-    if (hour < 2) next2h += count
-    if (hour < 6) next6h += count
-    if (hour < 12) next12h += count
-    if (hour < 24) next24h += count
-  })
+  // Also track by hour for visualization
+  const reviewsByHour = new Map<number, number>()
+
+  for (const review of summary.reviews) {
+    const availableAt = new Date(review.available_at)
+    const msFromNow = availableAt.getTime() - now.getTime()
+    const hoursFromNow = msFromNow / (1000 * 60 * 60)
+    const count = review.subject_ids.length
+
+    // Count cumulative totals based on actual availability time
+    if (msFromNow <= 0) {
+      // Already available
+      current += count
+      next2h += count
+      next6h += count
+      next12h += count
+      next24h += count
+    } else if (hoursFromNow < 2) {
+      next2h += count
+      next6h += count
+      next12h += count
+      next24h += count
+    } else if (hoursFromNow < 6) {
+      next6h += count
+      next12h += count
+      next24h += count
+    } else if (hoursFromNow < 12) {
+      next12h += count
+      next24h += count
+    } else if (hoursFromNow < 24) {
+      next24h += count
+    }
+
+    // For visualization, bucket by hour
+    const hourBucket = msFromNow <= 0 ? 0 : Math.floor(hoursFromNow)
+    if (hourBucket < 24) {
+      const currentCount = reviewsByHour.get(hourBucket) || 0
+      reviewsByHour.set(hourBucket, currentCount + count)
+    }
+  }
 
   // Find peak hour
   let peakHour = 0
@@ -124,12 +142,12 @@ export function projectLevel60Date(
   const levelDurations: Array<{ level: number; days: number }> = []
 
   for (const progression of levelProgressions) {
-    if (progression.passed_at && progression.started_at) {
-      const startDate = new Date(progression.started_at)
+    if (progression.passed_at && progression.unlocked_at) {
+      const unlockedDate = new Date(progression.unlocked_at)
       const passedDate = new Date(progression.passed_at)
-      const days = differenceInDays(passedDate, startDate)
+      const days = differenceInDays(passedDate, unlockedDate)
 
-      if (days > 0) {
+      if (days >= 0) {
         levelDurations.push({
           level: progression.level,
           days,

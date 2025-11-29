@@ -23,7 +23,7 @@ export function AssignmentsTable() {
   const [srsFilter, setSrsFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 50
+  const [itemsPerPage, setItemsPerPage] = useState(5)
 
   const isLoading = assignmentsLoading || subjectsLoading || statsLoading
 
@@ -131,7 +131,7 @@ export function AssignmentsTable() {
   const paginatedAssignments = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage
     return filteredAssignments.slice(start, start + itemsPerPage)
-  }, [filteredAssignments, currentPage])
+  }, [filteredAssignments, currentPage, itemsPerPage])
 
   if (isLoading) {
     return (
@@ -246,76 +246,140 @@ export function AssignmentsTable() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between mt-6 text-sm">
-        <div className="text-ink-400 dark:text-paper-300">{itemsPerPage} per page</div>
-        {totalPages > 1 && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth text-ink-400 dark:text-paper-300 disabled:opacity-50 disabled:cursor-not-allowed"
+      <div className="mt-6">
+        {/* Per page selector - separate row on mobile */}
+        <div className="flex items-center gap-2 mb-3 sm:hidden">
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value))
+              setCurrentPage(1)
+            }}
+            className="px-2 py-1 text-sm rounded-md border border-paper-300 dark:border-ink-300 bg-paper-100 dark:bg-ink-100 text-ink-100 dark:text-paper-100 focus-ring"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span className="text-sm text-ink-400 dark:text-paper-300">per page</span>
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          {/* Desktop: per page selector on left */}
+          <div className="hidden sm:flex items-center gap-2">
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value))
+                setCurrentPage(1)
+              }}
+              className="px-2 py-1 text-sm rounded-md border border-paper-300 dark:border-ink-300 bg-paper-100 dark:bg-ink-100 text-ink-100 dark:text-paper-100 focus-ring"
             >
-              ←
-            </button>
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span className="text-ink-400 dark:text-paper-300">per page</span>
+          </div>
 
-            {/* First page */}
-            <button
-              onClick={() => setCurrentPage(1)}
-              className={`px-3 py-1 rounded-md transition-smooth ${
-                currentPage === 1
-                  ? 'bg-vermillion-500 text-paper-100 dark:text-ink-100 font-medium'
-                  : 'hover:bg-paper-300 dark:hover:bg-ink-300 text-ink-400 dark:text-paper-300'
-              }`}
-            >
-              1
-            </button>
-
-            {/* Show ellipsis if needed */}
-            {currentPage > 3 && <span className="text-ink-400 dark:text-paper-300">...</span>}
-
-            {/* Show pages around current */}
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(page => page > 1 && page < totalPages && Math.abs(page - currentPage) <= 1)
-              .map(page => (
+          {/* Mobile: simplified pagination */}
+          {totalPages > 1 && (
+            <>
+              {/* Mobile pagination - simple format */}
+              <div className="flex sm:hidden items-center justify-center gap-3 w-full">
                 <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth text-ink-400 dark:text-paper-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Prev
+                </button>
+                <span className="text-ink-100 dark:text-paper-100 font-medium">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth text-ink-400 dark:text-paper-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
+
+              {/* Desktop pagination - full page numbers */}
+              <div className="hidden sm:flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth text-ink-400 dark:text-paper-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ←
+                </button>
+
+                {/* First page */}
+                <button
+                  onClick={() => setCurrentPage(1)}
                   className={`px-3 py-1 rounded-md transition-smooth ${
-                    currentPage === page
+                    currentPage === 1
                       ? 'bg-vermillion-500 text-paper-100 dark:text-ink-100 font-medium'
                       : 'hover:bg-paper-300 dark:hover:bg-ink-300 text-ink-400 dark:text-paper-300'
                   }`}
                 >
-                  {page}
+                  1
                 </button>
-              ))}
 
-            {/* Show ellipsis if needed */}
-            {currentPage < totalPages - 2 && <span className="text-ink-400 dark:text-paper-300">...</span>}
+                {/* Show ellipsis if needed */}
+                {currentPage > 3 && <span className="text-ink-400 dark:text-paper-300">...</span>}
 
-            {/* Last page */}
-            {totalPages > 1 && (
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                className={`px-3 py-1 rounded-md transition-smooth ${
-                  currentPage === totalPages
-                    ? 'bg-vermillion-500 text-paper-100 dark:text-ink-100 font-medium'
-                    : 'hover:bg-paper-300 dark:hover:bg-ink-300 text-ink-400 dark:text-paper-300'
-                }`}
-              >
-                {totalPages}
-              </button>
-            )}
+                {/* Show pages around current */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page > 1 && page < totalPages && Math.abs(page - currentPage) <= 1)
+                  .map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-md transition-smooth ${
+                        currentPage === page
+                          ? 'bg-vermillion-500 text-paper-100 dark:text-ink-100 font-medium'
+                          : 'hover:bg-paper-300 dark:hover:bg-ink-300 text-ink-400 dark:text-paper-300'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
 
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth text-ink-400 dark:text-paper-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              →
-            </button>
-          </div>
-        )}
+                {/* Show ellipsis if needed */}
+                {currentPage < totalPages - 2 && <span className="text-ink-400 dark:text-paper-300">...</span>}
+
+                {/* Last page */}
+                {totalPages > 1 && (
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    className={`px-3 py-1 rounded-md transition-smooth ${
+                      currentPage === totalPages
+                        ? 'bg-vermillion-500 text-paper-100 dark:text-ink-100 font-medium'
+                        : 'hover:bg-paper-300 dark:hover:bg-ink-300 text-ink-400 dark:text-paper-300'
+                    }`}
+                  >
+                    {totalPages}
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth text-ink-400 dark:text-paper-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  →
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

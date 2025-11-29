@@ -19,6 +19,7 @@ export function ReviewForecast() {
         { time: '+2h', count: forecast.next2h - forecast.current },
         { time: '+6h', count: forecast.next6h - forecast.next2h },
         { time: '+12h', count: forecast.next12h - forecast.next6h },
+        { time: '+24h', count: forecast.next24h - forecast.next12h },
       ]
     : []
 
@@ -29,7 +30,7 @@ export function ReviewForecast() {
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md">
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-8" />
         <div className="space-y-5">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-4 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
           ))}
         </div>

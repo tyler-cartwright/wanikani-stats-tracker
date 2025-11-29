@@ -50,7 +50,7 @@ export const useUserStore = create<UserState>()(
       name: 'wanikani-auth', // localStorage key
       partialize: (state) => ({
         token: state.token,
-        // Don't persist user data - it will be refetched on mount
+        user: state.user, // Persist user data to avoid refetch on every page load
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
