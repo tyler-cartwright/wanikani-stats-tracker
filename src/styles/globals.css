@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Paper tones (light mode backgrounds) - warm ivory, not white */
+  --color-paper-100: #FAF9F7;
+  --color-paper-200: #F5F3EF;
+  --color-paper-300: #EDE9E0;
+  --color-paper-400: #D8D4CC;
+
+  /* Ink tones (text) - warm charcoal */
+  --color-ink-100: #1C1917;
+  --color-ink-200: #292524;
+  --color-ink-300: #3D3835;
+  --color-ink-400: #6B6560;
+  --color-ink-500: #A8A29E;
+
+  /* Vermillion (primary accent - torii red) */
+  --color-vermillion-400: #D9534F;
+  --color-vermillion-500: #C53D2D;
+  --color-vermillion-600: #A33226;
+
+  /* Patina (secondary accent - aged copper green) */
+  --color-patina-400: #5A9182;
+  --color-patina-500: #4A7C6F;
+  --color-patina-600: #3D665B;
+
+  /* Functional accents */
+  --color-indigo: #3D5467;
+  --color-ochre: #B8935A;
+  --color-moss: #5C6B5A;
+
+  /* SRS Stage colors (desaturated, warm) */
+  --color-srs-apprentice: #C9A0C9;
+  --color-srs-guru: #7B9EB8;
+  --color-srs-master: #8B9E8B;
+  --color-srs-enlightened: #C4B078;
+  --color-srs-burned: #6B6560;
+
+  /* Font families - Crimson Pro for display, Inter for body */
+  --font-family-display: 'Crimson Pro', Georgia, serif;
+  --font-family-body: Inter, system-ui, sans-serif;
+  --font-family-japanese: 'Noto Sans JP', sans-serif;
+
+  /* Font sizes - fluid typography */
+  --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.8rem);
+  --font-size-sm: clamp(0.85rem, 0.8rem + 0.25vw, 0.9rem);
+  --font-size-base: clamp(1rem, 0.95rem + 0.25vw, 1.05rem);
+  --font-size-lg: clamp(1.15rem, 1.1rem + 0.3vw, 1.25rem);
+  --font-size-xl: clamp(1.35rem, 1.25rem + 0.5vw, 1.5rem);
+  --font-size-2xl: clamp(1.75rem, 1.5rem + 1vw, 2.25rem);
+  --font-size-3xl: clamp(2.25rem, 2rem + 1.5vw, 3rem);
+
+  /* Warm shadows - subtle, barely there */
+  --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-md: 0 2px 8px rgba(28, 25, 23, 0.06);
+  --shadow-lg: 0 8px 24px rgba(28, 25, 23, 0.08);
+  --shadow-xl: 0 16px 48px rgba(28, 25, 23, 0.12);
+
+  /* Transitions - gentle, considered */
+  --transition-timing-function-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-timing-function-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --transition-duration-fast: 150ms;
+  --transition-duration-normal: 250ms;
+  --transition-duration-slow: 400ms;
+}
+
+@layer base {
+  /* Prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      --transition-duration-fast: 0ms !important;
+      --transition-duration-normal: 0ms !important;
+      --transition-duration-slow: 0ms !important;
+    }
+  }
+
+  body {
+    background-color: var(--color-paper-100);
+    color: var(--color-ink-100);
+    font-family: var(--font-family-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Dark mode - invert paper and ink */
+  .dark body {
+    background-color: var(--color-ink-100);
+    color: var(--color-paper-100);
+  }
+
+  /* Typography base - display font for headers */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-display);
+  }
+}
+
+@layer utilities {
+  /* Japanese label - subtle, decorative only */
+  .japanese-label {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--color-ink-400);
+    font-family: var(--font-family-japanese);
+    opacity: 0.7;
+    font-weight: 400;
+  }
+
+  .dark .japanese-label {
+    color: var(--color-paper-400);
+  }
+
+  /* Smooth transitions - gentle, not jarring */
+  .transition-smooth {
+    transition: all var(--transition-duration-normal) var(--transition-timing-function-ease-out);
+  }
+
+  /* Focus ring - vermillion accent */
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-paper-100), 0 0 0 4px var(--color-vermillion-500);
+  }
+
+  .dark .focus-ring:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-ink-100), 0 0 0 4px var(--color-vermillion-500);
+  }
+}
