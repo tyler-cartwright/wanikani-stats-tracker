@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils/cn'
 import { useTheme } from '@/hooks/use-theme'
 import { useUserStore } from '@/stores/user-store'
 import { fetchUser } from '@/lib/api/endpoints'
+import { SyncStatus } from '@/components/shared/sync-status'
 
 const navItems = [
   { path: '/', label: 'Dashboard' },
@@ -36,9 +37,9 @@ export function Header() {
     loadUserData()
   }, [token, user, setUser, clearAuth])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('Are you sure you want to disconnect? You\'ll need to re-enter your API token.')) {
-      clearAuth()
+      await clearAuth()
       setShowMenu(false)
     }
   }
@@ -80,6 +81,8 @@ export function Header() {
 
           {/* Actions - subtle hover states */}
           <div className="flex items-center gap-3">
+            <SyncStatus className="hidden md:flex" showButton />
+
             <button
               onClick={toggleTheme}
               className="p-3 rounded-md hover:bg-paper-200 dark:hover:bg-ink-200 transition-smooth focus-ring"

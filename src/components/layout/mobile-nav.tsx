@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils/cn'
 import { useTheme } from '@/hooks/use-theme'
 import { useUserStore } from '@/stores/user-store'
 import { JapaneseLabel } from '@/components/shared/japanese-label'
+import { SyncStatus } from '@/components/shared/sync-status'
 import { useEffect } from 'react'
 
 interface MobileNavProps {
@@ -130,9 +131,9 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               <span className="text-sm font-medium">Settings</span>
             </Link>
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (confirm('Are you sure you want to disconnect? You\'ll need to re-enter your API token.')) {
-                  clearAuth()
+                  await clearAuth()
                   onClose()
                 }
               }}
@@ -141,6 +142,11 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               <LogOut className="w-5 h-5" />
               <span className="text-sm font-medium">Disconnect</span>
             </button>
+          </div>
+
+          {/* Sync Status */}
+          <div className="px-5 py-3 border-t border-paper-300 dark:border-ink-300">
+            <SyncStatus showButton />
           </div>
         </div>
       </aside>
