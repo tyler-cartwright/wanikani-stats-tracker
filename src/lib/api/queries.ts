@@ -6,6 +6,7 @@ import {
   fetchAssignments,
   fetchSubjects,
   fetchLevelProgressions,
+  fetchReviews,
   fetchReviewStatistics,
   fetchSummary,
 } from './endpoints'
@@ -19,6 +20,7 @@ export const queryKeys = {
   assignments: ['assignments'] as const,
   subjects: ['subjects'] as const,
   levelProgressions: ['levelProgressions'] as const,
+  reviews: ['reviews'] as const,
   reviewStatistics: ['reviewStatistics'] as const,
   summary: ['summary'] as const,
 }
@@ -99,6 +101,26 @@ export function useLevelProgressions() {
     queryFn: () => {
       if (!token) throw new Error('No API token available')
       return fetchLevelProgressions(token)
+    },
+    enabled: !!token,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
+  })
+}
+
+/**
+ * Fetch recent reviews (last 1000)
+ * Used for time-based analysis
+ */
+export function useReviews() {
+  const token = useUserStore((state) => state.token)
+
+  return useQuery({
+    queryKey: queryKeys.reviews,
+    queryFn: () => {
+      if (!token) throw new Error('No API token available')
+      return fetchReviews(token, 1000)
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes

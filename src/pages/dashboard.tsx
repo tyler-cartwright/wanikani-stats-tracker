@@ -2,7 +2,7 @@ import { HeroStats } from '@/components/dashboard/hero-stats'
 import { SRSSummary } from '@/components/dashboard/srs-summary'
 import { LevelProgress } from '@/components/dashboard/level-progress'
 import { ReviewForecast } from '@/components/dashboard/review-forecast'
-import { LeechAlert } from '@/components/dashboard/leech-alert'
+import { GuruForecast } from '@/components/dashboard/guru-forecast'
 
 export function Dashboard() {
   return (
@@ -19,7 +19,7 @@ export function Dashboard() {
       {/* Second Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ReviewForecast />
-        <LeechAlert />
+        <GuruForecast />
       </div>
     </div>
   )

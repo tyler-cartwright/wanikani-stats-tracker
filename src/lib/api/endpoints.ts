@@ -7,6 +7,7 @@ import type {
   Assignment,
   Subject,
   LevelProgression,
+  Review,
   ReviewStatistic,
   Summary,
 } from './types'
@@ -141,6 +142,43 @@ export async function fetchLevelProgressions(
   onProgress?: (current: number, total: number) => void
 ): Promise<LevelProgression[]> {
   return fetchAllPages<LevelProgression>('/level_progressions', token, onProgress)
+}
+
+// ============================================================================
+// Reviews
+// ============================================================================
+
+/**
+ * Fetch recent reviews (limited to avoid large data)
+ * https://docs.api.wanikani.com/20170710/#get-all-reviews
+ *
+ * Note: Fetches most recent 1000 reviews by default to keep data size manageable
+ */
+export async function fetchReviews(
+  token: string,
+  limit: number = 1000,
+  onProgress?: (current: number, total: number) => void
+): Promise<(Review & { id: number })[]> {
+  // Fetch with pagination, but stop after reaching limit
+  const reviews: (Review & { id: number })[] = []
+  let nextUrl: string | null = '/reviews'
+
+  while (nextUrl && reviews.length < limit) {
+    const response = await fetchAllPages<Review>(nextUrl, token, onProgress)
+    reviews.push(...response)
+
+    // Stop if we've reached our limit
+    if (reviews.length >= limit) {
+      break
+    }
+
+    nextUrl = null // Only fetch first page for now to keep it simple
+  }
+
+  // Return most recent reviews, sorted by date (newest first)
+  return reviews
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit)
 }
 
 // ============================================================================
