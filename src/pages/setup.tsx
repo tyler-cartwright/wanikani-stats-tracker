@@ -12,7 +12,7 @@ export function Setup() {
           <div className="flex items-center justify-center gap-3">
             <Flame className="w-12 h-12 text-vermillion-500" />
             <h1 className="text-4xl font-display font-semibold text-ink-100 dark:text-paper-100">
-              WK Stats
+              WaniTrack
             </h1>
           </div>
           <JapaneseLabel text="統計" className="text-center opacity-70" />
@@ -49,7 +49,7 @@ export function Setup() {
               </a>
             </li>
             <li>Click "Generate a new token"</li>
-            <li>Give it a name (e.g., "WK Stats")</li>
+            <li>Give it a name (e.g., "WaniTrack")</li>
             <li>Ensure it has "Read" permissions</li>
             <li>Copy the token and paste it above</li>
           </ol>

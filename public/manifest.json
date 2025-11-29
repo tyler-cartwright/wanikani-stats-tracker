@@ -1,6 +1,6 @@
 {
-  "name": "WaniKani Statistics Tracker",
-  "short_name": "WaniKani Stats",
+  "name": "WaniTrack",
+  "short_name": "WaniTrack",
   "description": "Track your WaniKani progress with beautiful statistics and insights",
   "start_url": "/",
   "display": "standalone",

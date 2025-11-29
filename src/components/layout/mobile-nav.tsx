@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Flame, Sun, Moon, Settings, LogOut, X } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useTheme } from '@/hooks/use-theme'
+import { useUserStore } from '@/stores/user-store'
 import { JapaneseLabel } from '@/components/shared/japanese-label'
 import { useEffect } from 'react'
 
@@ -20,6 +21,7 @@ const navItems = [
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
+  const { clearAuth } = useUserStore()
 
   // Close on escape key
   useEffect(() => {
@@ -67,7 +69,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-vermillion-500" />
               <span className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100">
-                WK Stats
+                WaniTrack
               </span>
             </div>
             <button
@@ -120,13 +122,17 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 </>
               )}
             </button>
-            <button className="flex items-center gap-3 w-full px-5 py-4 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth focus-ring text-ink-400 dark:text-paper-300">
-              <Settings className="w-5 h-5" />
-              <span className="text-sm font-medium">Settings</span>
-            </button>
-            <button className="flex items-center gap-3 w-full px-5 py-4 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth focus-ring text-ink-400 dark:text-paper-300">
+            <button
+              onClick={() => {
+                if (confirm('Are you sure you want to disconnect? You\'ll need to re-enter your API token.')) {
+                  clearAuth()
+                  onClose()
+                }
+              }}
+              className="flex items-center gap-3 w-full px-5 py-4 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth focus-ring text-ink-400 dark:text-paper-300"
+            >
               <LogOut className="w-5 h-5" />
-              <span className="text-sm font-medium">Logout</span>
+              <span className="text-sm font-medium">Disconnect</span>
             </button>
           </div>
         </div>

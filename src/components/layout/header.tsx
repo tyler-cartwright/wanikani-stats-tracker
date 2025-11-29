@@ -51,7 +51,7 @@ export function Header() {
           <Link to="/" className="flex items-center gap-3 focus-ring rounded-md px-2 py-1">
             <Flame className="w-6 h-6 text-vermillion-500" />
             <span className="text-xl font-display font-semibold text-ink-100 dark:text-paper-100">
-              WK Stats
+              WaniTrack
             </span>
           </Link>
 
