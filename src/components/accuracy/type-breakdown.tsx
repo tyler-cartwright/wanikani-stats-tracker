@@ -1,6 +1,7 @@
 import { ProgressBar } from '@/components/shared/progress-bar'
 import { useReviewStatistics, useSubjects } from '@/lib/api/queries'
 import { calculateAccuracyMetrics } from '@/lib/calculations/accuracy'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface TypeData {
   type: string
@@ -11,8 +12,9 @@ interface TypeData {
 export function TypeBreakdown() {
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = statsLoading || subjectsLoading
+  const isLoading = statsLoading || subjectsLoading || isSyncing
 
   const metrics = reviewStats && subjects
     ? calculateAccuracyMetrics(reviewStats, subjects)

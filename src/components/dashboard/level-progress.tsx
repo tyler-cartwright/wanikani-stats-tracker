@@ -1,14 +1,16 @@
 import { ProgressBar } from '@/components/shared/progress-bar'
 import { useUser, useAssignments, useSubjects, useLevelProgressions } from '@/lib/api/queries'
 import { calculateLevelProgress } from '@/lib/calculations/level-progress'
+import { useSyncStore } from '@/stores/sync-store'
 
 export function LevelProgress() {
   const { data: user } = useUser()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: levelProgressions } = useLevelProgressions()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = assignmentsLoading || subjectsLoading
+  const isLoading = assignmentsLoading || subjectsLoading || isSyncing
 
   // Calculate level progress
   const progress = user && assignments && subjects

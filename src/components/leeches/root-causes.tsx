@@ -1,5 +1,6 @@
 import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/queries'
 import { detectLeeches, findRootCauseRadicals } from '@/lib/calculations/leeches'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface DisplayRootCause {
   radical: string
@@ -12,8 +13,9 @@ export function RootCauses() {
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = statsLoading || subjectsLoading || assignmentsLoading
+  const isLoading = statsLoading || subjectsLoading || assignmentsLoading || isSyncing
 
   const leeches = reviewStats && subjects && assignments
     ? detectLeeches(reviewStats, subjects, assignments)

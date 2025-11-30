@@ -4,6 +4,7 @@ import { Check, X, Loader2, ExternalLink } from 'lucide-react'
 import { validateToken } from '@/lib/api/client'
 import { fetchUser } from '@/lib/api/endpoints'
 import { useUserStore } from '@/stores/user-store'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export function APITokenInput() {
   const [token, setToken] = useState('')
@@ -16,6 +17,7 @@ export function APITokenInput() {
   const { setToken: saveToken, setUser, clearAuth } = useUserStore()
   const storedToken = useUserStore((state) => state.token)
   const user = useUserStore((state) => state.user)
+  const { confirm, ConfirmDialog } = useConfirm()
 
   const handleValidate = async () => {
     if (!token.trim()) {
@@ -57,10 +59,20 @@ export function APITokenInput() {
     }
   }
 
-  const handleLogout = () => {
-    clearAuth()
-    setValidationStatus('idle')
-    setErrorMessage('')
+  const handleLogout = async () => {
+    const confirmed = await confirm({
+      title: 'Clear Token & Log Out?',
+      message: 'This will clear your API token and all locally cached data.',
+      confirmText: 'Clear & Log Out',
+      cancelText: 'Cancel',
+      variant: 'warning',
+    })
+
+    if (confirmed) {
+      clearAuth()
+      setValidationStatus('idle')
+      setErrorMessage('')
+    }
   }
 
   if (storedToken && user) {
@@ -86,6 +98,7 @@ export function APITokenInput() {
         >
           Clear Token & Log Out
         </button>
+        {ConfirmDialog}
       </div>
     )
   }
@@ -160,6 +173,7 @@ export function APITokenInput() {
           </div>
         </div>
       )}
+      {ConfirmDialog}
     </div>
   )
 }

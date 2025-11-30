@@ -1,4 +1,5 @@
 import { useReviewStatistics } from '@/lib/api/queries'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface DistributionBucket {
   label: string
@@ -11,6 +12,7 @@ interface DistributionBucket {
 
 export function AccuracyDistribution() {
   const { data: reviewStats, isLoading } = useReviewStatistics()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
   // Calculate distribution buckets
   const buckets: DistributionBucket[] = [
@@ -50,7 +52,7 @@ export function AccuracyDistribution() {
   const maxCount = Math.max(...buckets.map((b) => b.count), 1)
   const totalItems = buckets.reduce((sum, b) => sum + b.count, 0)
 
-  if (isLoading) {
+  if (isLoading || isSyncing) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />

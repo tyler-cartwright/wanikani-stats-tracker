@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils/cn'
 import { Lightbulb, TrendingDown, TrendingUp } from 'lucide-react'
 import { useReviewStatistics, useSubjects } from '@/lib/api/queries'
 import type { ReviewStatistic, Subject } from '@/lib/api/types'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface LevelData {
   level: number
@@ -66,6 +67,7 @@ function calculateAccuracyByLevel(
 export function TimeHeatmap() {
   const { data: reviewStats, isLoading: isLoadingStats } = useReviewStatistics()
   const { data: subjects, isLoading: isLoadingSubjects } = useSubjects()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
   const levelData = useMemo(() => {
     if (!reviewStats || !subjects) return []
@@ -86,7 +88,7 @@ export function TimeHeatmap() {
     )
   }, [levelData])
 
-  const isLoading = isLoadingStats || isLoadingSubjects
+  const isLoading = isLoadingStats || isLoadingSubjects || isSyncing
 
   if (isLoading) {
     return (

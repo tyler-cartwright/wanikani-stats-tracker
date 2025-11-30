@@ -1,6 +1,7 @@
 // Forecasting and Projection Calculations
 import { addHours, addDays, addMonths, differenceInDays } from 'date-fns'
 import type { Summary, LevelProgression } from '@/lib/api/types'
+import { calculateActiveAverage } from './activity-analysis'
 
 export interface ReviewForecast {
   current: number
@@ -20,9 +21,11 @@ export interface ReviewForecast {
 
 export interface Level60Projection {
   expected: Date
+  expectedActive: Date // NEW: projection using active average
   fastTrack: Date
   conservative: Date
   averageDaysPerLevel: number
+  activeDaysPerLevel: number // NEW: active average
   medianDaysPerLevel: number
   fastestLevel: {
     level: number
@@ -32,6 +35,12 @@ export interface Level60Projection {
     level: number
     days: number
   }
+  excludedLevels: Array<{
+    // NEW: transparency
+    level: number
+    days: number
+    reason: string
+  }>
 }
 
 /**
@@ -129,12 +138,15 @@ export function projectLevel60Date(
     // Already at max level
     return {
       expected: new Date(),
+      expectedActive: new Date(),
       fastTrack: new Date(),
       conservative: new Date(),
       averageDaysPerLevel: 0,
+      activeDaysPerLevel: 0,
       medianDaysPerLevel: 0,
       fastestLevel: { level: 60, days: 0 },
       slowestLevel: { level: 60, days: 0 },
+      excludedLevels: [],
     }
   }
 
@@ -161,18 +173,24 @@ export function projectLevel60Date(
     const now = new Date()
     return {
       expected: addMonths(now, (60 - currentLevel) * 0.4), // ~12 days/level
+      expectedActive: addMonths(now, (60 - currentLevel) * 0.4), // ~12 days/level
       fastTrack: addMonths(now, (60 - currentLevel) * 0.27), // ~8 days/level
       conservative: addMonths(now, (60 - currentLevel) * 0.6), // ~18 days/level
       averageDaysPerLevel: 12,
+      activeDaysPerLevel: 12,
       medianDaysPerLevel: 12,
       fastestLevel: { level: currentLevel, days: 8 },
       slowestLevel: { level: currentLevel, days: 18 },
+      excludedLevels: [],
     }
   }
 
   // Calculate average days per level
   const totalDays = levelDurations.reduce((sum, item) => sum + item.days, 0)
   const averageDaysPerLevel = totalDays / levelDurations.length
+
+  // Calculate active average (excluding breaks)
+  const activeResult = calculateActiveAverage(levelProgressions)
 
   // Calculate median
   const sortedDurations = [...levelDurations].sort((a, b) => a.days - b.days)
@@ -187,23 +205,33 @@ export function projectLevel60Date(
   const levelsRemaining = 60 - currentLevel
   const now = new Date()
 
+  // Use total average for "expected"
   const expected = addDays(now, Math.round(averageDaysPerLevel * levelsRemaining))
+
+  // Use active average for "expectedActive"
+  const expectedActive = addDays(
+    now,
+    Math.round(activeResult.activeAverage * levelsRemaining)
+  )
 
   // Fast track: 8 days per level (WK speed run pace)
   const fastTrack = addDays(now, 8 * levelsRemaining)
 
-  // Conservative: Use 90th percentile or average * 1.5
-  const conservativePace = Math.max(averageDaysPerLevel * 1.5, 18)
+  // Conservative: Use active average * 1.5
+  const conservativePace = Math.max(activeResult.activeAverage * 1.5, 18)
   const conservative = addDays(now, Math.round(conservativePace * levelsRemaining))
 
   return {
     expected,
+    expectedActive,
     fastTrack,
     conservative,
     averageDaysPerLevel: Math.round(averageDaysPerLevel * 10) / 10,
+    activeDaysPerLevel: activeResult.activeAverage,
     medianDaysPerLevel,
     fastestLevel,
     slowestLevel,
+    excludedLevels: activeResult.excludedLevels,
   }
 }
 

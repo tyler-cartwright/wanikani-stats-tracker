@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import { SRSBadge } from '@/components/shared/srs-badge'
 import { useAssignments, useSubjects, useReviewStatistics } from '@/lib/api/queries'
 import { getSRSStageName, type SRSStage } from '@/lib/api/types'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface EnrichedAssignment {
   id: number
@@ -18,6 +19,7 @@ export function AssignmentsTable() {
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [srsFilter, setSrsFilter] = useState<string>('all')
@@ -25,7 +27,7 @@ export function AssignmentsTable() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
 
-  const isLoading = assignmentsLoading || subjectsLoading || statsLoading
+  const isLoading = assignmentsLoading || subjectsLoading || statsLoading || isSyncing
 
   // Create lookup maps
   const subjectMap = useMemo(() => {

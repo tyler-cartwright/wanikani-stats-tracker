@@ -8,12 +8,14 @@ interface SettingsState {
   itemsPerPage: number
   autoRefreshEnabled: boolean
   autoRefreshInterval: number // seconds
+  useActiveAverage: boolean // default: true
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
   toggleTheme: () => void
   setItemsPerPage: (count: number) => void
   setAutoRefresh: (enabled: boolean, interval?: number) => void
+  setUseActiveAverage: (value: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -24,6 +26,7 @@ export const useSettingsStore = create<SettingsState>()(
       itemsPerPage: 50,
       autoRefreshEnabled: true,
       autoRefreshInterval: 30, // 30 seconds for summary data
+      useActiveAverage: true, // default to active average
 
       // Actions
       setTheme: (theme: 'light' | 'dark') => {
@@ -50,6 +53,10 @@ export const useSettingsStore = create<SettingsState>()(
           autoRefreshEnabled: enabled,
           ...(interval !== undefined && { autoRefreshInterval: interval }),
         })
+      },
+
+      setUseActiveAverage: (value: boolean) => {
+        set({ useActiveAverage: value })
       },
     }),
     {

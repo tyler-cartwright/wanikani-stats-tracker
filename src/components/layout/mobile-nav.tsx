@@ -5,6 +5,7 @@ import { useTheme } from '@/hooks/use-theme'
 import { useUserStore } from '@/stores/user-store'
 import { JapaneseLabel } from '@/components/shared/japanese-label'
 import { SyncStatus } from '@/components/shared/sync-status'
+import { useConfirm } from '@/hooks/use-confirm'
 import { useEffect } from 'react'
 
 interface MobileNavProps {
@@ -23,6 +24,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const { clearAuth } = useUserStore()
+  const { confirm, ConfirmDialog } = useConfirm()
 
   // Close on escape key
   useEffect(() => {
@@ -132,7 +134,15 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             </Link>
             <button
               onClick={async () => {
-                if (confirm('Are you sure you want to disconnect? You\'ll need to re-enter your API token.')) {
+                const confirmed = await confirm({
+                  title: 'Disconnect Account?',
+                  message: "You'll need to re-enter your API token to reconnect.",
+                  confirmText: 'Disconnect',
+                  cancelText: 'Cancel',
+                  variant: 'warning',
+                })
+
+                if (confirmed) {
                   await clearAuth()
                   onClose()
                 }
@@ -150,6 +160,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           </div>
         </div>
       </aside>
+      {ConfirmDialog}
     </>
   )
 }

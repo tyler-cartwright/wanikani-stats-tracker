@@ -1,6 +1,7 @@
 import { Zap } from 'lucide-react'
 import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/queries'
 import { detectLeeches, findConfusionPairs } from '@/lib/calculations/leeches'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface DisplayPair {
   item1: { character: string; meaning: string; accuracy: number }
@@ -11,8 +12,9 @@ export function ConfusionPairs() {
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = statsLoading || subjectsLoading || assignmentsLoading
+  const isLoading = statsLoading || subjectsLoading || assignmentsLoading || isSyncing
 
   const leeches = reviewStats && subjects && assignments
     ? detectLeeches(reviewStats, subjects, assignments)

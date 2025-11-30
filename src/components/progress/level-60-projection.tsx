@@ -1,11 +1,15 @@
-import { format, formatDistanceToNow } from 'date-fns'
+import { useState } from 'react'
+import { format, formatDistanceToNow, addDays } from 'date-fns'
 import { Rocket, TrendingUp, Turtle } from 'lucide-react'
 import { useUser, useLevelProgressions } from '@/lib/api/queries'
 import { projectLevel60Date, calculateMilestones } from '@/lib/calculations/forecasting'
+import { useSyncStore } from '@/stores/sync-store'
+import { useSettingsStore } from '@/stores/settings-store'
 
 interface Scenario {
   icon: typeof Rocket
   label: string
+  description: string
   date: Date
   pace: string
   color: string
@@ -14,25 +18,43 @@ interface Scenario {
 export function Level60Projection() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
+  const [showExcludedLevels, setShowExcludedLevels] = useState(false)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
+  const useActiveAverage = useSettingsStore((state) => state.useActiveAverage)
 
-  const isLoading = userLoading || progressionsLoading
+  const isLoading = userLoading || progressionsLoading || isSyncing
 
   // Calculate projection
   const projection = user && levelProgressions
     ? projectLevel60Date(user.level, levelProgressions)
     : null
 
-  // Calculate milestones
+  // Use setting to determine which average to use
+  const primaryDate = projection ? (useActiveAverage ? projection.expectedActive : projection.expected) : null
+  const primaryPace = projection ? (useActiveAverage ? projection.activeDaysPerLevel : projection.averageDaysPerLevel) : 0
+
+  // Calculate conservative date based on selected pace
+  const conservativeDate = user && projection
+    ? addDays(new Date(), Math.round(primaryPace * 1.5 * (60 - user.level)))
+    : null
+
+  // Calculate milestones using the selected pace
   const milestones = user && projection
-    ? calculateMilestones(user.level, projection.averageDaysPerLevel)
+    ? calculateMilestones(user.level, primaryPace)
     : []
 
-  // Build scenarios
-  const scenarios: Scenario[] = projection
+  // Calculate completed levels count
+  const completedLevels = levelProgressions
+    ? levelProgressions.filter(p => p.passed_at && p.unlocked_at).length
+    : 0
+
+  // Build scenarios based on selected average
+  const scenarios: Scenario[] = projection && primaryDate && conservativeDate
     ? [
         {
           icon: Rocket,
           label: 'Fast track',
+          description: 'WaniKani speed run pace',
           date: projection.fastTrack,
           pace: '8 days/level',
           color: 'text-patina-500',
@@ -40,15 +62,19 @@ export function Level60Projection() {
         {
           icon: TrendingUp,
           label: 'Expected',
-          date: projection.expected,
-          pace: `${Math.round(projection.averageDaysPerLevel)} days/level`,
+          description: useActiveAverage
+            ? 'Based on active learning pace (excludes breaks)'
+            : 'Based on all completed levels',
+          date: primaryDate,
+          pace: `${Math.round(primaryPace)} days/level`,
           color: 'text-ink-100',
         },
         {
           icon: Turtle,
           label: 'Conservative',
-          date: projection.conservative,
-          pace: `${Math.round(projection.averageDaysPerLevel * 1.5)} days/level`,
+          description: '50% slower than your current pace',
+          date: conservativeDate,
+          pace: `${Math.round(primaryPace * 1.5)} days/level`,
           color: 'text-ink-400',
         },
       ]
@@ -84,13 +110,28 @@ export function Level60Projection() {
 
       {/* Hero Estimate */}
       <div className="bg-vermillion-500/10 dark:bg-vermillion-500/20 border border-vermillion-500/20 dark:border-vermillion-500/30 rounded-lg p-8 mb-8 text-center">
-        <div className="text-sm text-ink-400 dark:text-paper-300 mb-2">Estimated</div>
+        <div className="text-sm text-ink-400 dark:text-paper-300 mb-2">
+          Estimated {useActiveAverage ? '(active learning)' : '(all levels)'}
+        </div>
         <div className="text-2xl font-display font-semibold text-vermillion-500 mb-1">
-          {format(projection.expected, 'MMMM yyyy')}
+          {primaryDate && format(primaryDate, 'MMMM yyyy')}
         </div>
         <div className="text-sm text-ink-400 dark:text-paper-300">
-          {formatDistanceToNow(projection.expected, { addSuffix: false })} remaining
+          {primaryDate && formatDistanceToNow(primaryDate, { addSuffix: false })} remaining
         </div>
+
+        {/* Excluded levels indicator - only show for active average */}
+        {useActiveAverage && projection.excludedLevels.length > 0 && (
+          <div className="mt-4 text-xs text-ink-400 dark:text-paper-300">
+            Based on {completedLevels - projection.excludedLevels.length} active levels
+            <button
+              onClick={() => setShowExcludedLevels(true)}
+              className="ml-2 text-vermillion-500 hover:underline"
+            >
+              (details)
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Scenarios */}
@@ -104,13 +145,18 @@ export function Level60Projection() {
                 key={scenario.label}
                 className="flex items-center justify-between p-3 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth"
               >
-                <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${scenario.color}`} />
-                  <span className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                    {scenario.label}
-                  </span>
+                <div className="flex items-center gap-3 flex-1">
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${scenario.color}`} />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-ink-100 dark:text-paper-100">
+                      {scenario.label}
+                    </div>
+                    <div className="text-xs text-ink-400 dark:text-paper-300">
+                      {scenario.description}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex-shrink-0 ml-3">
                   <div className="text-sm font-semibold text-ink-100 dark:text-paper-100">
                     {format(scenario.date, 'MMM yyyy')}
                   </div>
@@ -127,7 +173,7 @@ export function Level60Projection() {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-sm font-semibold text-ink-100 dark:text-paper-100">Milestones</h3>
           <span className="text-xs text-ink-400 dark:text-paper-300">
-            Based on {Math.round(projection.averageDaysPerLevel)} days/level average
+            Based on {Math.round(primaryPace)} days/level {useActiveAverage ? '(active)' : '(all)'}
           </span>
         </div>
 
@@ -228,6 +274,56 @@ export function Level60Projection() {
           </div>
         </div>
       </div>
+
+      {/* Excluded Levels Modal */}
+      {showExcludedLevels && projection.excludedLevels.length > 0 && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-50 bg-ink-100/50 dark:bg-paper-100/20 transition-opacity duration-300"
+            onClick={() => setShowExcludedLevels(false)}
+            aria-hidden="true"
+          />
+
+          {/* Modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div
+              className="pointer-events-auto w-full max-w-md bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 shadow-xl"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="p-6">
+                <h3 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+                  Filtered Levels
+                </h3>
+                <p className="text-sm text-ink-400 dark:text-paper-300 mb-4">
+                  These levels were excluded from your active average to provide a more accurate
+                  learning pace estimate:
+                </p>
+                <div className="space-y-2 mb-6">
+                  {projection.excludedLevels.map((level) => (
+                    <div
+                      key={level.level}
+                      className="flex justify-between text-sm p-2 bg-paper-300 dark:bg-ink-300 rounded"
+                    >
+                      <span className="text-ink-100 dark:text-paper-100">Level {level.level}</span>
+                      <span className="text-ink-400 dark:text-paper-300">
+                        {level.days} days ({level.reason})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowExcludedLevels(false)}
+                  className="w-full px-4 py-2 text-sm font-medium rounded-md bg-vermillion-500 hover:bg-vermillion-600 text-paper-100 dark:text-ink-100 transition-smooth focus-ring"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

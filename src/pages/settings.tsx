@@ -3,19 +3,41 @@ import { formatDistanceToNow } from 'date-fns'
 import { RefreshCw, Trash2, Database, CheckCircle, AlertCircle } from 'lucide-react'
 import { useSync } from '@/hooks/use-sync'
 import { useUserStore } from '@/stores/user-store'
+import { useSettingsStore } from '@/stores/settings-store'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export function Settings() {
   const { sync, forceSync, isSyncing, lastSyncAt, lastSyncResult, error } = useSync()
   const { clearAuth, user } = useUserStore()
+  const { useActiveAverage, setUseActiveAverage } = useSettingsStore()
+  const { confirm, ConfirmDialog } = useConfirm()
 
   const handleForceSync = async () => {
-    if (confirm('This will re-download all your data from WaniKani. Continue?')) {
+    const confirmed = await confirm({
+      title: 'Force Full Sync?',
+      message:
+        'This will re-download all your data from WaniKani. Your existing cache will be cleared.',
+      confirmText: 'Continue',
+      cancelText: 'Cancel',
+      variant: 'warning',
+    })
+
+    if (confirmed) {
       await forceSync()
     }
   }
 
   const handleLogout = async () => {
-    if (confirm('Are you sure you want to disconnect? This will clear all local data.')) {
+    const confirmed = await confirm({
+      title: 'Disconnect & Clear Data?',
+      message:
+        'This will clear your API token and all locally cached data. This action cannot be undone.',
+      confirmText: 'Disconnect',
+      cancelText: 'Cancel',
+      variant: 'danger',
+    })
+
+    if (confirmed) {
       await clearAuth()
     }
   }
@@ -130,6 +152,34 @@ export function Settings() {
         </div>
       </div>
 
+      {/* Progress Calculations */}
+      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+          Progress Calculations
+        </h2>
+        <div className="space-y-4">
+          <label className="flex items-center justify-between cursor-pointer">
+            <div>
+              <div className="text-sm font-medium text-ink-100 dark:text-paper-100">
+                Use active learning average
+              </div>
+              <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
+                Excludes extended breaks and vacation periods from pace calculations
+              </div>
+            </div>
+            <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
+              <input
+                type="checkbox"
+                checked={useActiveAverage}
+                onChange={(e) => setUseActiveAverage(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-12 h-6 bg-paper-300 dark:bg-ink-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-vermillion-500/20 rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-paper-100 dark:after:bg-ink-100 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-vermillion-500"></div>
+            </div>
+          </label>
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-vermillion-500/30 p-6 shadow-sm">
         <h2 className="text-lg font-display font-semibold text-vermillion-500 mb-4">
@@ -146,6 +196,7 @@ export function Settings() {
           Disconnect & Clear Data
         </button>
       </div>
+      {ConfirmDialog}
     </div>
   )
 }
