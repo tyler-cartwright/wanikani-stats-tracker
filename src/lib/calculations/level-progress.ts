@@ -19,6 +19,9 @@ export interface LevelProgressData {
   }
   kanjiNeededToLevelUp: number
   daysOnLevel: number
+  averageDaysPerLevel?: number // total average (includes all levels)
+  activeDaysPerLevel?: number // active learning average (excludes breaks)
+  excludedLevels?: number[] // which levels were filtered out
 }
 
 /**

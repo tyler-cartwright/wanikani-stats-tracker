@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useAssignments } from '@/lib/api/queries'
 import { startOfDay, endOfDay, addDays, formatDistanceToNow } from 'date-fns'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface TimeBreakdown {
   label: string
@@ -10,6 +11,7 @@ interface TimeBreakdown {
 
 export function GuruForecast() {
   const { data: assignments, isLoading } = useAssignments()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
   const { today, tomorrow, todayBreakdown } = useMemo(() => {
     if (!assignments) return { today: 0, tomorrow: 0, todayBreakdown: [] }
@@ -104,7 +106,7 @@ export function GuruForecast() {
   const total = today + tomorrow
   const maxCount = Math.max(today, tomorrow, 1)
 
-  if (isLoading) {
+  if (isLoading || isSyncing) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md">
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-8" />

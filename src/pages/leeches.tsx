@@ -3,13 +3,15 @@ import { ConfusionPairs } from '@/components/leeches/confusion-pairs'
 import { RootCauses } from '@/components/leeches/root-causes'
 import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/queries'
 import { detectLeeches } from '@/lib/calculations/leeches'
+import { useSyncStore } from '@/stores/sync-store'
 
 export function Leeches() {
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = statsLoading || subjectsLoading || assignmentsLoading
+  const isLoading = statsLoading || subjectsLoading || assignmentsLoading || isSyncing
 
   const leeches = reviewStats && subjects && assignments
     ? detectLeeches(reviewStats, subjects, assignments)

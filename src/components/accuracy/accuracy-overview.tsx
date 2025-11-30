@@ -2,12 +2,14 @@ import { ProgressBar } from '@/components/shared/progress-bar'
 import { Lightbulb } from 'lucide-react'
 import { useReviewStatistics, useSubjects } from '@/lib/api/queries'
 import { calculateAccuracyMetrics } from '@/lib/calculations/accuracy'
+import { useSyncStore } from '@/stores/sync-store'
 
 export function AccuracyOverview() {
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = statsLoading || subjectsLoading
+  const isLoading = statsLoading || subjectsLoading || isSyncing
 
   const metrics = reviewStats && subjects
     ? calculateAccuracyMetrics(reviewStats, subjects)

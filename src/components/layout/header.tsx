@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/use-theme'
 import { useUserStore } from '@/stores/user-store'
 import { fetchUser } from '@/lib/api/endpoints'
 import { SyncStatus } from '@/components/shared/sync-status'
+import { useConfirm } from '@/hooks/use-confirm'
 
 const navItems = [
   { path: '/', label: 'Dashboard' },
@@ -19,6 +20,7 @@ export function Header() {
   const { theme, toggleTheme } = useTheme()
   const { clearAuth, user, token, setUser } = useUserStore()
   const [showMenu, setShowMenu] = useState(false)
+  const { confirm, ConfirmDialog } = useConfirm()
 
   // Refetch user data if we have a token but no user data
   useEffect(() => {
@@ -38,7 +40,15 @@ export function Header() {
   }, [token, user, setUser, clearAuth])
 
   const handleLogout = async () => {
-    if (confirm('Are you sure you want to disconnect? You\'ll need to re-enter your API token.')) {
+    const confirmed = await confirm({
+      title: 'Disconnect Account?',
+      message: "You'll need to re-enter your API token to reconnect.",
+      confirmText: 'Disconnect',
+      cancelText: 'Cancel',
+      variant: 'warning',
+    })
+
+    if (confirmed) {
       await clearAuth()
       setShowMenu(false)
     }
@@ -137,6 +147,7 @@ export function Header() {
           </div>
         </div>
       </div>
+      {ConfirmDialog}
     </header>
   )
 }

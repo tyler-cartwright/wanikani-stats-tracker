@@ -1,12 +1,14 @@
 import { formatDistanceToNow } from 'date-fns'
 import { JapaneseLabel } from '@/components/shared/japanese-label'
 import { useUser, useSummary } from '@/lib/api/queries'
+import { useSyncStore } from '@/stores/sync-store'
 
 export function HeroStats() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: summary, isLoading: summaryLoading } = useSummary()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = userLoading || summaryLoading
+  const isLoading = userLoading || summaryLoading || isSyncing
 
   // Calculate current reviews and lessons
   const reviewsAvailable = summary?.reviews

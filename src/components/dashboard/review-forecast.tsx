@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 import { useSummary } from '@/lib/api/queries'
 import { calculateReviewForecast } from '@/lib/calculations/forecasting'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface ForecastItem {
   time: string
@@ -10,6 +11,7 @@ interface ForecastItem {
 
 export function ReviewForecast() {
   const { data: summary, isLoading } = useSummary()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
   const forecast = summary ? calculateReviewForecast(summary) : null
 
@@ -25,7 +27,7 @@ export function ReviewForecast() {
 
   const maxCount = Math.max(...forecastItems.map((f) => f.count), 1)
 
-  if (isLoading) {
+  if (isLoading || isSyncing) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md">
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-8" />

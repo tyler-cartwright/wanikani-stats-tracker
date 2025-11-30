@@ -1,6 +1,7 @@
 import { differenceInDays } from 'date-fns'
 import { cn } from '@/lib/utils/cn'
 import { useUser, useLevelProgressions } from '@/lib/api/queries'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface LevelData {
   level: number
@@ -23,8 +24,9 @@ function determinePace(days: number, average: number): 'fast' | 'average' | 'slo
 export function LevelTimeline() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
-  const isLoading = userLoading || progressionsLoading
+  const isLoading = userLoading || progressionsLoading || isSyncing
 
   // Calculate level data from progressions
   const levelData: LevelData[] = []

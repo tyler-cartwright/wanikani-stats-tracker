@@ -1,7 +1,7 @@
 {
   "name": "WaniTrack",
   "short_name": "WaniTrack",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Track your WaniKani progress with beautiful statistics and insights",
   "start_url": "/",
   "display": "standalone",

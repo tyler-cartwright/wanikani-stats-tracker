@@ -1,6 +1,7 @@
 import { ProgressBar } from '@/components/shared/progress-bar'
 import { useAssignments } from '@/lib/api/queries'
 import { calculateSRSDistribution } from '@/lib/calculations/srs-distribution'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface SRSStageData {
   stage: string
@@ -10,6 +11,7 @@ interface SRSStageData {
 
 export function SRSSummary() {
   const { data: assignments, isLoading } = useAssignments()
+  const isSyncing = useSyncStore((state) => state.isSyncing)
 
   const distribution = assignments ? calculateSRSDistribution(assignments) : null
 
@@ -25,7 +27,7 @@ export function SRSSummary() {
 
   const maxCount = Math.max(...srsData.map((d) => d.count), 1)
 
-  if (isLoading) {
+  if (isLoading || isSyncing) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md">
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-8" />
