@@ -6,7 +6,7 @@ A comprehensive statistics tracker and analytics platform for WaniKani learners.
 
 WaniTrack is a Progressive Web App (PWA) that connects to your WaniKani account via the official API to provide detailed analytics on your kanji and vocabulary study. All data processing happens locally in your browser using IndexedDB for storage. Your API token and learning data never touch a server—everything stays on your device.
 
-**Live App:** [https://tyler-cartwright.github.io/wanikani-stats-tracker](https://tyler-cartwright.github.io/wanikani-stats-tracker)
+**Live App:** [https://wanitrack.com](https://wanitrack.com)
 
 ### Progress Tracking
 Historical view of your level progression with projections to level 60. Multiple projection scenarios based on your actual pace: expected, expected active (excludes detected breaks), fast track, and conservative estimates. Intelligent break detection identifies inactive periods to provide more accurate projections.
