@@ -13,6 +13,7 @@ const navItems = [
   { path: '/progress', label: 'Progress' },
   { path: '/accuracy', label: 'Accuracy' },
   { path: '/leeches', label: 'Leeches' },
+  { path: '/kanji', label: 'Kanji' },
 ]
 
 export function Header() {

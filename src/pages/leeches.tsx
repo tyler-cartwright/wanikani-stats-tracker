@@ -25,39 +25,44 @@ export function Leeches() {
     <div className="space-y-8">
       {/* Leech Summary */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
-        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-          Leech Summary
-        </h2>
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="text-center">
-                <div className="h-10 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-2 mx-auto w-16" />
-                <div className="h-4 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mx-auto w-24" />
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="h-6 w-40 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-4" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="text-center">
+                  <div className="h-10 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-2 mx-auto w-16" />
+                  <div className="h-4 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mx-auto w-24" />
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-display font-semibold text-vermillion-500 dark:text-vermillion-400 mb-2">
-                {leeches.length}
+          <>
+            <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+              Leech Summary
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl font-display font-semibold text-vermillion-500 dark:text-vermillion-400 mb-2">
+                  {leeches.length}
+                </div>
+                <div className="text-sm text-ink-400 dark:text-paper-300">Total Leeches</div>
               </div>
-              <div className="text-sm text-ink-400 dark:text-paper-300">Total Leeches</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-display font-semibold text-ochre dark:text-ochre mb-2">
-                {highSeverity}
+              <div className="text-center">
+                <div className="text-3xl font-display font-semibold text-ochre dark:text-ochre mb-2">
+                  {highSeverity}
+                </div>
+                <div className="text-sm text-ink-400 dark:text-paper-300">High Severity</div>
               </div>
-              <div className="text-sm text-ink-400 dark:text-paper-300">High Severity</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-display font-semibold text-ink-400 dark:text-paper-300 mb-2">
-                {moderateSeverity}
+              <div className="text-center">
+                <div className="text-3xl font-display font-semibold text-ink-400 dark:text-paper-300 mb-2">
+                  {moderateSeverity}
+                </div>
+                <div className="text-sm text-ink-400 dark:text-paper-300">Moderate Severity</div>
               </div>
-              <div className="text-sm text-ink-400 dark:text-paper-300">Moderate Severity</div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
