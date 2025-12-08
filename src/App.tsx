@@ -12,6 +12,7 @@ const Dashboard = lazy(() => import('./pages/dashboard').then(m => ({ default: m
 const Progress = lazy(() => import('./pages/progress').then(m => ({ default: m.Progress })))
 const Accuracy = lazy(() => import('./pages/accuracy').then(m => ({ default: m.Accuracy })))
 const Leeches = lazy(() => import('./pages/leeches').then(m => ({ default: m.Leeches })))
+const Kanji = lazy(() => import('./pages/kanji').then(m => ({ default: m.Kanji })))
 const Settings = lazy(() => import('./pages/settings').then(m => ({ default: m.Settings })))
 const Setup = lazy(() => import('./pages/setup').then(m => ({ default: m.Setup })))
 
@@ -76,6 +77,7 @@ function AppContent() {
             <Route path="/progress" element={<Progress />} />
             <Route path="/accuracy" element={<Accuracy />} />
             <Route path="/leeches" element={<Leeches />} />
+            <Route path="/kanji" element={<Kanji />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -5,6 +5,40 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-12-08
+
+### Added
+- **Subject Grid Page**: Visual overview of all WaniKani learning items
+  - New `/kanji` route (renamed from kanji-specific to all subjects)
+  - Displays radicals, kanji, and vocabulary in a unified grid
+  - Color-coded top borders to distinguish subject types:
+    - Blue (#00AAFF) for radicals
+    - Pink (#FF00AA) for kanji
+    - Purple (#AA00FF) for vocabulary
+  - SRS stage colors for cell backgrounds (locked through burned)
+  - Flexible cell widths to accommodate multi-character vocabulary
+  - Radical image support for radicals without character representations
+- **Grid Features**:
+  - Dual view modes: flat grid or grouped by level
+  - Filtering by level range (1-60)
+  - Filtering by SRS stage
+  - Filtering by subject type (radical/kanji/vocabulary)
+  - Search by character, meaning, or reading
+  - Hover tooltips with item details
+  - Click to open item on WaniKani
+- **Performance Optimizations**:
+  - Lazy-loaded level sections via Intersection Observer
+  - Memoized cell components
+  - Deferred search for responsive typing
+- **Navigation**: Added "Kanji" link to header and mobile nav
+
+### Technical
+- Added `src/pages/kanji.tsx` - Subject grid page
+- Added `src/components/kanji-grid/` - Grid component suite
+- Added `src/lib/calculations/kanji-grid.ts` - Subject enrichment and filtering
+- Updated `src/App.tsx` with new route
+- Updated navigation components with new link
+
 ## [2.3.0] - 2025-12-02
 
 ### Added
@@ -332,6 +366,7 @@ WaniTrack v2.0.0 - Complete WaniKani statistics tracker and analytics platform.
 
 ## Version History Summary
 
+- **2.4.0** (Dec 8, 2025) - Subject grid page with radicals, kanji, vocabulary visualization
 - **2.3.0** (Dec 2, 2025) - Data export system, hidden item tracking, caching overhaul
 - **2.2.0** (Nov 30, 2025) - Customizable averaging, review counter fix, icon update
 - **2.1.1** (Nov 30, 2025) - Intelligent level averaging, modal system, toast notifications
