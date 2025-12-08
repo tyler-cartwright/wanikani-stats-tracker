@@ -5,6 +5,86 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2025-12-09
+
+### Fixed
+- Kanji grid radical images now follow the same contrast rules as other subjects across SRS stages and themes; no more invisible radicals when switching between light/dark or different card backgrounds.
+
+## [2.5.1] - 2025-12-09
+
+### Changed
+- Exam Readiness page now uses the skeleton loader during sync as well as DB fetch and is renamed internally to "Readiness" for clarity.
+
+### Fixed
+- Radicals without a kanji glyph now render their WaniKani-provided SVG fallback (preferring inline-styled SVGs) in the kanji grid and tooltip, eliminating the placeholder artefact.
+
+## [2.5.0] - 2025-12-08
+
+### Changed
+- **JLPT Readiness → Exam Readiness**: Complete pivot from JLPT to official Jōyō kanji (常用漢字) system
+  - Route changed: `/jlpt` → `/readiness` (old route redirects automatically)
+  - Navigation updated: "JLPT" → "Readiness" in header and mobile nav
+  - Page renamed: "Exam Readiness" with focus on official government-defined kanji standards
+
+### Added
+- **Jōyō Kanji System**: Official 2,136 kanji organized by Japanese school grades
+  - Grade 1 (80 kanji, Age 6-7)
+  - Grade 2 (160 kanji, Age 7-8)
+  - Grade 3 (200 kanji, Age 8-9)
+  - Grade 4 (200 kanji, Age 9-10)
+  - Grade 5 (185 kanji, Age 10-11)
+  - Grade 6 (181 kanji, Age 11-12)
+  - Secondary School (1,130 kanji, Age 12-18)
+  - Data source: [davidluzgouveia/kanji-data](https://github.com/davidluzgouveia/kanji-data)
+- **Three Key Metrics**:
+  - Jōyō Kanji Progress: Track completion through official grade levels
+  - Reading Coverage: Frequency-based estimate of real-world kanji coverage (based on newspaper corpus research)
+  - Approximate JLPT Level: Rough mapping to JLPT N5-N1 with disclaimers
+- **Grade Cards**: Display progress by school grade with age context and completion status (90%+ = Complete)
+- **JLPT Mapping Table**: Visual reference showing grade completion → JLPT level correlation
+- **Frequency Coverage Algorithm**: Research-based estimation (500 kanji ≈ 80%, 1000 ≈ 90%, 1600 ≈ 99%)
+- **Comprehensive Documentation**: Footer explains Jōyō system, WaniKani coverage, and JLPT mapping methodology
+- **Tooltips**: Info icons on metrics explaining calculations and limitations
+- **Skeleton Loading**: Full-page skeleton UI matching content structure for smooth loading experience
+
+### Removed
+- **Vocabulary Tracking**: Removed from exam readiness calculations (too subjective for JLPT/Jōyō correlation)
+  - Deleted `src/data/jlpt/jlpt-vocabulary.json`
+  - Simplified UI to kanji-only tracking
+  - Updated types to remove vocabulary fields
+
+### Fixed
+- **Kanji Box Colors**: Fixed inconsistent SRS colors and contrast issues
+  - Now uses app's official SRS color scheme (`bg-srs-apprentice`, `bg-srs-guru`, `bg-srs-master`, `bg-srs-enlightened`, `bg-srs-burned`)
+  - Proper text contrast in both light and dark modes (`text-ink-100 dark:text-paper-100`)
+  - Fixed Guru-level kanji visibility in light mode (was using light background + white text)
+- **Progress Bar Visibility**: Fixed contrast issues at 70-89% completion range
+  - Now uses SRS color scheme for consistency
+  - 90%+: `bg-srs-master` (muted green)
+  - 70-89%: `bg-srs-enlightened` (muted gold) - improved contrast
+  - <70%: `bg-vermillion-500` (red)
+- **Kanji Count Clarity**: Updated label to show "X of 2,136 Jōyō kanji are in WaniKani"
+  - Makes it clear why users see ~1,995 instead of 2,136 (WaniKani doesn't teach all Jōyō kanji)
+
+### Technical
+- Added `src/data/jlpt/joyo-kanji.json` - 2,136 Jōyō kanji organized by grade
+- Updated `src/data/jlpt/types.ts` - New types: `JoyoGrade`, `JoyoLevelData`, `JoyoReadinessResult`, `JOYO_GRADE_INFO`
+- Updated `src/data/jlpt/index.ts` - Exports for Jōyō system (`JOYO_KANJI`, `JOYO_COUNTS`, `JOYO_GRADES`)
+- Rewrote `src/lib/calculations/jlpt-readiness.ts`:
+  - Grade-based progression tracking
+  - Frequency coverage calculation (piecewise linear interpolation)
+  - JLPT approximation logic
+  - Removed vocabulary matching
+- Updated all JLPT components for Jōyō system:
+  - `src/components/jlpt/jlpt-hero.tsx` - Three metrics, tooltips, grade context
+  - `src/components/jlpt/jlpt-level-card.tsx` - Grade labels with age ranges, SRS colors
+  - `src/components/jlpt/jlpt-level-detail.tsx` - Removed vocabulary tab, improved sorting
+  - `src/components/jlpt/jlpt-item-grid.tsx` - Consistent SRS color scheme
+- Updated `src/pages/jlpt.tsx` - Skeleton loading, JLPT mapping table, updated footer
+- Updated `src/pages/settings.tsx` - Renamed "JLPT Readiness" → "Exam Readiness"
+- Updated `src/App.tsx` - New route and redirect
+- Updated `src/components/layout/header.tsx` and `mobile-nav.tsx` - Navigation labels
+
 ## [2.4.2] - 2025-12-08
 
 ### Removed
@@ -392,6 +472,9 @@ WaniTrack v2.0.0 - Complete WaniKani statistics tracker and analytics platform.
 
 ## Version History Summary
 
+- **2.5.2** (Dec 9, 2025) - Radical image contrast matches text/SRS colors across themes
+- **2.5.1** (Dec 9, 2025) - Readiness skeleton during sync; fallback radical SVGs
+- **2.5.0** (Dec 8, 2025) - Exam Readiness pivot to Jōyō system, new metrics/UI
 - **2.4.0** (Dec 8, 2025) - Subject grid page with radicals, kanji, vocabulary visualization
 - **2.3.0** (Dec 2, 2025) - Data export system, hidden item tracking, caching overhaul
 - **2.2.0** (Nov 30, 2025) - Customizable averaging, review counter fix, icon update

@@ -19,6 +19,7 @@ const navItems = [
   { path: '/accuracy', label: 'Accuracy', japanese: '精度' },
   { path: '/leeches', label: 'Leeches', japanese: '難点' },
   { path: '/kanji', label: 'Kanji', japanese: '漢字' },
+  { path: '/readiness', label: 'Readiness', japanese: '試験準備' },
 ]
 
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {

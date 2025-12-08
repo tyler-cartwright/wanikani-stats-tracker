@@ -1,6 +1,7 @@
 // Settings Store - Manages user preferences
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { SRSThreshold } from '@/data/jlpt'
 
 interface SettingsState {
   // State
@@ -12,6 +13,7 @@ interface SettingsState {
   averagingMethod: 'trimmed_mean' | 'median' // default: 'trimmed_mean'
   useCustomThreshold: boolean // default: false
   customThresholdDays: number // default: 60
+  jlptThreshold: SRSThreshold // default: 'guru'
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
@@ -22,6 +24,7 @@ interface SettingsState {
   setAveragingMethod: (method: 'trimmed_mean' | 'median') => void
   setUseCustomThreshold: (value: boolean) => void
   setCustomThresholdDays: (days: number) => void
+  setJlptThreshold: (threshold: SRSThreshold) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -36,6 +39,7 @@ export const useSettingsStore = create<SettingsState>()(
       averagingMethod: 'trimmed_mean', // default to trimmed mean
       useCustomThreshold: false, // default to OFF
       customThresholdDays: 60, // default 60 days
+      jlptThreshold: 'guru', // default to Guru (SRS 5+)
 
       // Actions
       setTheme: (theme: 'light' | 'dark') => {
@@ -78,6 +82,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setCustomThresholdDays: (days: number) => {
         set({ customThresholdDays: Math.max(1, Math.min(365, days)) }) // Clamp between 1-365 days
+      },
+
+      setJlptThreshold: (threshold: SRSThreshold) => {
+        set({ jlptThreshold: threshold })
       },
     }),
     {
