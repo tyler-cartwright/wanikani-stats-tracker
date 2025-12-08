@@ -5,6 +5,14 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2025-12-08
+
+### Removed
+- **Assignments Table from Progress Page**: Removed redundant subjects table component
+  - Deleted `src/components/progress/assignments-table.tsx` (398 lines)
+  - Subjects browsing now consolidated in dedicated Subject Grid page (`/kanji`)
+  - Reduced Progress page bundle size from ~24KB to ~13.9KB
+
 ## [2.4.1] - 2025-12-08
 
 ### Fixed
