@@ -8,6 +8,7 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { InfoTooltip } from '@/components/shared/info-tooltip'
 import { useUser } from '@/lib/api/queries'
 import { DataExportSection } from '@/components/settings/data-export-section'
+import { SRS_THRESHOLD_LABELS, SRS_THRESHOLD_DESCRIPTIONS, type SRSThreshold } from '@/data/jlpt'
 
 export function Settings() {
   const { sync, forceSync, isSyncing, lastSyncAt, lastSyncResult, error } = useSync()
@@ -21,7 +22,9 @@ export function Settings() {
     useCustomThreshold,
     setUseCustomThreshold,
     customThresholdDays,
-    setCustomThresholdDays
+    setCustomThresholdDays,
+    jlptThreshold,
+    setJlptThreshold
   } = useSettingsStore()
   const { confirm, ConfirmDialog } = useConfirm()
 
@@ -167,6 +170,39 @@ export function Settings() {
 
       {/* Data Export */}
       <DataExportSection />
+
+      {/* Exam Readiness Settings */}
+      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+          Exam Readiness
+        </h2>
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
+                SRS Threshold
+              </label>
+              <InfoTooltip content="Choose what SRS stage counts as 'known' for exam readiness calculations (Jōyō kanji and JLPT approximations). Higher thresholds are stricter - Guru+ (recommended) means kanji must be at Guru stage or higher to count as known." />
+            </div>
+            <select
+              value={jlptThreshold}
+              onChange={(e) => setJlptThreshold(e.target.value as SRSThreshold)}
+              className="w-full px-4 py-2 text-sm bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-md text-ink-100 dark:text-paper-100 focus:outline-none focus:ring-2 focus:ring-vermillion-500/20"
+            >
+              {(['apprentice_4', 'guru', 'master', 'enlightened', 'burned'] as SRSThreshold[]).map(
+                (threshold) => (
+                  <option key={threshold} value={threshold}>
+                    {SRS_THRESHOLD_LABELS[threshold]}
+                  </option>
+                )
+              )}
+            </select>
+            <div className="text-xs text-ink-400 dark:text-paper-300 mt-2">
+              {SRS_THRESHOLD_DESCRIPTIONS[jlptThreshold]}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Progress Calculations */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">

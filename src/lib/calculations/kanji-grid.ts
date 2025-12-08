@@ -68,6 +68,26 @@ function isRadical(subject: Subject): subject is RadicalSubject {
 }
 
 /**
+ * Choose the best-renderable radical image.
+ * Prefer inline-styled SVGs (self-colored, invert-friendly), fall back to any SVG, then first image.
+ */
+function getRadicalImageUrl(subject: RadicalSubject): string | null {
+  if (!subject.character_images || subject.character_images.length === 0) {
+    return null
+  }
+
+  const inlineSvg = subject.character_images.find(
+    (img) => img.content_type === 'image/svg+xml' && img.metadata?.inline_styles
+  )
+  if (inlineSvg) return inlineSvg.url
+
+  const anySvg = subject.character_images.find((img) => img.content_type === 'image/svg+xml')
+  if (anySvg) return anySvg.url
+
+  return subject.character_images[0]?.url ?? null
+}
+
+/**
  * Check if a subject is a kanji
  */
 function isKanji(subject: Subject): subject is KanjiSubject {
@@ -146,7 +166,7 @@ export function enrichSubjectsWithSRS(
 
     if (isRadical(subject)) {
       character = subject.characters
-      characterImageUrl = subject.character_images[0]?.url ?? null
+      characterImageUrl = getRadicalImageUrl(subject)
       primaryReading = null
       readingType = null
     } else if (isKanji(subject)) {

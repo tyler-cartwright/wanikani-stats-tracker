@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { EnrichedSubject } from '@/lib/calculations/kanji-grid'
 import { SRSBadge } from '@/components/shared/srs-badge'
+import { RadicalGlyph } from './radical-glyph'
+import { useSettingsStore } from '@/stores/settings-store'
 
 interface KanjiTooltipProps {
   subject: EnrichedSubject | null
@@ -11,6 +13,7 @@ interface KanjiTooltipProps {
 export function KanjiTooltip({ subject, position, visible }: KanjiTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [adjustedPosition, setAdjustedPosition] = useState(position)
+  const theme = useSettingsStore((state) => state.theme)
 
   // Adjust position to avoid overflow
   useEffect(() => {
@@ -65,10 +68,11 @@ export function KanjiTooltip({ subject, position, visible }: KanjiTooltipProps) 
             {subject.character ? (
               subject.character
             ) : subject.characterImageUrl ? (
-              <img
-                src={subject.characterImageUrl}
-                alt={subject.primaryMeaning}
-                className="w-8 h-8 dark:invert"
+              <RadicalGlyph
+                url={subject.characterImageUrl}
+                label={subject.primaryMeaning}
+                invert={theme === 'dark' || subject.srsStage === 9}
+                className="w-8 h-8"
               />
             ) : (
               <span className="text-ink-300 dark:text-paper-300">?</span>

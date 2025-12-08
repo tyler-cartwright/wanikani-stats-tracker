@@ -2,6 +2,8 @@ import { memo } from 'react'
 import { cn } from '@/lib/utils/cn'
 import type { EnrichedSubject } from '@/lib/calculations/kanji-grid'
 import { getSRSCellClasses, getSubjectTypeColor } from '@/lib/calculations/kanji-grid'
+import { RadicalGlyph } from './radical-glyph'
+import { useSettingsStore } from '@/stores/settings-store'
 
 interface SubjectCellProps {
   subject: EnrichedSubject
@@ -12,6 +14,10 @@ interface SubjectCellProps {
 }
 
 function SubjectCellComponent({ subject, isSelected = false, onClick, onMouseEnter, onMouseLeave }: SubjectCellProps) {
+  const theme = useSettingsStore((state) => state.theme)
+  // Match text color behavior: light glyph in dark theme or burned stage; dark otherwise
+  const invertGlyph = theme === 'dark' || subject.srsStage === 9
+
   return (
     <button
       type="button"
@@ -49,10 +55,11 @@ function SubjectCellComponent({ subject, isSelected = false, onClick, onMouseEnt
       {subject.character ? (
         <span>{subject.character}</span>
       ) : subject.characterImageUrl ? (
-        <img
-          src={subject.characterImageUrl}
-          alt={subject.primaryMeaning}
-          className="w-6 h-6 dark:invert"
+        <RadicalGlyph
+          url={subject.characterImageUrl}
+          label={subject.primaryMeaning}
+          invert={invertGlyph}
+          className="w-6 h-6"
         />
       ) : (
         <span className="text-ink-300 dark:text-paper-300">?</span>
