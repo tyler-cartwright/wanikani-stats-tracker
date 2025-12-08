@@ -5,11 +5,12 @@ import { KanjiCell } from './kanji-cell'
 
 interface KanjiLevelSectionProps {
   levelData: SubjectsByLevel
-  onSubjectClick: (subject: EnrichedSubject) => void
+  selectedSubjectId: number | null
+  onSubjectClick: (subject: EnrichedSubject, event: React.MouseEvent<HTMLButtonElement>) => void
   onSubjectHover: (subject: EnrichedSubject | null, event?: React.MouseEvent) => void
 }
 
-export function KanjiLevelSection({ levelData, onSubjectClick, onSubjectHover }: KanjiLevelSectionProps) {
+export function KanjiLevelSection({ levelData, selectedSubjectId, onSubjectClick, onSubjectHover }: KanjiLevelSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [isInView, setIsInView] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -75,7 +76,11 @@ export function KanjiLevelSection({ levelData, onSubjectClick, onSubjectHover }:
                 <KanjiCell
                   key={subject.id}
                   subject={subject}
-                  onClick={() => onSubjectClick(subject)}
+                  isSelected={selectedSubjectId === subject.id}
+                  onClick={(e) => {
+                    e.stopPropagation() // Prevent container click
+                    onSubjectClick(subject, e)
+                  }}
                   onMouseEnter={(e) => onSubjectHover(subject, e)}
                   onMouseLeave={() => onSubjectHover(null)}
                 />

@@ -14,11 +14,13 @@ import { KanjiLevelSection } from './kanji-level-section'
 import { KanjiCell } from './kanji-cell'
 import { KanjiTooltip } from './kanji-tooltip'
 import { useSyncStore } from '@/stores/sync-store'
+import { useTouchDevice } from '@/hooks/use-touch-device'
 
 export function KanjiGrid() {
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const isSyncing = useSyncStore((state) => state.isSyncing)
+  const isTouchDevice = useTouchDevice()
 
   // Filter state
   const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('grouped')
@@ -31,6 +33,9 @@ export function KanjiGrid() {
   // Tooltip state
   const [tooltipSubject, setTooltipSubject] = useState<EnrichedSubject | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
+
+  // Selection state for touch devices
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null)
 
   const isLoading = subjectsLoading || assignmentsLoading || isSyncing
 
@@ -74,15 +79,47 @@ export function KanjiGrid() {
   }, [filteredSubjects])
 
   // Handlers
-  const handleSubjectClick = (subject: EnrichedSubject) => {
-    window.open(subject.documentUrl, '_blank', 'noopener,noreferrer')
+  const handleSubjectClick = (subject: EnrichedSubject, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (isTouchDevice) {
+      // Touch device: tap-to-select pattern
+      if (selectedSubjectId === subject.id) {
+        // Second tap - navigate to WaniKani
+        window.open(subject.documentUrl, '_blank', 'noopener,noreferrer')
+      } else {
+        // First tap - select and show tooltip
+        setSelectedSubjectId(subject.id)
+        setTooltipSubject(subject)
+
+        // Position tooltip at center-bottom of the tapped cell
+        const button = event.currentTarget
+        const rect = button.getBoundingClientRect()
+        setTooltipPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.bottom + 8,
+        })
+      }
+    } else {
+      // Non-touch device: navigate immediately
+      window.open(subject.documentUrl, '_blank', 'noopener,noreferrer')
+    }
   }
 
   const handleSubjectHover = (subject: EnrichedSubject | null, event?: React.MouseEvent) => {
-    if (subject && event) {
-      setTooltipSubject(subject)
-      setTooltipPosition({ x: event.clientX + 16, y: event.clientY + 16 })
-    } else {
+    // Only handle hover on non-touch devices
+    if (!isTouchDevice) {
+      if (subject && event) {
+        setTooltipSubject(subject)
+        setTooltipPosition({ x: event.clientX + 16, y: event.clientY + 16 })
+      } else {
+        setTooltipSubject(null)
+      }
+    }
+  }
+
+  // Deselect when tapping outside cells on touch devices
+  const handleContainerClick = () => {
+    if (isTouchDevice && selectedSubjectId !== null) {
+      setSelectedSubjectId(null)
       setTooltipSubject(null)
     }
   }
@@ -212,7 +249,10 @@ export function KanjiGrid() {
       </div>
 
       {/* Grid */}
-      <div className="bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-xl p-4 sm:p-6">
+      <div
+        className="bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-xl p-4 sm:p-6"
+        onClick={handleContainerClick}
+      >
         {filteredSubjects.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-ink-300 dark:text-paper-300">No items match your filters.</p>
@@ -223,6 +263,7 @@ export function KanjiGrid() {
               <KanjiLevelSection
                 key={levelData.level}
                 levelData={levelData}
+                selectedSubjectId={selectedSubjectId}
                 onSubjectClick={handleSubjectClick}
                 onSubjectHover={handleSubjectHover}
               />
@@ -234,7 +275,11 @@ export function KanjiGrid() {
               <KanjiCell
                 key={subject.id}
                 subject={subject}
-                onClick={() => handleSubjectClick(subject)}
+                isSelected={selectedSubjectId === subject.id}
+                onClick={(e) => {
+                  e.stopPropagation() // Prevent container click
+                  handleSubjectClick(subject, e)
+                }}
                 onMouseEnter={(e) => handleSubjectHover(subject, e)}
                 onMouseLeave={() => handleSubjectHover(null)}
               />

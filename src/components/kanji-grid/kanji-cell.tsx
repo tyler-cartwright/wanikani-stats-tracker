@@ -5,12 +5,13 @@ import { getSRSCellClasses, getSubjectTypeColor } from '@/lib/calculations/kanji
 
 interface SubjectCellProps {
   subject: EnrichedSubject
-  onClick: () => void
+  isSelected?: boolean
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
   onMouseEnter: (event: React.MouseEvent) => void
   onMouseLeave: () => void
 }
 
-function SubjectCellComponent({ subject, onClick, onMouseEnter, onMouseLeave }: SubjectCellProps) {
+function SubjectCellComponent({ subject, isSelected = false, onClick, onMouseEnter, onMouseLeave }: SubjectCellProps) {
   return (
     <button
       type="button"
@@ -38,6 +39,8 @@ function SubjectCellComponent({ subject, onClick, onMouseEnter, onMouseLeave }: 
         'hover:scale-110 hover:shadow-md hover:z-10',
         // Focus
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vermillion-500 focus-visible:ring-offset-2',
+        // Selected state - ring outline for touch devices
+        isSelected && 'ring-2 ring-vermillion-500 ring-offset-2 scale-110 shadow-lg z-10',
         // SRS-based colors
         getSRSCellClasses(subject.srsStage)
       )}
@@ -58,10 +61,11 @@ function SubjectCellComponent({ subject, onClick, onMouseEnter, onMouseLeave }: 
   )
 }
 
-// Memoize with custom comparison (only re-render if id or srsStage changes)
+// Memoize with custom comparison (only re-render if id, srsStage, or isSelected changes)
 export const KanjiCell = memo(SubjectCellComponent, (prevProps, nextProps) => {
   return (
     prevProps.subject.id === nextProps.subject.id &&
-    prevProps.subject.srsStage === nextProps.subject.srsStage
+    prevProps.subject.srsStage === nextProps.subject.srsStage &&
+    prevProps.isSelected === nextProps.isSelected
   )
 })

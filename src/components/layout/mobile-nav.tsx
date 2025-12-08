@@ -67,7 +67,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-y-auto">
           {/* Header - Crimson Pro logo */}
           <div className="flex items-center justify-between p-6 border-b border-paper-300 dark:border-ink-300">
             <div className="flex items-center gap-2">

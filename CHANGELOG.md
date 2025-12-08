@@ -5,6 +5,24 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2025-12-08
+
+### Fixed
+- **Mobile Navigation Overflow**: Added scrolling to mobile drawer when content exceeds viewport height
+  - Prevents menu items from being cut off on landscape mode, small devices, or with large accessibility fonts
+  - Applied `overflow-y-auto` to drawer container
+- **Touch Device Tooltips**: Implemented tap-to-select pattern for Subject Grid on touch devices
+  - First tap selects cell and shows tooltip with item details
+  - Second tap on same cell navigates to WaniKani
+  - Tap elsewhere dismisses tooltip
+  - Desktop mouse behavior unchanged (hover shows tooltip, click navigates immediately)
+  - Selected cells show visual feedback (ring outline, scale, shadow)
+
+### Added
+- `useTouchDevice` hook for reliable touch device detection using `pointer: coarse` media query
+- Touch-aware interaction handlers in Subject Grid components
+- Visual selection state for grid cells on touch devices
+
 ## [2.4.0] - 2025-12-08
 
 ### Added
