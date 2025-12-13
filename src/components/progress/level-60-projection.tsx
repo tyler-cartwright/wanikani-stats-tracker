@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { format, formatDistanceToNow, addDays } from 'date-fns'
 import { Rocket, TrendingUp, Turtle } from 'lucide-react'
+import { cn } from '@/lib/utils/cn'
 import { useUser, useLevelProgressions } from '@/lib/api/queries'
-import { projectLevel60Date, calculateMilestones } from '@/lib/calculations/forecasting'
+import { projectLevel60Date } from '@/lib/calculations/forecasting'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
 
@@ -19,6 +20,7 @@ export function Level60Projection() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
   const [showExcludedLevels, setShowExcludedLevels] = useState(false)
+  const [selectedScenario, setSelectedScenario] = useState<'fast' | 'expected' | 'conservative'>('expected')
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const useActiveAverage = useSettingsStore((state) => state.useActiveAverage)
   const averagingMethod = useSettingsStore((state) => state.averagingMethod)
@@ -47,9 +49,76 @@ export function Level60Projection() {
     ? addDays(new Date(), Math.round(primaryPace * 1.5 * (60 - user.level)))
     : null
 
-  // Calculate milestones using the selected pace
-  const milestones = user && projection
-    ? calculateMilestones(user.level, primaryPace)
+  // Calculate pace based on selected scenario
+  const selectedPace = projection
+    ? selectedScenario === 'fast'
+      ? 8
+      : selectedScenario === 'conservative'
+      ? Math.round(primaryPace * 1.5)
+      : primaryPace
+    : 0
+
+  // Build comprehensive milestones (1, 10, 20, 30, 40, 50, 60)
+  const allMilestones = user && levelProgressions && projection
+    ? (() => {
+        const milestoneLevels = [1, 10, 20, 30, 40, 50, 60]
+        const now = new Date()
+
+        return milestoneLevels.map((level) => {
+          const isCompleted = user.level > level // Changed from >= to > (current level isn't complete yet)
+
+          // For completed levels, try to get actual date
+          let date: Date
+          if (isCompleted) {
+            if (level === 1) {
+              // Level 1 start date - use unlocked_at
+              const level1Progression = levelProgressions.find(p => p.level === 1)
+              date = level1Progression?.unlocked_at ? new Date(level1Progression.unlocked_at) : now
+            } else {
+              // For other completed levels, use passed_at (when they leveled up FROM that level)
+              const progression = levelProgressions.find(p => p.level === level)
+              if (progression?.passed_at) {
+                date = new Date(progression.passed_at)
+              } else {
+                // Fallback: try to infer from next level's unlocked_at
+                const nextProgression = levelProgressions.find(p => p.level === level + 1)
+                date = nextProgression?.unlocked_at ? new Date(nextProgression.unlocked_at) : now
+              }
+            }
+          } else {
+            // For upcoming levels, calculate projected date
+            const levelsToGo = level - user.level
+            date = addDays(now, levelsToGo * selectedPace)
+          }
+
+          return {
+            level,
+            date,
+            status: isCompleted ? 'completed' as const : 'upcoming' as const
+          }
+        })
+      })()
+    : []
+
+  // Mobile-optimized milestones: Start, Previous milestone, Next milestone, L60
+  const mobileMilestones = allMilestones.length > 0 && user
+    ? (() => {
+        const majorMilestones = [10, 20, 30, 40, 50]
+        const previousMilestone = majorMilestones
+          .filter(level => user.level > level)
+          .sort((a, b) => b - a)[0] // Get highest completed
+
+        const nextMilestone = majorMilestones
+          .filter(level => user.level < level)
+          .sort((a, b) => a - b)[0] // Get lowest upcoming
+
+        const selected = [1] // Always include start
+        if (previousMilestone) selected.push(previousMilestone)
+        if (nextMilestone) selected.push(nextMilestone)
+        selected.push(60) // Always include level 60
+
+        return allMilestones.filter(m => selected.includes(m.level))
+      })()
     : []
 
   // Calculate completed levels count
@@ -66,7 +135,7 @@ export function Level60Projection() {
           description: 'WaniKani speed run pace',
           date: projection.fastTrack,
           pace: '8 days/level',
-          color: 'text-patina-500',
+          color: 'text-patina-600 dark:text-patina-500',
         },
         {
           icon: TrendingUp,
@@ -76,7 +145,7 @@ export function Level60Projection() {
             : 'Based on all completed levels',
           date: primaryDate,
           pace: `${Math.round(primaryPace)} days/level`,
-          color: 'text-ink-100',
+          color: 'text-ink-100 dark:text-paper-100',
         },
         {
           icon: Turtle,
@@ -84,7 +153,7 @@ export function Level60Projection() {
           description: '50% slower than your current pace',
           date: conservativeDate,
           pace: `${Math.round(primaryPace * 1.5)} days/level`,
-          color: 'text-ink-400',
+          color: 'text-ink-400 dark:text-paper-300',
         },
       ]
     : []
@@ -92,17 +161,48 @@ export function Level60Projection() {
   if (isLoading) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        {/* Title */}
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-8" />
-        <div className="h-24 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-8" />
-        <div className="space-y-3 mb-8">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
-          ))}
+
+        {/* Hero estimate - centered */}
+        <div className="flex flex-col items-center py-6 mb-10">
+          <div className="h-3 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-3" />
+          <div className="h-12 w-48 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-2" />
+          <div className="h-4 w-40 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+          <div className="h-px w-48 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-4" />
+          <div className="h-6 w-56 bg-paper-300 dark:bg-ink-300 rounded-full animate-pulse" />
         </div>
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-12 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
-          ))}
+
+        {/* Tabs - three pills */}
+        <div className="mb-4">
+          <div className="h-4 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-4" />
+          <div className="flex gap-2 bg-paper-300 dark:bg-ink-300 rounded-lg p-1 mb-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex-1 h-10 bg-paper-200 dark:bg-ink-200 rounded-md animate-pulse" />
+            ))}
+          </div>
+          <div className="h-20 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+        </div>
+
+        {/* Stepper skeleton */}
+        <div className="pt-6 mt-6 border-t border-paper-300 dark:border-ink-300">
+          <div className="h-4 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+          <div className="flex items-center justify-between w-full">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <div key={i} className="flex items-center flex-1 last:flex-none">
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-paper-300 dark:bg-ink-300 animate-pulse" />
+                  <div className="mt-3 space-y-2">
+                    <div className="h-3 w-12 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                  </div>
+                </div>
+                {i < 7 && (
+                  <div className="flex-1 h-0.5 mx-1 bg-paper-300 dark:bg-ink-300 animate-pulse" style={{ marginBottom: '56px' }} />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -117,170 +217,245 @@ export function Level60Projection() {
         Journey to Level 60
       </h2>
 
-      {/* Hero Estimate */}
-      <div className="bg-vermillion-500/10 dark:bg-vermillion-500/20 border border-vermillion-500/20 dark:border-vermillion-500/30 rounded-lg p-8 mb-8 text-center">
-        <div className="text-sm text-ink-400 dark:text-paper-300 mb-2">
-          Estimated {useActiveAverage ? '(active learning)' : '(all levels)'} • {averagingMethod === 'median' ? 'Median' : 'Trimmed Mean'}
-        </div>
-        <div className="text-2xl font-display font-semibold text-vermillion-500 mb-1">
-          {primaryDate && format(primaryDate, 'MMMM yyyy')}
-        </div>
-        <div className="text-sm text-ink-400 dark:text-paper-300">
-          {primaryDate && formatDistanceToNow(primaryDate, { addSuffix: false })} remaining
+      {/* Hero Estimate - Elegant, Understated */}
+      <div className="mb-10">
+        {/* Main estimate display */}
+        <div className="flex flex-col items-center text-center py-6">
+          {/* Small label */}
+          <div className="text-xs uppercase tracking-wider text-ink-400 dark:text-paper-300 mb-3">
+            Estimated Completion
+          </div>
+
+          {/* Large date - ink colored, not vermillion */}
+          <div className="text-4xl md:text-5xl font-display font-bold text-ink-100 dark:text-paper-100 mb-2">
+            {primaryDate && format(primaryDate, 'MMMM yyyy')}
+          </div>
+
+          {/* Time remaining with subtle vermillion accent */}
+          <div className="flex items-center gap-2 text-sm text-ink-400 dark:text-paper-300">
+            <span>{primaryDate && formatDistanceToNow(primaryDate, { addSuffix: false })} remaining</span>
+            <span className="w-1 h-1 rounded-full bg-vermillion-500" />
+            <span>~{Math.round(primaryPace)} days/level</span>
+          </div>
+
+          {/* Subtle divider line with vermillion center accent */}
+          <div className="mt-6 w-48 h-px bg-gradient-to-r from-transparent via-vermillion-500/40 to-transparent" />
         </div>
 
-        {/* Excluded levels indicator - only show for active average */}
-        {useActiveAverage && projection.excludedLevels.length > 0 && (
-          <div className="mt-4 text-xs text-ink-400 dark:text-paper-300">
-            Based on {completedLevels - projection.excludedLevels.length} active levels
-            <button
-              onClick={() => setShowExcludedLevels(true)}
-              className="ml-2 text-vermillion-500 hover:underline"
-            >
-              (details)
-            </button>
-          </div>
-        )}
+        {/* Method indicator - small, subtle */}
+        <div className="text-center">
+          <span className="text-xs text-ink-400 dark:text-paper-300 bg-paper-300/50 dark:bg-ink-300/50 px-3 py-1 rounded-full">
+            {useActiveAverage ? 'Active pace' : 'All levels'} • {averagingMethod === 'median' ? 'Median' : 'Trimmed mean'}
+            {useActiveAverage && projection.excludedLevels.length > 0 && (
+              <>
+                {' '}• {completedLevels - projection.excludedLevels.length} levels{' '}
+                <button
+                  onClick={() => setShowExcludedLevels(true)}
+                  className="text-vermillion-500 hover:underline"
+                >
+                  (details)
+                </button>
+              </>
+            )}
+          </span>
+        </div>
       </div>
 
-      {/* Scenarios */}
+      {/* Scenarios - Tabbed Interface */}
       <div className="mb-8">
-        <h3 className="text-sm font-semibold text-ink-100 dark:text-paper-100 mb-4">Scenarios</h3>
-        <div className="space-y-3">
-          {scenarios.map((scenario) => {
+        <h3 className="text-sm font-semibold text-ink-100 dark:text-paper-100 mb-4">
+          Projection Scenario
+        </h3>
+
+        {/* Tab selector - segmented control style */}
+        <div className="flex bg-paper-300 dark:bg-ink-300 rounded-lg p-1 mb-6">
+          {(['fast', 'expected', 'conservative'] as const).map((key) => {
+            const scenario = scenarios.find(s =>
+              (key === 'fast' && s.label === 'Fast track') ||
+              (key === 'expected' && s.label === 'Expected') ||
+              (key === 'conservative' && s.label === 'Conservative')
+            )
+            if (!scenario) return null
+
+            const isActive = selectedScenario === key
             const Icon = scenario.icon
+
             return (
-              <div
-                key={scenario.label}
-                className="flex items-center justify-between p-3 rounded-md hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth"
+              <button
+                key={key}
+                onClick={() => setSelectedScenario(key)}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-smooth',
+                  isActive
+                    ? 'bg-paper-200 dark:bg-ink-200 text-ink-100 dark:text-paper-100 shadow-sm'
+                    : 'text-ink-400 dark:text-paper-300 hover:text-ink-100 dark:hover:text-paper-100'
+                )}
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${scenario.color}`} />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                      {scenario.label}
-                    </div>
-                    <div className="text-xs text-ink-400 dark:text-paper-300">
-                      {scenario.description}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0 ml-3">
-                  <div className="text-sm font-semibold text-ink-100 dark:text-paper-100">
-                    {format(scenario.date, 'MMM yyyy')}
-                  </div>
-                  <div className="text-xs text-ink-400 dark:text-paper-300">{scenario.pace}</div>
-                </div>
-              </div>
+                <Icon className={cn(
+                  'w-4 h-4',
+                  isActive ? scenario.color : 'text-ink-400 dark:text-paper-300'
+                )} />
+                <span className="hidden sm:inline">{scenario.label}</span>
+              </button>
             )
           })}
         </div>
+
+        {/* Selected scenario details */}
+        {scenarios.map((scenario) => {
+          const scenarioKey =
+            scenario.label === 'Fast track' ? 'fast' :
+            scenario.label === 'Expected' ? 'expected' : 'conservative'
+
+          if (selectedScenario !== scenarioKey) return null
+
+          return (
+            <div key={scenario.label} className="bg-paper-300/50 dark:bg-ink-300/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-lg font-semibold text-ink-100 dark:text-paper-100">
+                  {format(scenario.date, 'MMMM d, yyyy')}
+                </span>
+                <span className={cn('text-sm font-medium', scenario.color)}>
+                  {scenario.pace}
+                </span>
+              </div>
+              <p className="text-sm text-ink-400 dark:text-paper-300">
+                {scenario.description}
+              </p>
+            </div>
+          )
+        })}
       </div>
 
-      {/* Milestones Timeline */}
+      {/* Milestones - Stepper Design */}
       <div className="pt-6 mt-6 border-t border-paper-300 dark:border-ink-300">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-sm font-semibold text-ink-100 dark:text-paper-100">Milestones</h3>
+          <h3 className="text-sm font-semibold text-ink-100 dark:text-paper-100">Journey Milestones</h3>
           <span className="text-xs text-ink-400 dark:text-paper-300">
-            Based on {Math.round(primaryPace)} days/level • {useActiveAverage ? 'Active' : 'All'} • {averagingMethod === 'median' ? 'Median' : 'Trimmed Mean'}
+            Based on {Math.round(selectedPace)} days/level
           </span>
         </div>
 
-        {/* Timeline visualization with padding */}
-        <div className="relative pt-8 pb-24 px-6">
-          {/* Background line */}
-          <div className="absolute top-12 left-12 right-12 h-1 bg-paper-300 dark:bg-ink-300 rounded-full" />
-
-          {/* Progress line (from start to current level) */}
-          <div
-            className="absolute top-12 left-12 h-1 bg-patina-500 dark:bg-patina-400 rounded-full transition-all duration-slow"
-            style={{
-              width: `calc((100% - 96px) * ${((user.level - 1) / 59)})`,
-            }}
-          />
-
-          {/* Milestone markers container */}
-          <div className="relative" style={{ paddingLeft: '24px', paddingRight: '24px' }}>
-            {/* Start marker (Level 1) */}
-            <div className="flex flex-col items-center" style={{ position: 'absolute', left: '0%', transform: 'translateX(0%)' }}>
-              <div className="w-3 h-3 rounded-full bg-patina-500 dark:bg-patina-400 border-2 border-paper-200 dark:border-ink-200 mb-5" />
-              <div className="text-xs font-medium text-ink-400 dark:text-paper-300 whitespace-nowrap mb-5">
-                Lvl 1
-              </div>
-              <div className="text-xs text-ink-400 dark:text-paper-300 whitespace-nowrap md:rotate-0" style={{ transform: 'rotate(-45deg)', transformOrigin: 'center' }}>
-                Start
-              </div>
-            </div>
-
-            {/* Milestone markers at 30, 40, 50, 60 */}
-            {milestones.map((milestone) => {
-              const position = ((milestone.level - 1) / 59) * 100
+        {/* Stepper container - responsive */}
+        <div className="relative">
+          {/* Mobile: Reduced milestones */}
+          <div className="flex items-center justify-between w-full md:hidden">
+            {mobileMilestones.map((milestone, index) => {
               const isCompleted = milestone.status === 'completed'
               const isCurrent = user.level === milestone.level
+              const isLast = index === mobileMilestones.length - 1
+              const isStart = milestone.level === 1
 
               return (
-                <div
-                  key={milestone.level}
-                  className="flex flex-col items-center"
-                  style={{
-                    position: 'absolute',
-                    left: `${position}%`,
-                    transform: 'translateX(-50%)'
-                  }}
-                >
-                  {/* Marker dot */}
-                  <div className={`
-                    w-4 h-4 rounded-full border-2 border-paper-200 dark:border-ink-200 mb-5 transition-all
-                    ${isCompleted
-                      ? 'bg-patina-500 dark:bg-patina-400'
-                      : isCurrent
-                      ? 'bg-vermillion-500 dark:bg-vermillion-400 ring-4 ring-vermillion-500/20'
-                      : 'bg-paper-400 dark:bg-ink-400'
-                    }
-                  `} />
+                <div key={milestone.level} className="flex items-center flex-1 last:flex-none">
+                  {/* Step */}
+                  <div className="flex flex-col items-center">
+                    {/* Circle */}
+                    <div className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-xs transition-all relative',
+                      isCompleted && 'bg-patina-500 dark:bg-patina-400 text-paper-100',
+                      isCurrent && 'bg-vermillion-500 text-paper-100 ring-4 ring-vermillion-500/20',
+                      !isCompleted && !isCurrent && 'bg-paper-300 dark:bg-ink-300 text-ink-400 dark:text-paper-400'
+                    )}>
+                      {isStart ? '★' : milestone.level}
+                    </div>
 
-                  {/* Level label */}
-                  <div className={`
-                    text-xs font-medium mb-5 whitespace-nowrap
-                    ${isCompleted || isCurrent
-                      ? 'text-ink-100 dark:text-paper-100'
-                      : 'text-ink-400 dark:text-paper-300'
-                    }
-                  `}>
-                    Lvl {milestone.level}
+                    {/* Label */}
+                    <div className="mt-3 text-center">
+                      <div className={cn(
+                        'text-xs font-medium whitespace-nowrap',
+                        isCompleted || isCurrent ? 'text-ink-100 dark:text-paper-100' : 'text-ink-400 dark:text-paper-300'
+                      )}>
+                        {isStart ? 'Start' : `L${milestone.level}`}
+                      </div>
+                      <div className={cn(
+                        'text-xs mt-1 whitespace-nowrap',
+                        isCompleted ? 'text-patina-500 dark:text-patina-400' : 'text-ink-400 dark:text-paper-300'
+                      )}>
+                        {format(milestone.date, 'MMM yy')}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Date */}
-                  <div className="text-xs text-ink-400 dark:text-paper-300 whitespace-nowrap md:rotate-0" style={{ transform: 'rotate(-45deg)', transformOrigin: 'center' }}>
-                    {isCompleted
-                      ? 'Completed'
-                      : format(milestone.date, 'MMM yyyy')
-                    }
-                  </div>
+                  {/* Connecting line */}
+                  {!isLast && (
+                    <div className="flex-1 h-0.5 mx-2 relative" style={{ marginBottom: '56px' }}>
+                      <div className="absolute inset-0 bg-paper-300 dark:bg-ink-300" />
+                      {isCompleted && (
+                        <div className="absolute inset-0 bg-patina-500 dark:bg-patina-400" />
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}
-
-            {/* Current position indicator (if not on a milestone) */}
-            {!milestones.some(m => m.level === user.level) && user.level > 1 && (
-              <div
-                className="flex flex-col items-center"
-                style={{
-                  position: 'absolute',
-                  left: `${((user.level - 1) / 59) * 100}%`,
-                  transform: 'translateX(-50%)'
-                }}
-              >
-                <div className="w-3 h-3 rounded-full bg-vermillion-500 dark:bg-vermillion-400 border-2 border-paper-200 dark:border-ink-200 ring-4 ring-vermillion-500/20 mb-5" />
-                <div className="text-xs font-semibold text-vermillion-500 dark:text-vermillion-400 whitespace-nowrap mb-5">
-                  Lvl {user.level}
-                </div>
-                <div className="text-xs text-ink-400 dark:text-paper-300 whitespace-nowrap md:rotate-0" style={{ transform: 'rotate(-45deg)', transformOrigin: 'center' }}>
-                  Now
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Desktop: All milestones */}
+          <div className="hidden md:flex items-center justify-between w-full">
+            {allMilestones.map((milestone, index) => {
+              const isCompleted = milestone.status === 'completed'
+              const isCurrent = user.level === milestone.level
+              const isLast = index === allMilestones.length - 1
+              const isStart = milestone.level === 1
+
+              return (
+                <div key={milestone.level} className="flex items-center flex-1 last:flex-none">
+                  {/* Step */}
+                  <div className="flex flex-col items-center">
+                    {/* Circle */}
+                    <div className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-xs transition-all relative',
+                      isCompleted && 'bg-patina-500 dark:bg-patina-400 text-paper-100',
+                      isCurrent && 'bg-vermillion-500 text-paper-100 ring-4 ring-vermillion-500/20',
+                      !isCompleted && !isCurrent && 'bg-paper-300 dark:bg-ink-300 text-ink-400 dark:text-paper-400'
+                    )}>
+                      {isStart ? '★' : milestone.level}
+                    </div>
+
+                    {/* Label */}
+                    <div className="mt-3 text-center">
+                      <div className={cn(
+                        'text-xs font-medium whitespace-nowrap',
+                        isCompleted || isCurrent ? 'text-ink-100 dark:text-paper-100' : 'text-ink-400 dark:text-paper-300'
+                      )}>
+                        {isStart ? 'Start' : `L${milestone.level}`}
+                      </div>
+                      <div className={cn(
+                        'text-xs mt-1 whitespace-nowrap',
+                        isCompleted ? 'text-patina-500 dark:text-patina-400' : 'text-ink-400 dark:text-paper-300'
+                      )}>
+                        {format(milestone.date, 'MMM yy')}
+                      </div>
+                      {milestone.level === 60 && (
+                        <div className="text-xs text-ink-400 dark:text-paper-300 mt-1 font-medium">
+                          Master
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Connecting line */}
+                  {!isLast && (
+                    <div className="flex-1 h-0.5 mx-2 relative" style={{ marginBottom: '56px' }}>
+                      <div className="absolute inset-0 bg-paper-300 dark:bg-ink-300" />
+                      {isCompleted && (
+                        <div className="absolute inset-0 bg-patina-500 dark:bg-patina-400" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Current position indicator (if between milestones) */}
+          {!allMilestones.some(m => m.level === user.level) && user.level > 1 && (
+            <div className="mt-4 text-xs text-ink-400 dark:text-paper-300 flex items-center gap-2">
+              <div className="w-2 h-2 bg-vermillion-500 rounded-full" />
+              <span>Currently at Level {user.level}</span>
+            </div>
+          )}
         </div>
       </div>
 

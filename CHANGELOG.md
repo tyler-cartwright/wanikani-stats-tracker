@@ -5,6 +5,65 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2025-12-13
+
+### Changed
+- **Progress Page Redesign**: Complete visual and UX overhaul for improved data presentation
+  - **Journey to Level 60 Card**: Now positioned at top of page as primary focus
+    - Elegant hero estimate with understated typography and subtle vermillion accents (replaced dominant red block)
+    - Tabbed scenario selection (Fast track / Expected / Conservative) with interactive segmented control
+    - Scenario-reactive milestones that update dynamically based on selected projection
+  - **Milestone Timeline**: Horizontal stepper design replacing vertical timeline
+    - Shows 7 key milestones: Start (★), 10, 20, 30, 40, 50, 60
+    - Mobile optimization: Shows 4 relevant milestones (Start, Previous completed, Next upcoming, L60)
+    - Desktop: Shows all 7 milestones spanning full card width
+    - Displays actual completion dates for past milestones, projected dates for future
+    - Color-coded progress: Green (completed) → Red (current) → Grey (upcoming)
+  - **Level History Chart**: Grid replaced with vertical bar chart for better data visualization
+    - Vertical bars with levels on X-axis, days on Y-axis
+    - Statistical 4-category classification using standard deviation: Fast, Good, Slow, Very Slow
+    - Traffic light color scheme: Dark green → Green → Gold → Red
+    - Smart tooltips that position above or inside bars based on height to prevent clipping
+    - Proper dark mode support for all colors and icons
+  - **Statistical Analysis**: Improved pace categorization algorithm
+    - Fast: < (mean - 0.5 × σ)
+    - Good: Within ±0.5σ of mean
+    - Slow: Between +0.5σ and +1.5σ
+    - Very Slow: > (mean + 1.5 × σ)
+    - Better differentiation of outliers (e.g., 29d vs 160d levels properly classified separately)
+
+### Fixed
+- **Dark Mode Visibility**: All Progress page elements now properly visible in dark mode
+  - Scenario tab icons use dark mode variants (`text-ink-400 dark:text-paper-300` when inactive)
+  - Pace indicators ("X days/level") use proper contrast colors in both themes
+  - Bar chart colors include dark mode variants for all pace categories
+- **Milestone Date Accuracy**: Fixed completion date logic for historical milestones
+  - Correctly identifies completed levels using `user.level > milestone.level`
+  - Uses actual `passed_at` dates from WaniKani API for completed milestones
+  - Fallback to next level's `unlocked_at` if `passed_at` is unavailable
+- **Responsive Layout**: Removed horizontal scrolling on mobile devices
+  - Milestones use full card width with flexible connecting lines
+  - Adaptive spacing and sizing based on screen size
+  - No overflow on any viewport size
+
+### Technical
+- Updated `src/pages/progress.tsx` - Swapped component order (Level60Projection now first)
+- Updated `src/components/progress/level-60-projection.tsx`:
+  - Added tabbed scenario state management with `selectedScenario` state
+  - Built comprehensive milestone calculation (1, 10, 20, 30, 40, 50, 60) with actual/projected dates
+  - Mobile-optimized milestone filtering (Start, Previous, Next, L60)
+  - Horizontal stepper design with responsive rendering (mobile vs desktop)
+  - Elegant hero redesign with centered typography and gradient accents
+  - Dark mode support for all scenario colors
+- Updated `src/components/progress/level-timeline.tsx`:
+  - Converted from grid layout to vertical bar chart
+  - Implemented statistical classification using standard deviation
+  - Added `calculateStdDev()` helper function
+  - Updated `determinePace()` to use mean and standard deviation
+  - Traffic light color scheme with dark mode variants
+  - Smart tooltip positioning logic
+  - Responsive bar heights that fit container without scrolling
+
 ## [2.5.2] - 2025-12-09
 
 ### Fixed
