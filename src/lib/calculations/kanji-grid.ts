@@ -182,19 +182,21 @@ export function enrichSubjectsWithSRS(
       readingType = null
     }
 
-    enrichedSubjects.push({
-      id: subject.id,
-      character,
-      characterImageUrl,
-      level: subject.level,
-      primaryMeaning,
-      primaryReading,
-      readingType,
-      srsStage,
-      srsStageName: getSRSStageName(srsStage),
-      subjectType,
-      documentUrl: subject.document_url,
-    })
+    if (subject.hidden_at == null) {
+      enrichedSubjects.push({
+        id: subject.id,
+        character,
+        characterImageUrl,
+        level: subject.level,
+        primaryMeaning,
+        primaryReading,
+        readingType,
+        srsStage,
+        srsStageName: getSRSStageName(srsStage),
+        subjectType,
+        documentUrl: subject.document_url,
+      })
+    }
   })
 
   // Sort by level, then by id
