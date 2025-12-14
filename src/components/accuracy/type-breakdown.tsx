@@ -47,12 +47,23 @@ export function TypeBreakdown() {
   if (isLoading) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        {/* Title */}
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+
+        {/* Type sections */}
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-2">
-              <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
-              <div className="h-3 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+              {/* Label, accuracy, count row */}
+              <div className="flex items-center justify-between">
+                <div className="h-5 w-20 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                <div className="flex items-center gap-4">
+                  <div className="h-7 w-12 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                  <div className="h-4 w-16 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="h-3 bg-paper-300 dark:bg-ink-300 rounded-full animate-pulse" />
             </div>
           ))}
         </div>

@@ -5,6 +5,86 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1] - 2025-12-14
+
+### Fixed
+- **Accuracy Page Skeleton Loading**: All accuracy components now show proper structured skeletons instead of loading text
+  - **Accuracy Distribution**: Shows label/range/stats placeholders for each bucket with progress bars and footer
+  - **Accuracy by Level (Time Heatmap)**: Shows title, level bars, stats, and insight box placeholders instead of "Loading accuracy by level..." text
+  - **Type Breakdown**: Shows label/accuracy/count row with progress bar for each type (radicals, kanji, vocabulary)
+  - Consistent with loading patterns across the rest of the application
+
+## [2.8.0] - 2025-12-14
+
+### Added
+- **Progress Page Enhancement**: Three new comprehensive progress tracking components
+  - **Knowledge Stability**: Monitor how well learned items "stick" in memory
+    - Large stability ratio percentage showing solid vs fragile items
+    - Visual breakdown bar (solid items in green, fragile items in red)
+    - Breakdown by subject type (radicals, kanji, vocabulary)
+    - "At-risk items" modal with configurable display limits (10/25/50/All)
+    - Fragile items: those that passed Guru but fell back to Apprentice
+    - Solid items: those that passed Guru and remain at Guru+ stages
+    - Excludes burned items (permanently stable)
+  - **Burn Velocity**: Track burn progress and trends over time
+    - Circular progress ring showing total burn percentage
+    - Burn statistics for 7/30/90 day periods with daily rates
+    - Trend indicators (up/down/stable) comparing current vs previous periods
+    - Projected "all burned" completion date based on current velocity
+    - Remaining items counter
+  - **Milestone Timeline**: Visual achievement journey with badges
+    - Guru milestones: First Guru, 100, 500, 1000, 2500, All Guru (based on `passed_at`)
+    - Burn milestones: First Burn, 100, 500, 1000, 2500, 5000, All Burned (based on `burned_at`)
+    - Level milestones: 10, 20, 30, 40, 50, 60
+    - Grid and timeline view toggle
+    - Achievement badges with tooltips showing dates and descriptions
+    - Next milestone preview with progress bar
+    - Grayed out badges for upcoming achievements
+
+### Fixed
+- **Knowledge Stability Calculation**: Fixed logic to properly identify passed items
+  - Now uses `passed_at` timestamp instead of `passed` boolean (consistent with rest of codebase)
+  - Correctly counts items that have reached Guru stage
+  - Properly tracks items that fell back from Guru to Apprentice
+- **Level Milestone Tracking**: Fixed achievement detection for completed levels
+  - Now uses `currentLevel > target` instead of relying on `passed_at` in progressions
+  - Correctly shows levels as achieved when user has passed them (e.g., level 14 user shows level 10 as achieved)
+  - Eliminates negative "X to go" display for already-completed levels
+
+### Technical
+- Added `src/lib/calculations/knowledge-stability.ts`:
+  - `calculateKnowledgeStability()` - Main stability calculation
+  - `getAtRiskItems()` - Identifies and sorts fragile items by SRS stage
+  - TypeScript interfaces: `KnowledgeStability`, `AtRiskItem`, `TypeBreakdown`
+- Added `src/lib/calculations/burn-velocity.ts`:
+  - `calculateBurnVelocity()` - Main velocity calculation
+  - `calculateBurnPeriod()` - Period-based burn counting
+  - `calculateTrend()` - Trend comparison algorithm (>10% = up/down)
+  - TypeScript interfaces: `BurnVelocity`, `BurnPeriod`
+- Added `src/lib/calculations/milestones.ts`:
+  - `calculateMilestones()` - Main milestone orchestration
+  - `getBurnMilestones()` - Burn achievement tracking
+  - `getGuruMilestones()` - Guru achievement tracking (using `passed_at`)
+  - `getLevelMilestones()` - Level completion tracking
+  - TypeScript interfaces: `Milestone`, `MilestoneTimeline`
+- Added `src/components/progress/knowledge-stability.tsx`:
+  - Main component with stability display and modal
+  - Configurable at-risk item display limits
+  - Loading skeleton matching component layout
+- Added `src/components/progress/burn-velocity.tsx`:
+  - `ProgressRing` SVG component for circular progress
+  - `VelocityStat` component for period statistics
+  - Loading skeleton with responsive design
+- Added `src/components/progress/milestone-timeline.tsx`:
+  - `MilestoneBadge` component with tooltips
+  - `MilestoneTimelineItem` for chronological list view
+  - `NextMilestonePreview` with progress bar
+  - Grid/timeline view toggle
+  - Loading skeleton
+- Updated `src/pages/progress.tsx`:
+  - New component order: Level60Projection → KnowledgeStability → BurnVelocity → MilestoneTimeline → LevelTimeline
+  - All components maintain consistent spacing and responsive design
+
 ## [2.7.0] - 2025-12-14
 
 ### Added
@@ -629,6 +709,10 @@ WaniTrack v2.0.0 - Complete WaniKani statistics tracker and analytics platform.
 
 ## Version History Summary
 
+- **2.8.1** (Dec 14, 2025) - Fixed Accuracy Distribution skeleton loading state
+- **2.8.0** (Dec 14, 2025) - Progress page enhancement: Knowledge Stability, Burn Velocity, Milestone Timeline
+- **2.7.0** (Dec 14, 2025) - Readiness hero redesign, hidden items filter, UX improvements
+- **2.6.0** (Dec 13, 2025) - Progress page redesign with journey milestones and level history chart
 - **2.5.2** (Dec 9, 2025) - Radical image contrast matches text/SRS colors across themes
 - **2.5.1** (Dec 9, 2025) - Readiness skeleton during sync; fallback radical SVGs
 - **2.5.0** (Dec 8, 2025) - Exam Readiness pivot to Jōyō system, new metrics/UI

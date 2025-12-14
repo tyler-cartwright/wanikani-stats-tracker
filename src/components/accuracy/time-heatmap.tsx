@@ -93,9 +93,41 @@ export function TimeHeatmap() {
   if (isLoading) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-sm text-ink-400 dark:text-paper-300">
-            Loading accuracy by level...
+        {/* Title and level count */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="h-6 w-40 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+          <div className="h-4 w-20 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+        </div>
+
+        {/* Bar chart */}
+        <div className="space-y-2 mb-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-12 h-4 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+              <div className="flex-1">
+                <div
+                  className="h-8 bg-paper-300 dark:bg-ink-300 rounded-md animate-pulse"
+                  style={{ width: `${60 + Math.random() * 35}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Stats */}
+        <div className="flex flex-wrap gap-6 mb-6">
+          <div className="h-4 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+          <div className="h-4 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+        </div>
+
+        {/* Insight box */}
+        <div className="p-4 bg-paper-300/50 dark:bg-ink-300/50 rounded-lg">
+          <div className="flex gap-3">
+            <div className="w-5 h-5 bg-paper-300 dark:bg-ink-300 rounded animate-pulse flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 bg-paper-300 dark:bg-ink-300 rounded animate-pulse w-full" />
+              <div className="h-3 bg-paper-300 dark:bg-ink-300 rounded animate-pulse w-3/4" />
+            </div>
           </div>
         </div>
       </div>
