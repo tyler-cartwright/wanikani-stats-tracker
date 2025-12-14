@@ -56,11 +56,33 @@ export function AccuracyDistribution() {
   if (isLoading || isSyncing) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        {/* Title */}
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+
+        {/* Buckets */}
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-16 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+            <div key={i}>
+              {/* Label and stats row */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-16 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                  <div className="h-3 w-12 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-4 w-8 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                  <div className="h-3 w-10 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="h-3 bg-paper-300 dark:bg-ink-300 rounded-full animate-pulse" />
+            </div>
           ))}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-paper-300 dark:border-ink-300">
+          <div className="h-4 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mx-auto" />
         </div>
       </div>
     )
