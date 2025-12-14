@@ -28,17 +28,21 @@ export async function clearServiceWorkerCaches(): Promise<void> {
 }
 
 /**
- * Clears all localStorage except the auth token
- * Preserves user authentication while clearing cached data
+ * Clears all localStorage except the auth token and user settings
+ * Preserves user authentication and preferences (theme, etc.) while clearing cached data
  */
 export function clearLocalStorageExceptAuth(): void {
   try {
     const authData = localStorage.getItem('wanikani-auth')
+    const settingsData = localStorage.getItem('wanikani-settings')
     localStorage.clear()
     if (authData) {
       localStorage.setItem('wanikani-auth', authData)
     }
-    console.log('LocalStorage cleared (except auth)')
+    if (settingsData) {
+      localStorage.setItem('wanikani-settings', settingsData)
+    }
+    console.log('LocalStorage cleared (except auth and settings)')
   } catch (error) {
     console.error('Failed to clear localStorage:', error)
     throw error

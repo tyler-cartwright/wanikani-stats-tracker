@@ -5,6 +5,104 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2025-12-14
+
+### Added
+- **Kanji Grid: Hidden Items Filter**: New setting to control visibility of curriculum-removed items
+  - Items with `hidden_at` timestamp (removed from WaniKani curriculum) now hidden by default
+  - Settings page includes "Show Removed Items" toggle in new "Kanji Grid" section
+  - Helpful tooltip explains these are items studied before removal but no longer taught to new students
+  - Filter respects whether user completed lessons before removal
+
+### Changed
+- **Readiness Page Hero Redesign**: Complete visual transformation for achievement-focused presentation
+  - **Centered Hero Section**: Achievement is now the main character, not the color
+    - Elegant centered layout matching Progress page's "Estimated Completion" aesthetic
+    - Small uppercase label "CURRENT PROGRESS" with large grade number in ink colors
+    - Secondary stats line with dot separators: "X kanji · Y% coverage · NZ level"
+    - Subtle gradient divider with vermillion center accent
+    - Threshold indicator badge: "Guru threshold · 1,995/2,136 Jōyō in WaniKani"
+  - **Refined Metrics Grid**: Three key metrics remain but with reduced prominence
+    - Jōyō Kanji ring reduced from 140px to 120px
+    - Reading Coverage and JLPT numbers reduced from text-5xl to text-3xl
+    - Numbers now in ink colors (not colored) with small colored icons for subtle accents
+    - Labels more prominent than values for better hierarchy
+  - **Updated Skeleton**: Loading state matches new centered hero design
+- **Kanji Grid: SRS Filter Button Colors**: Buttons now match kanji block color scheme
+  - Locked: Gray (paper-300/ink-300)
+  - Apprentice: Purple (srs-apprentice)
+  - Guru: Blue (srs-guru)
+  - Master: Green (srs-master)
+  - Enlightened: Gold (srs-enlightened)
+  - Burned: Gray (srs-burned)
+  - Visual consistency makes filtering more intuitive
+- **Progress Page: Badge Wrapping**: Method indicator badge uses flex layout for graceful wrapping
+  - Converts from inline text with `•` separators to flex container with visual dot separators
+  - Items wrap at semantic boundaries (not mid-word) on small screens
+  - Maintains rounded pill appearance even when wrapped
+- **Progress Page: Modal Animations**: Excluded levels modal now uses app-standard animations
+  - Replaced custom modal with shared `Modal` component
+  - Consistent fade + scale animation (300ms, cubic-bezier ease-out)
+  - Accessibility improvements: escape key, backdrop click, focus management
+  - Mobile spacing improvements: responsive layout, increased padding and gaps
+
+### Fixed
+- **Settings Persistence**: Theme and all user preferences now survive app version updates
+  - `clearLocalStorageExceptAuth()` now preserves both `wanikani-auth` AND `wanikani-settings`
+  - Previously only auth token was preserved, causing theme reset to light mode on updates
+- **Stale Chunk Errors**: Automatic recovery when navigating after new deployment
+  - Created `lazyWithRetry()` wrapper for all lazy-loaded pages
+  - Detects chunk load errors (old chunks missing after deployment)
+  - Automatically reloads page to fetch new chunks (max 1 retry via sessionStorage)
+  - Seamless experience - no error UI shown, just smooth reload
+- **Progress Page: Skeleton Responsiveness**: Loading states now match component responsive behavior
+  - Level60Projection skeleton: 4 milestones on mobile, 7 on desktop (was 7 always)
+  - LevelTimeline skeleton: 8 bars on mobile, 15 on desktop with overflow-x-auto
+  - Stats and legend use responsive gaps (gap-4 sm:gap-6)
+- **Progress Page: Modal Mobile Layout**: Excluded levels modal better formatted on small screens
+  - Increased spacing from space-y-2 to space-y-3
+  - List items stack vertically on mobile, side-by-side on desktop (flex-col sm:flex-row)
+  - Improved readability with responsive gaps and padding
+
+### Technical
+- Updated `src/stores/settings-store.ts`:
+  - Added `showHiddenItems` boolean setting (default: false)
+  - Added `setShowHiddenItems()` action
+- Updated `src/components/kanji-grid/kanji-grid.tsx`:
+  - Imported and applied `excludeHiddenSubjects` filter based on setting
+  - Added `showHiddenItems` to enrichment dependencies
+- Updated `src/lib/calculations/kanji-grid.ts`:
+  - Added `hidden_at: string | null` to `EnrichedSubject` interface
+  - Updated `enrichSubjectsWithSRS()` to preserve `hidden_at` field from subjects
+- Updated `src/pages/settings.tsx`:
+  - Added "Kanji Grid" settings section with toggle switch
+- Updated `src/components/kanji-grid/kanji-grid-filters.tsx`:
+  - Replaced uniform vermillion button colors with stage-specific colors
+  - Added `stageColors` mapping object for active/inactive states
+- Updated `src/components/progress/level-60-projection.tsx`:
+  - Removed green badge (lines 37-57)
+  - Added centered hero section with large grade display, stats line, divider, and badge
+  - Refined three metrics: smaller sizes, ink-colored numbers, subtle icons
+  - Imported `Modal` component and replaced custom modal markup
+  - Enhanced mobile spacing in modal list items
+  - Fixed badge flex layout for responsive wrapping
+- Updated `src/components/jlpt/jlpt-hero.tsx`:
+  - Removed `GraduationCap` icon import
+  - Added `SRS_THRESHOLD_LABELS` import and `useSettingsStore` hook
+  - Replaced green badge with centered hero section
+  - Updated three metrics with reduced sizing and ink colors
+- Updated `src/pages/readiness.tsx`:
+  - Updated skeleton to match new centered hero layout
+  - Refined metrics skeleton structure (label above, smaller circle)
+- Updated `src/lib/cache/cache-manager.ts`:
+  - `clearLocalStorageExceptAuth()` now preserves `wanikani-settings` in addition to `wanikani-auth`
+- Created `src/lib/utils/lazy-with-retry.ts`:
+  - Implements chunk load error detection and automatic page reload
+  - Uses sessionStorage to prevent infinite reload loops
+- Updated `src/App.tsx`:
+  - All lazy-loaded pages now use `lazyWithRetry()` instead of `lazy()`
+  - Removed unused `lazy` import from React
+
 ## [2.6.0] - 2025-12-13
 
 ### Changed

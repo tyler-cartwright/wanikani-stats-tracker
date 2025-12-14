@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useUserStore } from './stores/user-store'
@@ -6,16 +6,17 @@ import { AppShell } from './components/layout/app-shell'
 import { ErrorBoundary } from './components/shared/error-boundary'
 import { InitialSync } from './components/shared/initial-sync'
 import { Loader2 } from 'lucide-react'
+import { lazyWithRetry } from './lib/utils/lazy-with-retry'
 
-// Lazy load pages
-const Dashboard = lazy(() => import('./pages/dashboard').then(m => ({ default: m.Dashboard })))
-const Progress = lazy(() => import('./pages/progress').then(m => ({ default: m.Progress })))
-const Accuracy = lazy(() => import('./pages/accuracy').then(m => ({ default: m.Accuracy })))
-const Leeches = lazy(() => import('./pages/leeches').then(m => ({ default: m.Leeches })))
-const Kanji = lazy(() => import('./pages/kanji').then(m => ({ default: m.Kanji })))
-const Readiness = lazy(() => import('./pages/readiness').then(m => ({ default: m.Readiness })))
-const Settings = lazy(() => import('./pages/settings').then(m => ({ default: m.Settings })))
-const Setup = lazy(() => import('./pages/setup').then(m => ({ default: m.Setup })))
+// Lazy load pages with automatic chunk error retry
+const Dashboard = lazyWithRetry(() => import('./pages/dashboard').then(m => ({ default: m.Dashboard })))
+const Progress = lazyWithRetry(() => import('./pages/progress').then(m => ({ default: m.Progress })))
+const Accuracy = lazyWithRetry(() => import('./pages/accuracy').then(m => ({ default: m.Accuracy })))
+const Leeches = lazyWithRetry(() => import('./pages/leeches').then(m => ({ default: m.Leeches })))
+const Kanji = lazyWithRetry(() => import('./pages/kanji').then(m => ({ default: m.Kanji })))
+const Readiness = lazyWithRetry(() => import('./pages/readiness').then(m => ({ default: m.Readiness })))
+const Settings = lazyWithRetry(() => import('./pages/settings').then(m => ({ default: m.Settings })))
+const Setup = lazyWithRetry(() => import('./pages/setup').then(m => ({ default: m.Setup })))
 
 // Configure TanStack Query
 export const queryClient = new QueryClient({

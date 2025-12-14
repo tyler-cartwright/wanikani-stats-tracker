@@ -184,21 +184,45 @@ export function KanjiGridFilters({
       <div className="space-y-2">
         <label className="text-sm font-medium text-ink-200 dark:text-paper-200">SRS Stages:</label>
         <div className="flex flex-wrap gap-2">
-          {srsStages.map((stage) => (
-            <button
-              key={stage.value}
-              type="button"
-              onClick={() => toggleSrsStage(stage.value)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border',
-                srsFilter.includes(stage.value) || srsFilter.length === 0
-                  ? 'bg-vermillion-500 text-paper-100 border-vermillion-500'
-                  : 'bg-paper-200 dark:bg-ink-200 text-ink-300 dark:text-paper-300 border-paper-300 dark:border-ink-300 hover:border-vermillion-500'
-              )}
-            >
-              {stage.label}
-            </button>
-          ))}
+          {srsStages.map((stage) => {
+            const isActive = srsFilter.includes(stage.value) || srsFilter.length === 0
+
+            // Color mapping to match kanji block colors
+            const stageColors = {
+              initiate: isActive
+                ? 'bg-paper-300 dark:bg-ink-300 text-ink-100 dark:text-paper-100 border-paper-400 dark:border-ink-400'
+                : 'bg-paper-200 dark:bg-ink-200 text-ink-400 dark:text-paper-300 border-paper-300 dark:border-ink-300 hover:border-paper-400 dark:hover:border-ink-400',
+              apprentice: isActive
+                ? 'bg-srs-apprentice text-paper-100 dark:text-ink-100 border-srs-apprentice'
+                : 'bg-paper-200 dark:bg-ink-200 text-ink-400 dark:text-paper-300 border-paper-300 dark:border-ink-300 hover:border-srs-apprentice',
+              guru: isActive
+                ? 'bg-srs-guru text-paper-100 dark:text-ink-100 border-srs-guru'
+                : 'bg-paper-200 dark:bg-ink-200 text-ink-400 dark:text-paper-300 border-paper-300 dark:border-ink-300 hover:border-srs-guru',
+              master: isActive
+                ? 'bg-srs-master text-paper-100 dark:text-ink-100 border-srs-master'
+                : 'bg-paper-200 dark:bg-ink-200 text-ink-400 dark:text-paper-300 border-paper-300 dark:border-ink-300 hover:border-srs-master',
+              enlightened: isActive
+                ? 'bg-srs-enlightened text-paper-100 dark:text-ink-100 border-srs-enlightened'
+                : 'bg-paper-200 dark:bg-ink-200 text-ink-400 dark:text-paper-300 border-paper-300 dark:border-ink-300 hover:border-srs-enlightened',
+              burned: isActive
+                ? 'bg-srs-burned text-paper-100 dark:text-ink-100 border-srs-burned'
+                : 'bg-paper-200 dark:bg-ink-200 text-ink-400 dark:text-paper-300 border-paper-300 dark:border-ink-300 hover:border-srs-burned',
+            }
+
+            return (
+              <button
+                key={stage.value}
+                type="button"
+                onClick={() => toggleSrsStage(stage.value)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border',
+                  stageColors[stage.value]
+                )}
+              >
+                {stage.label}
+              </button>
+            )
+          })}
           {srsFilter.length > 0 && (
             <button
               type="button"

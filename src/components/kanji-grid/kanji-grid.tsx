@@ -8,18 +8,21 @@ import {
   filterSubjects,
   groupSubjectsByLevel,
 } from '@/lib/calculations/kanji-grid'
+import { excludeHiddenSubjects } from '@/lib/utils/filters'
 import { KanjiGridFilters } from './kanji-grid-filters'
 import { KanjiGridLegend } from './kanji-grid-legend'
 import { KanjiLevelSection } from './kanji-level-section'
 import { KanjiCell } from './kanji-cell'
 import { KanjiTooltip } from './kanji-tooltip'
 import { useSyncStore } from '@/stores/sync-store'
+import { useSettingsStore } from '@/stores/settings-store'
 import { useTouchDevice } from '@/hooks/use-touch-device'
 
 export function KanjiGrid() {
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const isSyncing = useSyncStore((state) => state.isSyncing)
+  const showHiddenItems = useSettingsStore((state) => state.showHiddenItems)
   const isTouchDevice = useTouchDevice()
 
   // Filter state
@@ -39,11 +42,13 @@ export function KanjiGrid() {
 
   const isLoading = subjectsLoading || assignmentsLoading || isSyncing
 
-  // Step 1: Enrich subjects with SRS data
+  // Step 1: Enrich subjects with SRS data and filter hidden items
   const enrichedSubjects = useMemo(() => {
     if (!subjects || !assignments) return []
-    return enrichSubjectsWithSRS(subjects, assignments)
-  }, [subjects, assignments])
+    const enriched = enrichSubjectsWithSRS(subjects, assignments)
+    // Filter out hidden items unless user wants to see them
+    return showHiddenItems ? enriched : excludeHiddenSubjects(enriched)
+  }, [subjects, assignments, showHiddenItems])
 
   // Step 2: Apply filters
   const filteredSubjects = useMemo(() => {

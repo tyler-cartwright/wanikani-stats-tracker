@@ -125,27 +125,40 @@ export function LevelTimeline() {
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
 
         {/* Stats row */}
-        <div className="flex gap-6 mb-8">
+        <div className="flex flex-wrap gap-4 sm:gap-6 mb-8">
           <div className="h-4 bg-paper-300 dark:bg-ink-300 rounded animate-pulse w-32" />
           <div className="h-4 bg-paper-300 dark:bg-ink-300 rounded animate-pulse w-32" />
           <div className="h-4 bg-paper-300 dark:bg-ink-300 rounded animate-pulse w-32" />
         </div>
 
         {/* Vertical bar placeholders */}
-        <div className="h-[400px] flex items-end gap-1">
-          {Array.from({ length: 15 }).map((_, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center justify-end">
-              <div
-                className="w-full bg-paper-300 dark:bg-ink-300 rounded-t-md animate-pulse"
-                style={{ height: `${Math.random() * 300 + 50}px` }}
-              />
-              <div className="w-6 h-3 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mt-2" />
-            </div>
-          ))}
+        <div className="relative overflow-x-auto pb-2">
+          <div className="h-[400px] flex items-end gap-1 min-w-full">
+            {/* Mobile: fewer bars */}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center justify-end md:hidden min-w-[8px]">
+                <div
+                  className="w-full bg-paper-300 dark:bg-ink-300 rounded-t-md animate-pulse"
+                  style={{ height: `${Math.random() * 300 + 50}px` }}
+                />
+                <div className="w-6 h-3 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mt-2" />
+              </div>
+            ))}
+            {/* Desktop: more bars */}
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div key={i} className="hidden md:flex flex-1 flex-col items-center justify-end min-w-[8px]">
+                <div
+                  className="w-full bg-paper-300 dark:bg-ink-300 rounded-t-md animate-pulse"
+                  style={{ height: `${Math.random() * 300 + 50}px` }}
+                />
+                <div className="w-6 h-3 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mt-2" />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Legend */}
-        <div className="flex gap-4 mt-6">
+        <div className="flex flex-wrap gap-3 sm:gap-4 mt-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-4 w-20 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
           ))}

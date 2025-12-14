@@ -14,6 +14,7 @@ interface SettingsState {
   useCustomThreshold: boolean // default: false
   customThresholdDays: number // default: 60
   jlptThreshold: SRSThreshold // default: 'guru'
+  showHiddenItems: boolean // default: false - show items removed from curriculum
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
@@ -25,6 +26,7 @@ interface SettingsState {
   setUseCustomThreshold: (value: boolean) => void
   setCustomThresholdDays: (days: number) => void
   setJlptThreshold: (threshold: SRSThreshold) => void
+  setShowHiddenItems: (value: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -40,6 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
       useCustomThreshold: false, // default to OFF
       customThresholdDays: 60, // default 60 days
       jlptThreshold: 'guru', // default to Guru (SRS 5+)
+      showHiddenItems: false, // default to hiding curriculum-removed items
 
       // Actions
       setTheme: (theme: 'light' | 'dark') => {
@@ -86,6 +89,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setJlptThreshold: (threshold: SRSThreshold) => {
         set({ jlptThreshold: threshold })
+      },
+
+      setShowHiddenItems: (value: boolean) => {
+        set({ showHiddenItems: value })
       },
     }),
     {

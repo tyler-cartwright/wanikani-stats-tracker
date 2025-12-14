@@ -54,17 +54,33 @@ export function Readiness() {
             <div className="h-10 w-40 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
           </div>
 
-          {/* Current Grade Badge */}
-          <div className="mb-8">
-            <div className="h-16 w-64 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+          {/* Hero - Centered Progress */}
+          <div className="mb-10">
+            <div className="flex flex-col items-center py-6 space-y-4">
+              {/* Small label */}
+              <div className="h-3 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+              {/* Large grade */}
+              <div className="h-12 w-48 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+              {/* Complete subtitle */}
+              <div className="h-5 w-24 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+              {/* Stats line */}
+              <div className="h-4 w-64 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+              {/* Divider */}
+              <div className="h-px w-48 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+            </div>
+            {/* Badge */}
+            <div className="flex justify-center">
+              <div className="h-6 w-56 bg-paper-300 dark:bg-ink-300 rounded-full animate-pulse" />
+            </div>
           </div>
 
-          {/* Three Metrics */}
+          {/* Three Metrics - Refined */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex flex-col items-center space-y-3">
-                <div className="h-36 w-36 bg-paper-300 dark:bg-ink-300 rounded-full animate-pulse" />
                 <div className="h-4 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                <div className="h-32 w-32 bg-paper-300 dark:bg-ink-300 rounded-full animate-pulse" />
+                <div className="h-3 w-28 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
               </div>
             ))}
           </div>

@@ -6,6 +6,7 @@ import { useUser, useLevelProgressions } from '@/lib/api/queries'
 import { projectLevel60Date } from '@/lib/calculations/forecasting'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
+import { Modal } from '@/components/shared/modal'
 
 interface Scenario {
   icon: typeof Rocket
@@ -187,18 +188,38 @@ export function Level60Projection() {
         {/* Stepper skeleton */}
         <div className="pt-6 mt-6 border-t border-paper-300 dark:border-ink-300">
           <div className="h-4 w-32 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
-          <div className="flex items-center justify-between w-full">
+
+          {/* Mobile: 4 milestones */}
+          <div className="flex items-center justify-between w-full md:hidden">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center flex-1 last:flex-none">
+                <div className="flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-paper-300 dark:bg-ink-300 animate-pulse" />
+                  <div className="mt-3 space-y-2">
+                    <div className="h-3 w-12 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+                  </div>
+                </div>
+                {i < 4 && (
+                  <div className="flex-1 h-0.5 mx-2 bg-paper-300 dark:bg-ink-300 animate-pulse" style={{ marginBottom: '56px' }} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: 7 milestones */}
+          <div className="hidden md:flex items-center justify-between w-full">
             {[1, 2, 3, 4, 5, 6, 7].map((i) => (
               <div key={i} className="flex items-center flex-1 last:flex-none">
                 <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-paper-300 dark:bg-ink-300 animate-pulse" />
+                  <div className="w-10 h-10 rounded-full bg-paper-300 dark:bg-ink-300 animate-pulse" />
                   <div className="mt-3 space-y-2">
                     <div className="h-3 w-12 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
                     <div className="h-3 w-16 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
                   </div>
                 </div>
                 {i < 7 && (
-                  <div className="flex-1 h-0.5 mx-1 bg-paper-300 dark:bg-ink-300 animate-pulse" style={{ marginBottom: '56px' }} />
+                  <div className="flex-1 h-0.5 mx-2 bg-paper-300 dark:bg-ink-300 animate-pulse" style={{ marginBottom: '56px' }} />
                 )}
               </div>
             ))}
@@ -243,12 +264,15 @@ export function Level60Projection() {
         </div>
 
         {/* Method indicator - small, subtle */}
-        <div className="text-center">
-          <span className="text-xs text-ink-400 dark:text-paper-300 bg-paper-300/50 dark:bg-ink-300/50 px-3 py-1 rounded-full">
-            {useActiveAverage ? 'Active pace' : 'All levels'} • {averagingMethod === 'median' ? 'Median' : 'Trimmed mean'}
+        <div className="flex justify-center">
+          <div className="inline-flex flex-wrap items-center justify-center gap-1.5 text-xs text-ink-400 dark:text-paper-300 bg-paper-300/50 dark:bg-ink-300/50 px-3 py-1 rounded-full">
+            <span>{useActiveAverage ? 'Active pace' : 'All levels'}</span>
+            <span className="w-1 h-1 rounded-full bg-ink-400/40 dark:bg-paper-300/40" aria-hidden="true" />
+            <span>{averagingMethod === 'median' ? 'Median' : 'Trimmed mean'}</span>
             {useActiveAverage && projection.excludedLevels.length > 0 && (
               <>
-                {' '}• {completedLevels - projection.excludedLevels.length} levels{' '}
+                <span className="w-1 h-1 rounded-full bg-ink-400/40 dark:bg-paper-300/40" aria-hidden="true" />
+                <span>{completedLevels - projection.excludedLevels.length} levels</span>
                 <button
                   onClick={() => setShowExcludedLevels(true)}
                   className="text-vermillion-500 hover:underline"
@@ -257,7 +281,7 @@ export function Level60Projection() {
                 </button>
               </>
             )}
-          </span>
+          </div>
         </div>
       </div>
 
@@ -460,54 +484,40 @@ export function Level60Projection() {
       </div>
 
       {/* Excluded Levels Modal */}
-      {showExcludedLevels && projection.excludedLevels.length > 0 && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-50 bg-ink-100/50 dark:bg-paper-100/20 transition-opacity duration-300"
-            onClick={() => setShowExcludedLevels(false)}
-            aria-hidden="true"
-          />
-
-          {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div
-              className="pointer-events-auto w-full max-w-md bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 shadow-xl"
-              role="dialog"
-              aria-modal="true"
-            >
-              <div className="p-6">
-                <h3 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-                  Filtered Levels
-                </h3>
-                <p className="text-sm text-ink-400 dark:text-paper-300 mb-4">
-                  These levels were excluded from your active average to provide a more accurate
-                  learning pace estimate:
-                </p>
-                <div className="space-y-2 mb-6">
-                  {projection.excludedLevels.map((level) => (
-                    <div
-                      key={level.level}
-                      className="flex justify-between text-sm p-2 bg-paper-300 dark:bg-ink-300 rounded"
-                    >
-                      <span className="text-ink-100 dark:text-paper-100">Level {level.level}</span>
-                      <span className="text-ink-400 dark:text-paper-300">
-                        {level.days} days ({level.reason})
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setShowExcludedLevels(false)}
-                  className="w-full px-4 py-2 text-sm font-medium rounded-md bg-vermillion-500 hover:bg-vermillion-600 text-paper-100 dark:text-ink-100 transition-smooth focus-ring"
-                >
-                  Close
-                </button>
+      <Modal
+        isOpen={showExcludedLevels && projection.excludedLevels.length > 0}
+        onClose={() => setShowExcludedLevels(false)}
+        size="md"
+      >
+        <div className="p-6">
+          <h3 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+            Filtered Levels
+          </h3>
+          <p className="text-sm text-ink-400 dark:text-paper-300 mb-6">
+            These levels were excluded from your active average to provide a more accurate
+            learning pace estimate:
+          </p>
+          <div className="space-y-3 mb-6">
+            {projection.excludedLevels.map((level) => (
+              <div
+                key={level.level}
+                className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 text-sm p-3 bg-paper-300 dark:bg-ink-300 rounded"
+              >
+                <span className="text-ink-100 dark:text-paper-100 font-medium">Level {level.level}</span>
+                <span className="text-ink-400 dark:text-paper-300">
+                  {level.days} days · {level.reason}
+                </span>
               </div>
-            </div>
+            ))}
           </div>
-        </>
-      )}
+          <button
+            onClick={() => setShowExcludedLevels(false)}
+            className="w-full px-4 py-2 text-sm font-medium rounded-md bg-vermillion-500 hover:bg-vermillion-600 text-paper-100 dark:text-ink-100 transition-smooth focus-ring"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

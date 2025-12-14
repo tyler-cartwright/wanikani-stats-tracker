@@ -18,6 +18,7 @@ export interface EnrichedSubject {
   srsStageName: SRSStage
   subjectType: SubjectType
   documentUrl: string
+  hidden_at: string | null // WaniKani curriculum removal timestamp
 }
 
 export interface SubjectsByLevel {
@@ -194,6 +195,7 @@ export function enrichSubjectsWithSRS(
       srsStageName: getSRSStageName(srsStage),
       subjectType,
       documentUrl: subject.document_url,
+      hidden_at: subject.hidden_at,
     })
   })
 
