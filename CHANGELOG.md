@@ -5,6 +5,22 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.1] - 2025-12-20
+
+### Fixed
+- **Dashboard Level Progress: Mobile Layout**: Fixed cramped stats display on narrow screens
+  - Stats now stack vertically on mobile (type label on row 1, stats on row 2)
+  - Desktop layout unchanged (horizontal with justify-between)
+  - Improved spacing with responsive gap classes
+  - Applied to radicals, kanji, and vocabulary progress rows
+
+### Technical
+- Updated `src/components/dashboard/level-progress.tsx`:
+  - Changed stats container from `flex justify-between` to `flex flex-col sm:flex-row`
+  - Added responsive alignment: `sm:items-center sm:justify-between`
+  - Added responsive gaps: `gap-1 sm:gap-0` for row spacing, `gap-2 sm:gap-3` for stat items
+  - Mobile breakpoint: 640px (Tailwind `sm`)
+
 ## [2.11.0] - 2025-12-20
 
 ### Added
