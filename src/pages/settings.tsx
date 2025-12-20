@@ -26,7 +26,9 @@ export function Settings() {
     jlptThreshold,
     setJlptThreshold,
     showHiddenItems,
-    setShowHiddenItems
+    setShowHiddenItems,
+    levelHistoryMode,
+    setLevelHistoryMode
   } = useSettingsStore()
   const { confirm, ConfirmDialog } = useConfirm()
 
@@ -365,6 +367,88 @@ export function Settings() {
                 </div>
               </label>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Level History Display */}
+      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+          Level History Display
+        </h2>
+        <div>
+          <div className="text-sm font-medium text-ink-100 dark:text-paper-100 mb-3">
+            Visualization Mode
+          </div>
+          <div className="space-y-3">
+            {/* Bar Chart Option */}
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="radio"
+                name="levelHistoryMode"
+                value="bar-chart"
+                checked={levelHistoryMode === 'bar-chart'}
+                onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
+                className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-ink-100 dark:text-paper-100">
+                    Bar Chart (recommended)
+                  </span>
+                  <InfoTooltip content="Vertical bars showing days per level with logarithmic scale to handle outliers. Best for visualizing progress patterns and comparing level completion times." />
+                </div>
+                <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
+                  Vertical bars with logarithmic scale for outliers
+                </div>
+              </div>
+            </label>
+
+            {/* Level Cards Option */}
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="radio"
+                name="levelHistoryMode"
+                value="cards"
+                checked={levelHistoryMode === 'cards'}
+                onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
+                className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-ink-100 dark:text-paper-100">
+                    Level Cards
+                  </span>
+                  <InfoTooltip content="Grid of cards showing level number, days, and pace color. Easy to scan individual level stats at a glance." />
+                </div>
+                <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
+                  Grid of cards showing level, days, and pace color
+                </div>
+              </div>
+            </label>
+
+            {/* Compact List Option */}
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="radio"
+                name="levelHistoryMode"
+                value="compact-list"
+                checked={levelHistoryMode === 'compact-list'}
+                onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
+                className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-ink-100 dark:text-paper-100">
+                    Compact List
+                  </span>
+                  <InfoTooltip content="Horizontal scrollable colored badges showing all levels compactly. Most space-efficient option." />
+                </div>
+                <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
+                  Horizontal scrollable colored badges
+                </div>
+              </div>
+            </label>
           </div>
         </div>
       </div>

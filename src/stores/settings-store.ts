@@ -15,6 +15,7 @@ interface SettingsState {
   customThresholdDays: number // default: 60
   jlptThreshold: SRSThreshold // default: 'guru'
   showHiddenItems: boolean // default: false - show items removed from curriculum
+  levelHistoryMode: 'bar-chart' | 'cards' | 'compact-list' // default: 'bar-chart'
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
@@ -27,6 +28,7 @@ interface SettingsState {
   setCustomThresholdDays: (days: number) => void
   setJlptThreshold: (threshold: SRSThreshold) => void
   setShowHiddenItems: (value: boolean) => void
+  setLevelHistoryMode: (mode: 'bar-chart' | 'cards' | 'compact-list') => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -43,6 +45,7 @@ export const useSettingsStore = create<SettingsState>()(
       customThresholdDays: 60, // default 60 days
       jlptThreshold: 'guru', // default to Guru (SRS 5+)
       showHiddenItems: false, // default to hiding curriculum-removed items
+      levelHistoryMode: 'bar-chart', // default to bar chart view
 
       // Actions
       setTheme: (theme: 'light' | 'dark') => {
@@ -93,6 +96,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setShowHiddenItems: (value: boolean) => {
         set({ showHiddenItems: value })
+      },
+
+      setLevelHistoryMode: (mode: 'bar-chart' | 'cards' | 'compact-list') => {
+        set({ levelHistoryMode: mode })
       },
     }),
     {
