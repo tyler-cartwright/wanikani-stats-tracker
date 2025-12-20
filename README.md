@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.11.1
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.12.1
 
 ---
 
@@ -22,6 +22,15 @@ Long-term analysis and projections:
 - **Level 60 Projections**: Multiple scenarios based on your actual pace (expected, active, fast track, conservative)
 - **Intelligent Break Detection**: Automatically identifies inactive periods for more accurate projections
 - **Assignments Table**: Comprehensive searchable list with filtering by type and SRS stage
+
+### Workload Forecasting
+Plan your lesson pace and predict future review workload:
+- **Lesson Pace Configuration**: Set lessons per day (0-999) and forecast period (7-180 days) with presets or custom values
+- **Workload Metrics**: Track peak day, average daily reviews, stabilization point, and total reviews over the forecast period
+- **Level Progression Forecast**: Projects what level you'll reach based on your lesson pace, accounting for your current progress
+- **Interactive Charts**: Daily or weekly view of projected workload, split between existing items and new lessons
+- **Breakdown Analysis**: Percentage split showing reviews from existing items vs new lessons
+- **Configurable Settings**: Control whether vocabulary is included in level progression calculations (Settings → Forecast)
 
 ### Leech Detection
 Identify and tackle your problem items:
@@ -155,6 +164,7 @@ src/
 ├── components/         # UI components (organized by feature)
 │   ├── dashboard/      # Dashboard page components
 │   ├── progress/       # Progress tracking components
+│   ├── forecast/       # Workload forecasting components
 │   ├── leeches/        # Leech detection components
 │   ├── settings/       # Settings page components
 │   └── shared/         # Reusable UI components

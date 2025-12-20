@@ -5,6 +5,17 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.1] - 2025-12-20
+
+### Fixed
+- **TypeScript Compilation**: Fixed type errors preventing successful build
+  - Removed unused `viewportHeight` variable in `src/components/shared/info-tooltip.tsx:34`
+  - Fixed `id` property type error in `src/lib/calculations/level-progression-forecast.ts` by updating `LevelProgressionForecastInput` interface to properly type subjects as `(Subject & { id: number })[]` to match repository layer data structure
+
+### Technical
+- Updated `src/components/shared/info-tooltip.tsx`: Removed unused `viewportHeight` declaration
+- Updated `src/lib/calculations/level-progression-forecast.ts`: Changed `subjects` parameter type from `Subject[]` to `(Subject & { id: number })[]` in `LevelProgressionForecastInput` interface
+
 ## [2.12.0] - 2025-12-20
 
 ### Added

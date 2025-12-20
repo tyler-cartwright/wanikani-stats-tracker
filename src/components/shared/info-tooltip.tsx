@@ -31,7 +31,6 @@ export function InfoTooltip({ content, className = '' }: InfoTooltipProps) {
     const buttonRect = button.getBoundingClientRect()
     const tooltipRect = tooltip.getBoundingClientRect()
     const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
     const padding = 16
 
     // Calculate centered X position

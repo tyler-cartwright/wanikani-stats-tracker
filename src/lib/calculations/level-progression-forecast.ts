@@ -2,7 +2,7 @@
 import type { Subject, Assignment } from '@/lib/api/types'
 
 export interface LevelProgressionForecastInput {
-  subjects: Subject[]
+  subjects: (Subject & { id: number })[]
   assignments: Assignment[]
   currentLevel: number
   lessonsPerDay: number
