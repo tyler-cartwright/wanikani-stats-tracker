@@ -5,6 +5,45 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2025-12-20
+
+### Added
+- **Progress Page: Level History Visualization Options**: Customizable display modes for level completion history
+  - **New Settings Section**: "Level History Display" in Settings page with three visualization mode options
+    - **Bar Chart (recommended)**: Vertical bars with logarithmic scale to handle outlier levels
+    - **Level Cards**: Responsive grid of cards showing level number, days, and pace color
+    - **Compact List**: Space-efficient colored badges in a flowing layout
+  - **Logarithmic Scale for Bar Chart**: Solves disparity issue where outlier levels (100+ days) made regular levels (20-30 days) invisible
+    - 800-day and 25-day levels now show ~2x visual difference instead of 32x linear difference
+    - All bars remain visible and proportionally meaningful
+    - Y-axis indicator shows "Scale: logarithmic" for clarity
+  - **Consistent Card Design**: All level cards use neutral background with colored borders and text
+    - Works uniformly across light and dark modes
+    - Border and text colors indicate pace (fast/good/slow/very-slow)
+  - **Preserved Features**: Standard deviation color coding maintained across all visualization modes
+  - **Setting Persistence**: User's preferred visualization mode saved to localStorage
+
+### Changed
+- **Level History Bar Chart**: Switched from linear to logarithmic scale for better handling of level time disparities
+  - Addresses common WaniKani user pattern: early levels taking hundreds of days before settling into consistent pace
+  - Makes all bars readable regardless of outlier presence
+
+### Technical
+- Updated `src/stores/settings-store.ts`:
+  - Added `levelHistoryMode` setting with type `'bar-chart' | 'cards' | 'compact-list'`
+  - Added `setLevelHistoryMode` action
+  - Default value: `'bar-chart'`
+- Updated `src/pages/settings.tsx`:
+  - Added "Level History Display" section with radio button UI
+  - Three options with descriptions and tooltips explaining each visualization mode
+- Updated `src/components/progress/level-timeline.tsx`:
+  - Extracted bar chart rendering into `BarChartView` sub-component
+  - Implemented logarithmic scale: `logScale = (days) => Math.log(days + 1)`
+  - Created `CardsView` sub-component with responsive grid (5→8→10→12 columns)
+  - Created `CompactListView` sub-component with colored pill badges
+  - Added conditional rendering based on `levelHistoryMode` setting
+  - All views maintain pace-based color coding and support dark mode
+
 ## [2.9.0] - 2025-12-20
 
 ### Added

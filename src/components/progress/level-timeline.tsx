@@ -31,6 +31,158 @@ function determinePace(
   return 'good'
 }
 
+// Bar Chart View with logarithmic scale
+function BarChartView({ levelData, maxDays }: { levelData: LevelData[]; maxDays: number }) {
+  const containerHeight = 400
+  const logScale = (days: number) => Math.log(days + 1) // +1 to handle 0
+  const maxLog = logScale(maxDays)
+
+  return (
+    <>
+      {/* Chart container with fixed height */}
+      <div className="relative overflow-x-auto pb-2">
+        <div className="flex items-end gap-1 min-w-full" style={{ height: `${containerHeight}px` }}>
+          {levelData.map((level) => {
+            const barHeight =
+              level.days !== null ? (logScale(level.days) / maxLog) * (containerHeight - 40) : 0
+
+            // Smart tooltip positioning - show below bar if it's too tall
+            const isTallBar = barHeight > containerHeight - 80
+
+            return (
+              <div
+                key={level.level}
+                className="flex-1 flex flex-col items-center justify-end group min-w-[8px]"
+              >
+                {/* Bar */}
+                <div className="relative w-full flex flex-col items-center">
+                  {level.days !== null ? (
+                    <>
+                      {/* Days label on hover/tap - smart positioning */}
+                      <div
+                        className={cn(
+                          'absolute opacity-0 group-hover:opacity-100 transition-opacity bg-ink-100 dark:bg-paper-100 text-paper-100 dark:text-ink-100 text-xs px-2 py-1 rounded whitespace-nowrap z-10',
+                          isTallBar ? 'top-2' : '-top-6'
+                        )}
+                      >
+                        {level.days}d
+                      </div>
+
+                      {/* Vertical bar */}
+                      <div
+                        className={cn(
+                          'w-full rounded-t-md transition-all duration-slow ease-out group-hover:opacity-80',
+                          level.pace === 'fast' && 'bg-patina-600 dark:bg-patina-500',
+                          level.pace === 'good' && 'bg-patina-500 dark:bg-patina-400',
+                          level.pace === 'slow' && 'bg-ochre',
+                          level.pace === 'very-slow' && 'bg-vermillion-500 dark:bg-vermillion-400'
+                        )}
+                        style={{ height: `${barHeight}px` }}
+                      />
+                    </>
+                  ) : (
+                    // Current level indicator
+                    <div className="flex flex-col items-center mb-2">
+                      <div className="w-2 h-2 bg-vermillion-500 rounded-full animate-pulse mb-1" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Level number below bar */}
+                <div
+                  className={cn(
+                    'text-xs font-medium mt-2 tabular-nums',
+                    level.days === null
+                      ? 'text-vermillion-500 font-semibold'
+                      : 'text-ink-400 dark:text-paper-300'
+                  )}
+                >
+                  {level.level}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Y-axis indicator */}
+      <div className="text-xs text-ink-400 dark:text-paper-300 mt-2 text-right">
+        Max: {maxDays} days · Scale: logarithmic
+      </div>
+    </>
+  )
+}
+
+// Cards Grid View
+function CardsView({ levelData }: { levelData: LevelData[] }) {
+  return (
+    <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
+      {levelData.map((level) => (
+        <div
+          key={level.level}
+          className={cn(
+            'rounded-lg p-2 text-center border bg-paper-100 dark:bg-ink-100 transition-smooth hover:scale-105',
+            level.days === null &&
+              'border-vermillion-500',
+            level.days !== null && level.pace === 'fast' &&
+              'border-patina-600 dark:border-patina-500',
+            level.days !== null && level.pace === 'good' &&
+              'border-patina-500 dark:border-patina-400',
+            level.days !== null && level.pace === 'slow' &&
+              'border-ochre',
+            level.days !== null && level.pace === 'very-slow' &&
+              'border-vermillion-500 dark:border-vermillion-400'
+          )}
+        >
+          <div className="text-xs font-semibold text-ink-100 dark:text-paper-100">
+            {level.level}
+          </div>
+          <div
+            className={cn(
+              'text-sm font-bold tabular-nums',
+              level.days === null && 'text-vermillion-500',
+              level.days !== null && level.pace === 'fast' && 'text-patina-700 dark:text-patina-400',
+              level.days !== null && level.pace === 'good' && 'text-patina-600 dark:text-patina-500',
+              level.days !== null && level.pace === 'slow' && 'text-ochre',
+              level.days !== null && level.pace === 'very-slow' && 'text-vermillion-600 dark:text-vermillion-400'
+            )}
+          >
+            {level.days !== null ? `${level.days}d` : '...'}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Compact List View
+function CompactListView({ levelData }: { levelData: LevelData[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {levelData.map((level) => (
+        <div
+          key={level.level}
+          className={cn(
+            'px-2 py-1 rounded-full text-xs font-medium tabular-nums transition-smooth hover:scale-105',
+            level.days === null &&
+              'bg-vermillion-500 text-white',
+            level.days !== null && level.pace === 'fast' &&
+              'bg-patina-600 text-white dark:bg-patina-500',
+            level.days !== null && level.pace === 'good' &&
+              'bg-patina-500 text-white dark:bg-patina-400',
+            level.days !== null && level.pace === 'slow' &&
+              'bg-ochre text-ink-100 dark:text-ink-100',
+            level.days !== null && level.pace === 'very-slow' &&
+              'bg-vermillion-500 text-white dark:bg-vermillion-400'
+          )}
+        >
+          {level.level}: {level.days !== null ? `${level.days}d` : '...'}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function LevelTimeline() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
@@ -39,6 +191,7 @@ export function LevelTimeline() {
   const averagingMethod = useSettingsStore((state) => state.averagingMethod)
   const useCustomThreshold = useSettingsStore((state) => state.useCustomThreshold)
   const customThresholdDays = useSettingsStore((state) => state.customThresholdDays)
+  const levelHistoryMode = useSettingsStore((state) => state.levelHistoryMode)
 
   const isLoading = userLoading || progressionsLoading || isSyncing
 
@@ -198,86 +351,18 @@ export function LevelTimeline() {
         </div>
       </div>
 
-      {/* Vertical bar chart */}
-      <div className="relative">
-        {/* Calculate max days for scaling */}
-        {(() => {
-          const maxDays = Math.max(...levelData.filter(l => l.days !== null).map(l => l.days || 0))
-          const containerHeight = 400 // Fixed container height in pixels
+      {/* Visualization - conditional based on mode */}
+      {(() => {
+        const maxDays = Math.max(...levelData.filter((l) => l.days !== null).map((l) => l.days || 0))
 
-          return (
-            <>
-              {/* Chart container with fixed height */}
-              <div className="relative overflow-x-auto pb-2">
-                <div className="flex items-end gap-1 min-w-full" style={{ height: `${containerHeight}px` }}>
-                  {levelData.map((level) => {
-                    const barHeight = level.days !== null
-                      ? (level.days / maxDays) * (containerHeight - 40) // Reserve 40px for labels
-                      : 0
-
-                    // Smart tooltip positioning - show below bar if it's too tall
-                    const isTallBar = barHeight > (containerHeight - 80)
-
-                    return (
-                      <div
-                        key={level.level}
-                        className="flex-1 flex flex-col items-center justify-end group min-w-[8px]"
-                      >
-                        {/* Bar */}
-                        <div className="relative w-full flex flex-col items-center">
-                          {level.days !== null ? (
-                            <>
-                              {/* Days label on hover/tap - smart positioning */}
-                              <div className={cn(
-                                'absolute opacity-0 group-hover:opacity-100 transition-opacity bg-ink-100 dark:bg-paper-100 text-paper-100 dark:text-ink-100 text-xs px-2 py-1 rounded whitespace-nowrap z-10',
-                                isTallBar ? 'top-2' : '-top-6'
-                              )}>
-                                {level.days}d
-                              </div>
-
-                              {/* Vertical bar */}
-                              <div
-                                className={cn(
-                                  'w-full rounded-t-md transition-all duration-slow ease-out group-hover:opacity-80',
-                                  level.pace === 'fast' && 'bg-patina-600 dark:bg-patina-500',
-                                  level.pace === 'good' && 'bg-patina-500 dark:bg-patina-400',
-                                  level.pace === 'slow' && 'bg-ochre',
-                                  level.pace === 'very-slow' && 'bg-vermillion-500 dark:bg-vermillion-400'
-                                )}
-                                style={{ height: `${barHeight}px` }}
-                              />
-                            </>
-                          ) : (
-                            // Current level indicator
-                            <div className="flex flex-col items-center mb-2">
-                              <div className="w-2 h-2 bg-vermillion-500 rounded-full animate-pulse mb-1" />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Level number below bar */}
-                        <div className={cn(
-                          'text-xs font-medium mt-2 tabular-nums',
-                          level.days === null
-                            ? 'text-vermillion-500 font-semibold'
-                            : 'text-ink-400 dark:text-paper-300'
-                        )}>
-                          {level.level}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Y-axis indicator */}
-              <div className="text-xs text-ink-400 dark:text-paper-300 mt-2 text-right">
-                Max: {maxDays} days
-              </div>
-            </>
-          )
-        })()}
-      </div>
+        return (
+          <div className="relative">
+            {levelHistoryMode === 'bar-chart' && <BarChartView levelData={levelData} maxDays={maxDays} />}
+            {levelHistoryMode === 'cards' && <CardsView levelData={levelData} />}
+            {levelHistoryMode === 'compact-list' && <CompactListView levelData={levelData} />}
+          </div>
+        )
+      })()}
 
       {/* Legend - Traffic light system */}
       <div className="flex flex-wrap gap-4 mt-6 text-xs">
