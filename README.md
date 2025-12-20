@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://tyler-cartwright.github.io/wanikani-stats-tracker) | **Version:** 2.11.1
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.11.1
 
 ---
 
@@ -86,7 +86,7 @@ WaniTrack is a **Progressive Web App** that connects directly to the WaniKani AP
 ### For Users
 
 1. **Get your API token** from [WaniKani Settings](https://www.wanikani.com/settings/personal_access_tokens)
-2. **Visit** [wanitrack.com](https://tyler-cartwright.github.io/wanikani-stats-tracker)
+2. **Visit** [wanitrack.com](https://wanitrack.com)
 3. **Enter your token** and start exploring your stats
 
 ### Install as PWA
@@ -224,7 +224,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Links
 
-- **Live App**: [wanitrack.com](https://tyler-cartwright.github.io/wanikani-stats-tracker)
+- **Live App**: [wanitrack.com](https://wanitrack.com)
 - **Repository**: [GitHub](https://github.com/tyler-cartwright/wanikani-stats-tracker)
 - **WaniKani**: [wanikani.com](https://www.wanikani.com)
 - **WaniKani API Docs**: [docs.api.wanikani.com](https://docs.api.wanikani.com)
