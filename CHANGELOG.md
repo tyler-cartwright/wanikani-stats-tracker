@@ -5,6 +5,53 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2025-12-20
+
+### Added
+- **Dashboard Level Progress Enhancement**: Navigate through level history with enhanced visualization
+  - **Level Navigation**: Arrow buttons to browse previous levels while defaulting to current level
+    - Left/right chevron buttons to step through levels
+    - Left arrow disabled at level 1, right arrow disabled at current level
+    - Selected level displayed in header
+  - **Layered Progress Bars**: Visualize the gap between lessons started and items passed
+    - Background layer (muted): Shows lessons started count
+    - Foreground layer (vibrant): Shows guru'd items overlaid on top
+    - Clear visual representation of learning progress vs mastery
+  - **Enhanced Stats Display**: Both started and guru counts shown for each subject type
+    - Format: "X/Y started · Z/Y guru · N%"
+    - Radicals, kanji, and vocabulary all show dual metrics
+  - **Past Level Completion Info**: Historical levels show completion date and duration
+    - Format: "Passed MMM d, yyyy · X days"
+    - Current level shows "X kanji to level up" or "Ready to level up!"
+    - Not started levels show "Not started"
+
+### Fixed
+- **Reset Level Handling**: Correctly display completion status and duration for levels that were reset mid-level
+  - Improved level progression record selection to prioritize completed progressions over abandoned ones
+  - Fixes issue where reset levels showed "in progress" with incorrect day counts (e.g., 135 days instead of actual 20 days)
+  - Now sorts progressions to find the one with `passed_at` for reset levels
+  - Better validation in footer to ensure passed levels display completion date
+
+### Technical
+- Updated `src/lib/calculations/level-progress.ts`:
+  - Extended `SubjectProgressData` interface to track both `started` (lessons completed) and `guru` (passed items)
+  - Added `passedAt` and `isCurrentLevel` fields to `LevelProgressData` interface
+  - Modified `calculateLevelProgress()` signature to accept `selectedLevel`, `userCurrentLevel`, and `levelPassedAt`
+  - Updated calculation logic to count both `started_at !== null` and `srs_stage >= 5` separately
+  - Days calculation now uses `passed_at` as end date for completed levels instead of current date
+- Added `src/components/shared/layered-progress-bar.tsx`:
+  - New component for overlapping progress visualization
+  - Props: `backgroundValue`, `foregroundValue`, color classes, height, animation
+  - Uses absolute positioning for layered bars with proper dark mode support
+- Updated `src/components/dashboard/level-progress.tsx`:
+  - Added state management for `selectedLevel` with `useState` and `useEffect`
+  - Implemented level navigation with ChevronLeft/ChevronRight icons from lucide-react
+  - Enhanced progression finding logic to handle reset levels (sort by `passed_at` presence)
+  - Updated stats display to show both started and guru metrics
+  - Replaced `ProgressBar` with `LayeredProgressBar` component
+  - Improved footer with conditional rendering based on level status (current/passed/in-progress/not-started)
+  - Added date formatting with `date-fns` format function
+
 ## [2.8.1] - 2025-12-14
 
 ### Fixed
