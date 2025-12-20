@@ -16,6 +16,7 @@ interface SettingsState {
   jlptThreshold: SRSThreshold // default: 'guru'
   showHiddenItems: boolean // default: false - show items removed from curriculum
   levelHistoryMode: 'bar-chart' | 'cards' | 'compact-list' // default: 'bar-chart'
+  includeBurnedLeeches: boolean // default: false - exclude burned items from leeches
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
@@ -29,6 +30,7 @@ interface SettingsState {
   setJlptThreshold: (threshold: SRSThreshold) => void
   setShowHiddenItems: (value: boolean) => void
   setLevelHistoryMode: (mode: 'bar-chart' | 'cards' | 'compact-list') => void
+  setIncludeBurnedLeeches: (value: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -46,6 +48,7 @@ export const useSettingsStore = create<SettingsState>()(
       jlptThreshold: 'guru', // default to Guru (SRS 5+)
       showHiddenItems: false, // default to hiding curriculum-removed items
       levelHistoryMode: 'bar-chart', // default to bar chart view
+      includeBurnedLeeches: false, // default to excluding burned items from leeches
 
       // Actions
       setTheme: (theme: 'light' | 'dark') => {
@@ -100,6 +103,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setLevelHistoryMode: (mode: 'bar-chart' | 'cards' | 'compact-list') => {
         set({ levelHistoryMode: mode })
+      },
+
+      setIncludeBurnedLeeches: (value: boolean) => {
+        set({ includeBurnedLeeches: value })
       },
     }),
     {

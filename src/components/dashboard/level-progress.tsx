@@ -114,9 +114,9 @@ export function LevelProgress() {
       <div className="space-y-6">
         {items.map((item) => (
           <div key={item.type} className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm gap-1 sm:gap-0">
               <span className="text-ink-400 dark:text-paper-300 font-medium">{item.type}</span>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <span className="text-ink-400 dark:text-paper-400 tabular-nums text-xs">
                   {item.data.started}/{item.data.total} started
                 </span>

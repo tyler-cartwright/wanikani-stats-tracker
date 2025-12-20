@@ -5,6 +5,107 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.1] - 2025-12-20
+
+### Fixed
+- **Dashboard Level Progress: Mobile Layout**: Fixed cramped stats display on narrow screens
+  - Stats now stack vertically on mobile (type label on row 1, stats on row 2)
+  - Desktop layout unchanged (horizontal with justify-between)
+  - Improved spacing with responsive gap classes
+  - Applied to radicals, kanji, and vocabulary progress rows
+
+### Technical
+- Updated `src/components/dashboard/level-progress.tsx`:
+  - Changed stats container from `flex justify-between` to `flex flex-col sm:flex-row`
+  - Added responsive alignment: `sm:items-center sm:justify-between`
+  - Added responsive gaps: `gap-1 sm:gap-0` for row spacing, `gap-2 sm:gap-3` for stat items
+  - Mobile breakpoint: 640px (Tailwind `sm`)
+
+## [2.11.0] - 2025-12-20
+
+### Added
+- **Leeches Page: Interactive Detail Modal**: Click any leech item to view comprehensive details
+  - **Large character display** with subject type badge (radical/kanji/vocabulary)
+  - **Level and SRS stage** with color-coded SRS badge
+  - **All meanings**: Display all accepted meanings for the item
+  - **Readings breakdown**:
+    - Kanji: On'yomi and Kun'yomi grouped separately
+    - Vocabulary: All readings displayed
+    - Radicals: Section hidden (no readings)
+  - **Accuracy statistics**: Three-column grid showing overall, meaning, and reading accuracy percentages
+  - **WaniKani link**: External link button to view item on WaniKani
+  - Full dark/light mode support with smooth animations
+  - Mobile responsive with scrollable content
+- **Leeches Page: Readings Display**: Primary reading shown in table view
+  - Displays primary reading with type indicator (on/kun) for kanji
+  - Shows primary reading for vocabulary items
+  - Compact format that maintains mobile compatibility
+- **CSV Export: Readings Columns**: Enhanced leech export with reading data
+  - **Three new columns**:
+    - `On'yomi`: Comma-separated list for kanji, "N/A" for other types
+    - `Kun'yomi`: Comma-separated list for kanji, "N/A" for other types
+    - `Reading`: Comma-separated list for vocabulary, "N/A" for other types
+  - All readings exported for comprehensive analysis
+- **Settings: Burned Leeches Control**: New setting to control whether burned items appear in leeches list
+  - **New "Leeches" section** in Settings page with toggle switch
+  - **Default behavior**: Excludes burned items (SRS stage 9) to focus on active problem items
+  - **When enabled**: Shows all items that met leech criteria, including those that eventually burned
+  - Info tooltip explains the feature
+  - Setting persisted to localStorage
+- **Export Section: Dynamic Byline**: Export description updates based on burned leeches setting
+  - Shows "Excludes burned items." when setting is OFF
+  - Shows "Includes burned items." when setting is ON
+  - Provides clear indication of what will be exported
+
+### Changed
+- **Leech Data Model**: Extended to include comprehensive reading and meaning data
+  - Added `readings` object with on'yomi, kun'yomi, vocabulary arrays plus primary reading and type
+  - Added `allMeanings` array with all accepted meanings (not just primary)
+  - Added `documentUrl` for direct WaniKani links
+- **Leeches Detection**: Enhanced to support burned item filtering
+  - Added optional `includeBurned` parameter to `detectLeeches` function
+  - Filters out SRS stage 9 items when `includeBurned` is false
+  - Applied to both leeches page display and CSV export
+
+### Technical
+- Updated `src/lib/calculations/leeches.ts`:
+  - Added `LeechReadings` interface for structured reading data
+  - Extended `LeechItem` interface with `readings`, `allMeanings`, and `documentUrl` fields
+  - Added `extractReadings()` helper function to parse readings from subject types
+  - Modified `detectLeeches()` to extract readings from KanjiSubject and VocabularySubject
+  - Added `includeBurned` option to threshold parameter with filter logic
+- Added `src/components/leeches/leech-detail-modal.tsx`:
+  - New modal component using base `Modal` with `size="lg"`
+  - Sections for character, level/SRS, meanings, readings, accuracy stats, and WaniKani link
+  - Uses `getSRSStageName()` to convert SRS stage numbers to badge types
+  - Conditional rendering for readings based on subject type
+  - Full dark/light mode support with `paper-*` / `ink-*` color tokens
+- Updated `src/components/leeches/priority-list.tsx`:
+  - Extended `DisplayLeechItem` interface with `reading`, `readingType`, and `fullLeech` fields
+  - Added modal state management with `useState`
+  - Updated mapping to include primary reading extraction
+  - Added `onClick` handler to open modal for selected leech
+  - Integrated `LeechDetailModal` component
+- Updated `src/lib/export/export-manager.ts`:
+  - Modified `exportLeeches()` signature to accept `options?: { includeBurned?: boolean }`
+  - Added three new CSV columns for readings (On'yomi, Kun'yomi, Reading)
+  - Passes `includeBurned` option to `detectLeeches()` call
+- Updated `src/components/settings/data-export-section.tsx`:
+  - Retrieves `includeBurnedLeeches` from settings store
+  - Passes option to `exportLeeches()` call
+  - Dynamic byline text based on setting value
+- Updated `src/stores/settings-store.ts`:
+  - Added `includeBurnedLeeches` boolean state (default: false)
+  - Added `setIncludeBurnedLeeches` action
+  - Persisted via Zustand's localStorage middleware
+- Updated `src/pages/settings.tsx`:
+  - Added "Leeches" section with toggle for "Include Burned Items"
+  - Info tooltip explaining the feature
+  - Follows existing toggle pattern with vermillion active state
+- Updated `src/pages/leeches.tsx`:
+  - Imports `includeBurnedLeeches` from settings store
+  - Passes `{ includeBurned: includeBurnedLeeches }` to `detectLeeches()` call
+
 ## [2.10.0] - 2025-12-20
 
 ### Added

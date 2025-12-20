@@ -1,6 +1,14 @@
 // Leech Detection and Analysis
 import type { ReviewStatistic, Subject, Assignment } from '@/lib/api/types'
 
+export interface LeechReadings {
+  primary: string | null
+  primaryType: 'onyomi' | 'kunyomi' | null // for kanji
+  onyomi: string[]
+  kunyomi: string[]
+  vocabulary: string[]
+}
+
 export interface LeechItem {
   subjectId: number
   character: string
@@ -14,6 +22,9 @@ export interface LeechItem {
   meaningAccuracy: number
   readingAccuracy: number
   currentSRS: number
+  readings: LeechReadings
+  allMeanings: string[]
+  documentUrl: string
 }
 
 export interface ConfusionPair {
@@ -31,6 +42,56 @@ export interface RootCauseRadical {
 }
 
 /**
+ * Extract readings from a subject based on its type
+ */
+function extractReadings(subject: Subject): LeechReadings {
+  const emptyReadings: LeechReadings = {
+    primary: null,
+    primaryType: null,
+    onyomi: [],
+    kunyomi: [],
+    vocabulary: [],
+  }
+
+  // Radicals don't have readings
+  if ('character_images' in subject) {
+    return emptyReadings
+  }
+
+  // Kanji subjects
+  if ('readings' in subject && 'visually_similar_subject_ids' in subject) {
+    const kanjiReadings = subject.readings
+    const onyomi = kanjiReadings.filter((r) => r.type === 'onyomi').map((r) => r.reading)
+    const kunyomi = kanjiReadings.filter((r) => r.type === 'kunyomi').map((r) => r.reading)
+    const primary = kanjiReadings.find((r) => r.primary)
+
+    return {
+      primary: primary?.reading || null,
+      primaryType: primary?.type === 'nanori' ? null : (primary?.type || null),
+      onyomi,
+      kunyomi,
+      vocabulary: [],
+    }
+  }
+
+  // Vocabulary subjects
+  if ('readings' in subject) {
+    const vocabReadings = subject.readings.map((r) => r.reading)
+    const primary = subject.readings.find((r) => r.primary)
+
+    return {
+      primary: primary?.reading || null,
+      primaryType: null,
+      onyomi: [],
+      kunyomi: [],
+      vocabulary: vocabReadings,
+    }
+  }
+
+  return emptyReadings
+}
+
+/**
  * Detect leeches based on accuracy and review count
  *
  * Default criteria:
@@ -41,10 +102,11 @@ export function detectLeeches(
   reviewStats: ReviewStatistic[],
   subjects: (Subject & { id: number })[],
   assignments: Assignment[],
-  threshold: { minReviews?: number; maxAccuracy?: number } = {}
+  threshold: { minReviews?: number; maxAccuracy?: number; includeBurned?: boolean } = {}
 ): LeechItem[] {
   const minReviews = threshold.minReviews ?? 10
   const maxAccuracy = threshold.maxAccuracy ?? 75
+  const includeBurned = threshold.includeBurned ?? false
 
   // Create lookup maps
   const subjectMap = new Map<number, Subject & { id: number }>()
@@ -68,6 +130,9 @@ export function detectLeeches(
 
     const assignment = assignmentMap.get(stat.subject_id)
     if (!assignment) continue
+
+    // Optionally exclude burned items (SRS stage 9)
+    if (!includeBurned && assignment.srs_stage === 9) continue
 
     const totalReviews =
       stat.meaning_correct +
@@ -97,6 +162,14 @@ export function detectLeeches(
         stat.subject_type === 'kana_vocabulary' ? 'vocabulary' : stat.subject_type
       const level = 'level' in subject ? subject.level : 0
 
+      // Extract all meanings
+      const allMeanings = subject.meanings
+        .filter((m) => m.accepted_answer)
+        .map((m) => m.meaning)
+
+      // Extract readings
+      const readings = extractReadings(subject)
+
       leeches.push({
         subjectId: stat.subject_id,
         character,
@@ -110,6 +183,9 @@ export function detectLeeches(
         meaningAccuracy,
         readingAccuracy,
         currentSRS: assignment.srs_stage,
+        readings,
+        allMeanings,
+        documentUrl: subject.document_url,
       })
     }
   }

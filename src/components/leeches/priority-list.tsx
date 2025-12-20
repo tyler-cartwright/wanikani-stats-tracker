@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/queries'
-import { detectLeeches } from '@/lib/calculations/leeches'
+import { detectLeeches, type LeechItem } from '@/lib/calculations/leeches'
 import { useSyncStore } from '@/stores/sync-store'
+import { useSettingsStore } from '@/stores/settings-store'
+import { LeechDetailModal } from './leech-detail-modal'
 
 interface DisplayLeechItem {
   rank: number
@@ -11,6 +13,9 @@ interface DisplayLeechItem {
   reviews: number
   severity: number
   focus: string
+  reading: string | null
+  readingType: 'onyomi' | 'kunyomi' | null
+  fullLeech: LeechItem
 }
 
 export function PriorityList() {
@@ -18,14 +23,16 @@ export function PriorityList() {
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const isSyncing = useSyncStore((state) => state.isSyncing)
+  const includeBurnedLeeches = useSettingsStore((state) => state.includeBurnedLeeches)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
+  const [selectedLeech, setSelectedLeech] = useState<LeechItem | null>(null)
 
   const isLoading = statsLoading || subjectsLoading || assignmentsLoading || isSyncing
 
   const leeches = reviewStats && subjects && assignments
-    ? detectLeeches(reviewStats, subjects, assignments)
+    ? detectLeeches(reviewStats, subjects, assignments, { includeBurned: includeBurnedLeeches })
     : []
 
   // Convert all leeches to display format
@@ -43,6 +50,9 @@ export function PriorityList() {
         reviews: leech.totalReviews,
         severity: leech.severity,
         focus,
+        reading: leech.readings.primary,
+        readingType: leech.readings.primaryType,
+        fullLeech: leech,
       }
     })
   }, [leeches])
@@ -87,6 +97,7 @@ export function PriorityList() {
           {displayLeeches.map((item) => (
             <div
               key={item.rank}
+              onClick={() => setSelectedLeech(item.fullLeech)}
               className="p-4 rounded-lg border border-paper-300 dark:border-ink-300 hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth cursor-pointer"
             >
               <div className="flex items-start gap-4">
@@ -98,11 +109,21 @@ export function PriorityList() {
                 {/* Content */}
                 <div className="flex-1 space-y-2">
                   {/* Character and Meaning */}
-                  <div className="flex items-baseline gap-3">
+                  <div className="flex items-baseline gap-3 flex-wrap">
                     <span className="text-2xl font-japanese text-ink-100 dark:text-paper-100">
                       {item.character}
                     </span>
                     <span className="text-base text-ink-300 dark:text-paper-300">{item.meaning}</span>
+                    {item.reading && (
+                      <span className="text-sm font-japanese text-ink-400 dark:text-paper-300">
+                        {item.reading}
+                        {item.readingType && (
+                          <span className="text-xs ml-1">
+                            ({item.readingType === 'onyomi' ? 'on' : 'kun'})
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </div>
 
                   {/* Stats */}
@@ -266,6 +287,13 @@ export function PriorityList() {
           </div>
         </div>
       )}
+
+      {/* Leech Detail Modal */}
+      <LeechDetailModal
+        isOpen={selectedLeech !== null}
+        onClose={() => setSelectedLeech(null)}
+        leech={selectedLeech}
+      />
     </div>
   )
 }

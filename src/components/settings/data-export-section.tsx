@@ -118,10 +118,14 @@ export function DataExportSection() {
     try {
       setIsExportingLeeches(true)
 
-      const result = await exportLeeches(token, (message) => {
-        // Optional: could show progress
-        console.log('[LEECH EXPORT]', message)
-      })
+      const result = await exportLeeches(
+        token,
+        (message) => {
+          // Optional: could show progress
+          console.log('[LEECH EXPORT]', message)
+        },
+        { includeBurned: settingsStore.includeBurnedLeeches }
+      )
 
       if (result.success) {
         showToast({
@@ -357,6 +361,9 @@ export function DataExportSection() {
             <p className="text-sm text-ink-400 dark:text-paper-300">
               Export your problem items for analysis in spreadsheet applications.
               Leeches are items with low accuracy that may need extra attention.
+              {settingsStore.includeBurnedLeeches
+                ? ' Includes burned items.'
+                : ' Excludes burned items.'}
             </p>
 
             <button

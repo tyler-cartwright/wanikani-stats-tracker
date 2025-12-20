@@ -4,17 +4,19 @@ import { RootCauses } from '@/components/leeches/root-causes'
 import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/queries'
 import { detectLeeches } from '@/lib/calculations/leeches'
 import { useSyncStore } from '@/stores/sync-store'
+import { useSettingsStore } from '@/stores/settings-store'
 
 export function Leeches() {
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const isSyncing = useSyncStore((state) => state.isSyncing)
+  const includeBurnedLeeches = useSettingsStore((state) => state.includeBurnedLeeches)
 
   const isLoading = statsLoading || subjectsLoading || assignmentsLoading || isSyncing
 
   const leeches = reviewStats && subjects && assignments
-    ? detectLeeches(reviewStats, subjects, assignments)
+    ? detectLeeches(reviewStats, subjects, assignments, { includeBurned: includeBurnedLeeches })
     : []
 
   // Calculate severity breakdown

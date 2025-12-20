@@ -143,11 +143,13 @@ function determineExportType(
  *
  * @param token - WaniKani API token
  * @param onProgress - Optional callback for progress updates
+ * @param options - Export options (includeBurned)
  * @returns Export result with filename and count
  */
 export async function exportLeeches(
   token: string,
-  onProgress?: (message: string) => void
+  onProgress?: (message: string) => void,
+  options?: { includeBurned?: boolean }
 ): Promise<ExportResult> {
   try {
     // Step 1: Fetch user data for filename
@@ -193,7 +195,9 @@ export async function exportLeeches(
     const assignments = indexedDBData.assignments.map((a) => a.data)
     const reviewStats = indexedDBData.reviewStatistics.map((rs) => rs.data)
 
-    const leeches = detectLeeches(reviewStats, subjects, assignments)
+    const leeches = detectLeeches(reviewStats, subjects, assignments, {
+      includeBurned: options?.includeBurned ?? false,
+    })
 
     console.log('[EXPORT] Leeches detected:', leeches.length)
 
@@ -215,6 +219,9 @@ export async function exportLeeches(
       'Meaning',
       'Type',
       'Level',
+      'On\'yomi',
+      'Kun\'yomi',
+      'Reading',
       'Accuracy (%)',
       'Total Reviews',
       'Incorrect Count',
@@ -230,6 +237,9 @@ export async function exportLeeches(
       'Meaning': leech.meaning,
       'Type': leech.type,
       'Level': leech.level,
+      'On\'yomi': leech.type === 'kanji' ? leech.readings.onyomi.join(', ') : 'N/A',
+      'Kun\'yomi': leech.type === 'kanji' ? leech.readings.kunyomi.join(', ') : 'N/A',
+      'Reading': leech.type === 'vocabulary' ? leech.readings.vocabulary.join(', ') : 'N/A',
       'Accuracy (%)': leech.accuracy,
       'Total Reviews': leech.totalReviews,
       'Incorrect Count': leech.incorrectCount,

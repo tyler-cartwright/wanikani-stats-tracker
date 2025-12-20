@@ -28,7 +28,9 @@ export function Settings() {
     showHiddenItems,
     setShowHiddenItems,
     levelHistoryMode,
-    setLevelHistoryMode
+    setLevelHistoryMode,
+    includeBurnedLeeches,
+    setIncludeBurnedLeeches
   } = useSettingsStore()
   const { confirm, ConfirmDialog } = useConfirm()
 
@@ -232,6 +234,37 @@ export function Settings() {
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-paper-100 dark:bg-ink-100 transition-transform ${
                   showHiddenItems ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Leeches Settings */}
+      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+          Leeches
+        </h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
+                Include Burned Items
+              </label>
+              <InfoTooltip content="Show items that eventually reached burned status in the leeches list. Useful to see items you struggled with historically, even if they're now burned." />
+            </div>
+            <button
+              onClick={() => setIncludeBurnedLeeches(!includeBurnedLeeches)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                includeBurnedLeeches
+                  ? 'bg-vermillion-500'
+                  : 'bg-paper-300 dark:bg-ink-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-paper-100 dark:bg-ink-100 transition-transform ${
+                  includeBurnedLeeches ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
