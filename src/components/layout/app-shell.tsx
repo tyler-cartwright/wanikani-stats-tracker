@@ -16,7 +16,7 @@ export function AppShell({ children }: AppShellProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-paper-100 dark:bg-ink-100">
+    <div className="min-h-screen flex flex-col bg-paper-100 dark:bg-ink-100">
       {isMobile ? (
         <>
           {/* Mobile Header with Hamburger */}
@@ -50,7 +50,7 @@ export function AppShell({ children }: AppShellProps) {
       )}
 
       {/* Page Content - generous padding, max-width for readability */}
-      <main className="container mx-auto px-8 py-12 max-w-6xl min-h-[calc(100vh-200px)]">
+      <main className="flex-1 container mx-auto px-8 py-12 max-w-6xl">
         {children}
       </main>
 
