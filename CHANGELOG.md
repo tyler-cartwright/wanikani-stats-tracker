@@ -5,6 +5,32 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.2] - 2025-12-23
+
+### Fixed
+- **Mobile Responsiveness: Navigation Detection**: Fixed mobile navigation not appearing on mobile devices and Chrome DevTools responsive mode
+  - Replaced unreliable `resize` event listener with `matchMedia` API for responsive breakpoint detection
+  - Mobile navigation now correctly responds to Chrome DevTools device dropdown changes
+  - Fixed mobile orientation changes not triggering navigation updates on iOS/Android
+  - Improved PWA viewport change detection
+- **Desktop Navigation: Overflow on Mid-Sized Screens**: Fixed horizontal scrollbar appearing on iPad Pro and screens at lower desktop breakpoint
+  - Increased mobile/desktop breakpoint from 1024px (lg) to 1280px (xl)
+  - Desktop navigation now only appears when there's sufficient space for all 7 nav items
+  - iPad Pro portrait (1024px) now correctly shows mobile navigation
+- **Footer Positioning: Floating on Short Pages**: Fixed footer hovering above bottom of viewport on pages with minimal content
+  - Implemented flexbox sticky footer pattern
+  - Footer now anchors to bottom of screen on short pages (Dashboard, Setup)
+  - Footer still flows naturally after content on long pages
+
+### Technical
+- Updated `src/hooks/use-mobile.ts`:
+  - Replaced `window.addEventListener('resize', ...)` with `window.matchMedia('(max-width: 1279px)').addEventListener('change', ...)` for reliable breakpoint detection (lines 11-26)
+  - Changed breakpoint from 1024px (lg) to 1280px (xl) (lines 5, 14)
+  - Added helper function `getIsMobile()` for computing initial state (lines 3-6)
+- Updated `src/components/layout/app-shell.tsx`:
+  - Added `flex flex-col` to root div for sticky footer layout (line 19)
+  - Replaced `min-h-[calc(100vh-200px)]` with `flex-1` on main element for flexible content area (line 53)
+
 ## [2.12.1] - 2025-12-20
 
 ### Fixed
