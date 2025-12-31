@@ -177,7 +177,7 @@ function getLevelMilestones(
         // Otherwise use most recent created_at
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })[0]
-    const isAchieved = currentLevel > target
+    const isAchieved = currentLevel >= target
     const achievedAt = progression?.passed_at ? new Date(progression.passed_at) : null
 
     return {
