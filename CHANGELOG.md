@@ -5,6 +5,43 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.1] - 2026-01-15
+
+### Fixed
+- **Progress Page: Milestone Achievement Logic**: Fixed level milestones not showing as achieved at exact level
+  - Level 20 milestone now shows as achieved when user reaches level 20 (not level 21)
+  - Changed comparison from `currentLevel > target` to `currentLevel >= target` for consistent behavior
+  - Matches existing burn and guru milestone logic
+
+### Changed
+- **Dashboard Level Progress: Historical Duration Display**: Enhanced time precision for completed levels
+  - **Current level**: Continues to show rounded-up day count (e.g., "Day 10" when 9 days 3 hours in)
+  - **Historical levels (top right)**: Now shows precise duration with hours (e.g., "9d 4h" instead of "Day 10")
+  - **Historical levels (bottom text)**: Shows verbose format (e.g., "Passed Dec 25, 2025 · 9 days 4 hours" instead of "10 days")
+  - Hours are omitted when duration is exactly to the day
+- **Progress Page: Level Timeline Duration Display**: All visualization modes now show precise duration with hours
+  - **Bar Chart**: Hover tooltips display "9d 4h" format instead of "9d"
+  - **Cards View**: Card labels show "9d 4h" format
+  - **Compact List View**: Badge labels show "9d 4h" format
+  - Provides accurate historical completion times across all views
+
+### Technical
+- Updated `src/lib/calculations/milestones.ts`:
+  - Modified `getLevelMilestones()` to use `>=` instead of `>` for level achievement check (line 180)
+- Updated `src/lib/calculations/level-progress.ts`:
+  - Added `durationCompact` and `durationVerbose` fields to `LevelProgressData` interface
+  - Created `formatDurationCompact()` helper function for "9d 4h" format
+  - Created `formatDurationVerbose()` helper function for "9 days 4 hours" format
+  - Enhanced `calculateLevelProgress()` to compute precise durations for historical levels
+  - Exported formatting functions for reuse in other components
+- Updated `src/components/dashboard/level-progress.tsx`:
+  - Modified top-right display to use `durationCompact` for historical levels
+  - Updated bottom text to use `durationVerbose` for historical levels
+- Updated `src/components/progress/level-timeline.tsx`:
+  - Added `durationFormatted` field to `LevelData` interface
+  - Enhanced level progression calculation to track milliseconds for hour precision
+  - Updated all three view modes (bar chart, cards, compact list) to display formatted durations
+
 ## [2.13.0] - 2026-01-15
 
 ### Added

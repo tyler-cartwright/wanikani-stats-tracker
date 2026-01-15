@@ -4,10 +4,12 @@ import { useUser, useLevelProgressions } from '@/lib/api/queries'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { calculateActiveAverage } from '@/lib/calculations/activity-analysis'
+import { formatDurationCompact } from '@/lib/calculations/level-progress'
 
 interface LevelData {
   level: number
   days: number | null // null for current level
+  durationFormatted: string | null // formatted duration with hours for historical levels
   pace: 'fast' | 'good' | 'slow' | 'very-slow'
 }
 
@@ -65,7 +67,7 @@ function BarChartView({ levelData, maxDays }: { levelData: LevelData[]; maxDays:
                           isTallBar ? 'top-2' : '-top-6'
                         )}
                       >
-                        {level.days}d
+                        {level.durationFormatted}
                       </div>
 
                       {/* Vertical bar */}
@@ -147,7 +149,7 @@ function CardsView({ levelData }: { levelData: LevelData[] }) {
               level.days !== null && level.pace === 'very-slow' && 'text-vermillion-600 dark:text-vermillion-400'
             )}
           >
-            {level.days !== null ? `${level.days}d` : '...'}
+            {level.durationFormatted ?? '...'}
           </div>
         </div>
       ))}
@@ -176,7 +178,7 @@ function CompactListView({ levelData }: { levelData: LevelData[] }) {
               'bg-vermillion-500 text-white dark:bg-vermillion-400'
           )}
         >
-          {level.level}: {level.days !== null ? `${level.days}d` : '...'}
+          {level.level}: {level.durationFormatted ?? '...'}
         </div>
       ))}
     </div>
@@ -204,7 +206,7 @@ export function LevelTimeline() {
 
   if (levelProgressions && user) {
     // First pass: calculate days for completed levels
-    const completedLevels: Array<{ level: number; days: number }> = []
+    const completedLevels: Array<{ level: number; days: number; milliseconds: number }> = []
 
     for (const progression of levelProgressions) {
       if (progression.passed_at && progression.unlocked_at) {
@@ -212,7 +214,11 @@ export function LevelTimeline() {
         const passedDate = new Date(progression.passed_at)
         const days = differenceInDays(passedDate, unlockedDate)
         if (days >= 0) {
-          completedLevels.push({ level: progression.level, days })
+          completedLevels.push({
+            level: progression.level,
+            days,
+            milliseconds: passedDate.getTime() - unlockedDate.getTime()
+          })
         }
       }
     }
@@ -241,10 +247,11 @@ export function LevelTimeline() {
     stdDev = calculateStdDev(daysArray, avgDays)
 
     // Add completed levels with pace
-    for (const { level, days } of completedLevels) {
+    for (const { level, days, milliseconds } of completedLevels) {
       levelData.push({
         level,
         days,
+        durationFormatted: formatDurationCompact(milliseconds),
         pace: determinePace(days, avgDays, stdDev),
       })
     }
@@ -254,6 +261,7 @@ export function LevelTimeline() {
       levelData.push({
         level: user.level,
         days: null,
+        durationFormatted: null,
         pace: 'good',
       })
     }
