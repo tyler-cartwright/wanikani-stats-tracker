@@ -44,7 +44,7 @@ export interface RootCauseRadical {
 /**
  * Extract readings from a subject based on its type
  */
-function extractReadings(subject: Subject): LeechReadings {
+export function extractReadings(subject: Subject): LeechReadings {
   const emptyReadings: LeechReadings = {
     primary: null,
     primaryType: null,

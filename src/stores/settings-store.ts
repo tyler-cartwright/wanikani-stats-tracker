@@ -18,6 +18,7 @@ interface SettingsState {
   levelHistoryMode: 'bar-chart' | 'cards' | 'compact-list' // default: 'bar-chart'
   includeBurnedLeeches: boolean // default: false - exclude burned items from leeches
   forecastIncludeVocabulary: boolean // default: true - include vocabulary in level progression forecast
+  showAllLevelsInAccuracy: boolean // default: false - show levels beyond user's current level in accuracy by level
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
@@ -33,6 +34,7 @@ interface SettingsState {
   setLevelHistoryMode: (mode: 'bar-chart' | 'cards' | 'compact-list') => void
   setIncludeBurnedLeeches: (value: boolean) => void
   setForecastIncludeVocabulary: (value: boolean) => void
+  setShowAllLevelsInAccuracy: (value: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -52,6 +54,7 @@ export const useSettingsStore = create<SettingsState>()(
       levelHistoryMode: 'bar-chart', // default to bar chart view
       includeBurnedLeeches: false, // default to excluding burned items from leeches
       forecastIncludeVocabulary: true, // default to including vocabulary
+      showAllLevelsInAccuracy: false, // default to hiding levels beyond current level
 
       // Actions
       setTheme: (theme: 'light' | 'dark') => {
@@ -114,6 +117,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setForecastIncludeVocabulary: (value: boolean) => {
         set({ forecastIncludeVocabulary: value })
+      },
+
+      setShowAllLevelsInAccuracy: (value: boolean) => {
+        set({ showAllLevelsInAccuracy: value })
       },
     }),
     {

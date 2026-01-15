@@ -7,6 +7,7 @@ interface LessonPaceSelectorProps {
   onLessonsChange: (value: number) => void
   forecastDays: number
   onForecastDaysChange: (value: number) => void
+  isLoading?: boolean
 }
 
 const PRESET_PACES = [0, 5, 10, 15, 20]
@@ -17,6 +18,7 @@ export function LessonPaceSelector({
   onLessonsChange,
   forecastDays,
   onForecastDaysChange,
+  isLoading = false,
 }: LessonPaceSelectorProps) {
   const [customPaceValue, setCustomPaceValue] = useState('')
   const [isCustomPaceMode, setIsCustomPaceMode] = useState(
@@ -71,6 +73,33 @@ export function LessonPaceSelector({
 
   const isPacePresetActive = (pace: number) => !isCustomPaceMode && lessonsPerDay === pace
   const isDaysPresetActive = (days: number) => !isCustomDaysMode && forecastDays === days
+
+  if (isLoading) {
+    return (
+      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-4" />
+        <div className="space-y-3 mb-6">
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-10 flex-1 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+            ))}
+          </div>
+          <div className="h-10 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+        </div>
+        <div className="pt-6 border-t border-paper-300 dark:border-ink-300">
+          <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-4" />
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-10 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+              ))}
+            </div>
+            <div className="h-10 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">

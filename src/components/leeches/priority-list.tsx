@@ -3,7 +3,8 @@ import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/quer
 import { detectLeeches, type LeechItem } from '@/lib/calculations/leeches'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
-import { LeechDetailModal } from './leech-detail-modal'
+import { Modal } from '@/components/shared/modal'
+import { ItemDetailContent } from '@/components/shared/item-detail-content'
 
 interface DisplayLeechItem {
   rank: number
@@ -289,11 +290,19 @@ export function PriorityList() {
       )}
 
       {/* Leech Detail Modal */}
-      <LeechDetailModal
-        isOpen={selectedLeech !== null}
-        onClose={() => setSelectedLeech(null)}
-        leech={selectedLeech}
-      />
+      <Modal isOpen={selectedLeech !== null} onClose={() => setSelectedLeech(null)} size="lg">
+        {selectedLeech && (
+          <div className="p-6">
+            <ItemDetailContent item={selectedLeech} />
+            <button
+              onClick={() => setSelectedLeech(null)}
+              className="w-full mt-4 px-4 py-2 text-sm font-medium rounded-md bg-vermillion-500 hover:bg-vermillion-600 text-paper-100 dark:text-ink-100 transition-smooth focus-ring"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

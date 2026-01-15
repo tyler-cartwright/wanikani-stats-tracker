@@ -5,6 +5,58 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-01-15
+
+### Added
+- **Progress Page: At-Risk Items Detail View**: Enhanced at-risk items with clickable drill-down to view full item details
+  - Click any at-risk item to view readings (on'yomi/kun'yomi), all accepted meanings, accuracy statistics, and WaniKani link
+  - Smooth slide transitions between list and detail views
+  - Visual indicators (chevron icons) and helper text to show items are clickable
+  - Back button returns to the list without closing the modal
+- **Accuracy Page: Level Filtering**: New setting to control which levels are shown in "Accuracy by Level"
+  - By default, only shows levels up to your current level (hides levels from curriculum reshuffling)
+  - New "Show all levels in Accuracy by Level" toggle in Settings → Accuracy section
+  - Prevents confusion when items move to higher levels due to WaniKani curriculum updates
+- **Forecast Page: Skeleton Loading**: Added consistent skeleton loading states for entire page
+  - Note disclaimer box shows skeleton during loading
+  - Lesson Pace Selector shows skeleton during loading
+  - Matches skeleton pattern used on other pages for consistent UX
+
+### Changed
+- **Navigation: Tab Order**: Swapped Accuracy and Forecast tab positions in both desktop and mobile navigation
+  - New order: Dashboard → Progress → **Accuracy** → **Forecast** → Leeches → Kanji → Readiness
+  - Updated in both desktop header and mobile drawer
+- **Forecast Page: Default Lesson Pace**: Changed default lesson pace from 10 to 15 lessons per day
+  - Reflects a more sustainable learning pace for most users
+  - Default time period remains 30 days
+
+### Refactored
+- **Modal Architecture**: Complete refactor of modal pattern for better UX and maintainability
+  - Created new `DrilldownModal` component for "list → detail → back" flows with smooth slide transitions
+  - Created shared `ItemDetailContent` component for consistent item detail display across the app
+  - Replaced `LeechDetailModal` with shared components
+  - Knowledge Stability (at-risk items) now uses single modal with view switching instead of dual modal coordination
+  - Leeches page now uses shared `ItemDetailContent` for consistency
+  - Eliminates jarring modal close/open animations
+  - Simplifies state management (single `isOpen` per feature)
+  - Establishes scalable pattern for future "drill-down" features
+
+### Technical
+- Created `src/components/shared/drilldown-modal.tsx`: Generic modal component with internal view switching and slide transitions
+- Created `src/components/shared/item-detail-content.tsx`: Shared component for displaying item details (character, type, level, SRS, meanings, readings, accuracy stats)
+- Deleted `src/components/leeches/leech-detail-modal.tsx`: Functionality replaced by shared components
+- Updated `src/components/progress/knowledge-stability.tsx`: Migrated to DrilldownModal pattern with pre-enriched at-risk items
+- Updated `src/components/leeches/priority-list.tsx`: Migrated to use shared ItemDetailContent
+- Updated `src/stores/settings-store.ts`: Added `showAllLevelsInAccuracy` setting (default: false)
+- Updated `src/pages/settings.tsx`: Added "Accuracy" settings section with level filtering toggle
+- Updated `src/components/accuracy/time-heatmap.tsx`: Added filtering logic based on user's current level and settings
+- Updated `src/pages/forecast.tsx`: Added skeleton states for note box and lesson pace selector, changed default lesson pace to 15
+- Updated `src/components/forecast/lesson-pace-selector.tsx`: Added `isLoading` prop and skeleton state
+- Updated `src/components/layout/header.tsx`: Swapped Forecast and Accuracy nav items
+- Updated `src/components/layout/mobile-nav.tsx`: Swapped Forecast and Accuracy nav items
+- Exported `extractReadings()` function in `src/lib/calculations/leeches.ts` for reuse
+- Added `enrichAtRiskItem()` function in `src/lib/calculations/knowledge-stability.ts` to convert at-risk items to full LeechItem format
+
 ## [2.12.2] - 2025-12-23
 
 ### Fixed
