@@ -18,8 +18,8 @@ export function Forecast() {
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const forecastIncludeVocabulary = useSettingsStore((state) => state.forecastIncludeVocabulary)
 
-  // Default to 10 lessons per day and 30 days forecast
-  const [lessonsPerDay, setLessonsPerDay] = useState(10)
+  // Default to 15 lessons per day and 30 days forecast
+  const [lessonsPerDay, setLessonsPerDay] = useState(15)
   const [forecastDays, setForecastDays] = useState(30)
   const [viewMode, setViewMode] = useState<'daily' | 'weekly'>('weekly')
 
@@ -71,11 +71,17 @@ export function Forecast() {
   return (
     <div className="space-y-8">
       {/* Disclaimer */}
-      <div className="bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-lg p-4">
-        <p className="text-sm text-ink-400 dark:text-paper-300">
-          <span className="font-semibold text-ink-100 dark:text-paper-100">Note:</span> These forecasts are estimates based on your average accuracy rate and assume consistent daily performance. Actual results will vary depending on how well you do in your reviews each day.
-        </p>
-      </div>
+      {isLoading ? (
+        <div className="bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-lg p-4">
+          <div className="h-10 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
+        </div>
+      ) : (
+        <div className="bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-lg p-4">
+          <p className="text-sm text-ink-400 dark:text-paper-300">
+            <span className="font-semibold text-ink-100 dark:text-paper-100">Note:</span> These forecasts are estimates based on your average accuracy rate and assume consistent daily performance. Actual results will vary depending on how well you do in your reviews each day.
+          </p>
+        </div>
+      )}
 
       {/* Lesson Pace Selector + Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -84,6 +90,7 @@ export function Forecast() {
           onLessonsChange={setLessonsPerDay}
           forecastDays={forecastDays}
           onForecastDaysChange={setForecastDays}
+          isLoading={isLoading}
         />
         <ForecastMetrics
           metrics={forecast?.metrics || null}

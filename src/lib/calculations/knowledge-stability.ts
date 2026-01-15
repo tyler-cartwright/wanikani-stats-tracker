@@ -1,5 +1,7 @@
 // Knowledge Stability Calculations
-import type { Assignment, Subject } from '@/lib/api/types'
+import type { Assignment, Subject, ReviewStatistic } from '@/lib/api/types'
+import { extractReadings } from './leeches'
+import type { LeechItem } from './leeches'
 
 export interface AtRiskItem {
   subjectId: number
@@ -167,4 +169,62 @@ function getAtRiskItems(
   })
 
   return atRiskItems
+}
+
+/**
+ * Enrich an at-risk item with full details needed for the detail modal
+ * Returns a LeechItem-compatible object
+ */
+export function enrichAtRiskItem(
+  item: AtRiskItem,
+  subjects: Array<Subject & { id: number }>,
+  reviewStats: ReviewStatistic[]
+): LeechItem | null {
+  // Find the subject
+  const subject = subjects.find((s) => s.id === item.subjectId)
+  if (!subject) return null
+
+  // Find review stats for this subject
+  const stat = reviewStats.find((s) => s.subject_id === item.subjectId)
+  if (!stat) return null
+
+  // Calculate accuracy stats
+  const meaningTotal = stat.meaning_correct + stat.meaning_incorrect
+  const readingTotal = stat.reading_correct + stat.reading_incorrect
+  const totalReviews =
+    stat.meaning_correct + stat.meaning_incorrect + stat.reading_correct + stat.reading_incorrect
+  const incorrectCount = stat.meaning_incorrect + stat.reading_incorrect
+
+  const meaningAccuracy =
+    meaningTotal > 0 ? Math.round((stat.meaning_correct / meaningTotal) * 100) : 100
+
+  const readingAccuracy =
+    readingTotal > 0 ? Math.round((stat.reading_correct / readingTotal) * 100) : 100
+
+  // Extract all meanings
+  const allMeanings = subject.meanings.filter((m) => m.accepted_answer).map((m) => m.meaning)
+
+  // Extract readings
+  const readings = extractReadings(subject)
+
+  // Map subject type
+  const type = item.subjectType === 'kana_vocabulary' ? 'vocabulary' : item.subjectType
+
+  return {
+    subjectId: item.subjectId,
+    character: item.character || '?',
+    meaning: item.meaning,
+    type: type as 'radical' | 'kanji' | 'vocabulary',
+    level: item.level,
+    accuracy: stat.percentage_correct,
+    totalReviews,
+    incorrectCount,
+    severity: 0, // Not used for at-risk items, but required by LeechItem type
+    meaningAccuracy,
+    readingAccuracy,
+    currentSRS: item.currentSrsStage,
+    readings,
+    allMeanings,
+    documentUrl: subject.document_url,
+  }
 }

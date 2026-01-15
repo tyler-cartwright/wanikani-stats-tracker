@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Lightbulb, TrendingDown, TrendingUp } from 'lucide-react'
-import { useReviewStatistics, useSubjects } from '@/lib/api/queries'
+import { useReviewStatistics, useSubjects, useUser } from '@/lib/api/queries'
 import type { ReviewStatistic, Subject } from '@/lib/api/types'
 import { useSyncStore } from '@/stores/sync-store'
+import { useSettingsStore } from '@/stores/settings-store'
 
 interface LevelData {
   level: number
@@ -67,12 +68,21 @@ function calculateAccuracyByLevel(
 export function TimeHeatmap() {
   const { data: reviewStats, isLoading: isLoadingStats } = useReviewStatistics()
   const { data: subjects, isLoading: isLoadingSubjects } = useSubjects()
+  const { data: user } = useUser()
   const isSyncing = useSyncStore((state) => state.isSyncing)
+  const showAllLevelsInAccuracy = useSettingsStore((state) => state.showAllLevelsInAccuracy)
 
   const levelData = useMemo(() => {
     if (!reviewStats || !subjects) return []
-    return calculateAccuracyByLevel(reviewStats, subjects)
-  }, [reviewStats, subjects])
+    const allLevelData = calculateAccuracyByLevel(reviewStats, subjects)
+
+    // Filter by user's current level unless showAllLevelsInAccuracy is enabled
+    if (!showAllLevelsInAccuracy && user?.level) {
+      return allLevelData.filter((item) => item.level <= user.level)
+    }
+
+    return allLevelData
+  }, [reviewStats, subjects, user, showAllLevelsInAccuracy])
 
   const bestLevel = useMemo(() => {
     if (levelData.length === 0) return null

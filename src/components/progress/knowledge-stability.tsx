@@ -1,15 +1,17 @@
 import { useState, useMemo } from 'react'
-import { format } from 'date-fns'
-import { Shield, AlertTriangle } from 'lucide-react'
+import { Shield, AlertTriangle, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import { useAssignments, useSubjects } from '@/lib/api/queries'
+import { useAssignments, useSubjects, useReviewStatistics } from '@/lib/api/queries'
 import { useSyncStore } from '@/stores/sync-store'
-import { calculateKnowledgeStability } from '@/lib/calculations/knowledge-stability'
-import { Modal } from '@/components/shared/modal'
+import { calculateKnowledgeStability, enrichAtRiskItem } from '@/lib/calculations/knowledge-stability'
+import { DrilldownModal } from '@/components/shared/drilldown-modal'
+import { ItemDetailContent } from '@/components/shared/item-detail-content'
+import type { LeechItem } from '@/lib/calculations/leeches'
 
 export function KnowledgeStability() {
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
+  const { data: reviewStats } = useReviewStatistics()
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const [showAtRisk, setShowAtRisk] = useState(false)
   const [atRiskLimit, setAtRiskLimit] = useState<10 | 25 | 50 | 'all'>(25)
@@ -20,6 +22,14 @@ export function KnowledgeStability() {
     if (!assignments || !subjects) return null
     return calculateKnowledgeStability(assignments, subjects)
   }, [assignments, subjects])
+
+  // Enrich at-risk items with full details for the modal
+  const enrichedAtRiskItems = useMemo(() => {
+    if (!stability || !subjects || !reviewStats) return []
+    return stability.atRiskItems
+      .map((item) => enrichAtRiskItem(item, subjects, reviewStats))
+      .filter((item): item is LeechItem => item !== null)
+  }, [stability, subjects, reviewStats])
 
   if (isLoading) {
     return (
@@ -156,20 +166,46 @@ export function KnowledgeStability() {
         </div>
       )}
 
-      {/* Modal for at-risk items list */}
-      <Modal isOpen={showAtRisk} onClose={() => setShowAtRisk(false)} size="lg">
-        <div className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-vermillion-500 dark:text-vermillion-400" />
-            <h3 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100">
-              At-Risk Items
-            </h3>
+      {/* At-risk items modal with drill-down */}
+      <DrilldownModal
+        isOpen={showAtRisk}
+        onClose={() => setShowAtRisk(false)}
+        title="At-Risk Items"
+        description="These items passed Guru but have fallen back. They're most likely to become leeches. Click any item to view detailed information, readings, and accuracy stats."
+        items={enrichedAtRiskItems.slice(0, atRiskLimit === 'all' ? undefined : atRiskLimit)}
+        renderListItem={(item, onClick) => (
+          <div
+            onClick={onClick}
+            className="flex items-center justify-between p-3 bg-paper-300/50 dark:bg-ink-300/50 rounded-lg hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              {item.character && (
+                <div className="text-2xl font-japanese">{item.character}</div>
+              )}
+              <div className="flex-1">
+                <div className="text-sm font-medium text-ink-100 dark:text-paper-100">
+                  {item.meaning}
+                </div>
+                <div className="text-xs text-ink-400 dark:text-paper-300">
+                  Level {item.level} · {item.type}
+                </div>
+              </div>
+            </div>
+            <div className="text-right flex items-center gap-3">
+              <div>
+                <div className="text-xs font-medium text-vermillion-500 dark:text-vermillion-400">
+                  SRS {item.currentSRS}
+                </div>
+                <div className="text-xs text-ink-400 dark:text-paper-300">
+                  {item.accuracy}% accuracy
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-ink-400 dark:text-paper-300 group-hover:text-ink-100 dark:group-hover:text-paper-100 transition-smooth" />
+            </div>
           </div>
-          <p className="text-sm text-ink-400 dark:text-paper-300 mb-6">
-            These items passed Guru but have fallen back. They're most likely to become leeches.
-          </p>
-
-          {/* Limit selector */}
+        )}
+        renderDetail={(item) => <ItemDetailContent item={item} />}
+        listHeaderContent={
           <div className="flex gap-2 mb-4">
             <span className="text-xs text-ink-400 dark:text-paper-300 self-center mr-2">Show:</span>
             <div className="flex gap-1 bg-paper-300 dark:bg-ink-300 rounded-lg p-1">
@@ -189,49 +225,8 @@ export function KnowledgeStability() {
               ))}
             </div>
           </div>
-
-          {/* Items list */}
-          <div className="max-h-[400px] overflow-y-auto space-y-2">
-            {stability.atRiskItems
-              .slice(0, atRiskLimit === 'all' ? undefined : atRiskLimit)
-              .map((item) => (
-                <div
-                  key={item.subjectId}
-                  className="flex items-center justify-between p-3 bg-paper-300/50 dark:bg-ink-300/50 rounded-lg hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth"
-                >
-                  <div className="flex items-center gap-3">
-                    {item.character && (
-                      <div className="text-2xl font-japanese">{item.character}</div>
-                    )}
-                    <div>
-                      <div className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                        {item.meaning}
-                      </div>
-                      <div className="text-xs text-ink-400 dark:text-paper-300">
-                        Level {item.level} · {item.subjectType}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs font-medium text-vermillion-500 dark:text-vermillion-400">
-                      SRS {item.currentSrsStage}
-                    </div>
-                    <div className="text-xs text-ink-400 dark:text-paper-300">
-                      Passed {format(item.passedAt, 'MMM yyyy')}
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-
-          <button
-            onClick={() => setShowAtRisk(false)}
-            className="w-full mt-6 px-4 py-2 text-sm font-medium rounded-md bg-vermillion-500 hover:bg-vermillion-600 text-paper-100 dark:text-ink-100 transition-smooth focus-ring"
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
+        }
+      />
     </div>
   )
 }

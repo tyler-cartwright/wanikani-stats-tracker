@@ -16,8 +16,8 @@ interface MobileNavProps {
 const navItems = [
   { path: '/', label: 'Dashboard', japanese: '概要' },
   { path: '/progress', label: 'Progress', japanese: '進捗' },
-  { path: '/forecast', label: 'Forecast', japanese: '予測' },
   { path: '/accuracy', label: 'Accuracy', japanese: '精度' },
+  { path: '/forecast', label: 'Forecast', japanese: '予測' },
   { path: '/leeches', label: 'Leeches', japanese: '難点' },
   { path: '/kanji', label: 'Kanji', japanese: '漢字' },
   { path: '/readiness', label: 'Readiness', japanese: '試験準備' },
