@@ -15,11 +15,50 @@ export interface LevelProgressData {
   vocabulary: SubjectProgressData
   kanjiNeededToLevelUp: number
   daysOnLevel: number
+  durationCompact?: string // For historical levels: "9d 4h"
+  durationVerbose?: string // For historical levels: "9 days 4 hours"
   passedAt?: string | null // For completed levels
   isCurrentLevel: boolean
   averageDaysPerLevel?: number // total average (includes all levels)
   activeDaysPerLevel?: number // active learning average (excludes breaks)
   excludedLevels?: number[] // which levels were filtered out
+}
+
+/**
+ * Format a duration in milliseconds to compact format (e.g., "9d 4h", "10d", "18h")
+ */
+export function formatDurationCompact(milliseconds: number): string {
+  const hours = Math.floor(milliseconds / (1000 * 60 * 60))
+  const days = Math.floor(hours / 24)
+  const remainingHours = hours % 24
+
+  if (days > 0 && remainingHours > 0) {
+    return `${days}d ${remainingHours}h`
+  } else if (days > 0) {
+    return `${days}d`
+  } else {
+    return `${hours}h`
+  }
+}
+
+/**
+ * Format a duration in milliseconds to verbose format (e.g., "9 days 4 hours", "10 days", "18 hours")
+ */
+export function formatDurationVerbose(milliseconds: number): string {
+  const hours = Math.floor(milliseconds / (1000 * 60 * 60))
+  const days = Math.floor(hours / 24)
+  const remainingHours = hours % 24
+
+  const dayText = days === 1 ? 'day' : 'days'
+  const hourText = remainingHours === 1 ? 'hour' : 'hours'
+
+  if (days > 0 && remainingHours > 0) {
+    return `${days} ${dayText} ${remainingHours} ${hourText}`
+  } else if (days > 0) {
+    return `${days} ${dayText}`
+  } else {
+    return `${hours} ${hourText}`
+  }
 }
 
 /**
@@ -117,11 +156,20 @@ export function calculateLevelProgress(
 
   // Calculate days on level
   let daysOnLevel = 0
+  let durationCompact: string | undefined
+  let durationVerbose: string | undefined
+
   if (levelStartDate) {
     const startDate = new Date(levelStartDate)
     const endDate = levelPassedAt ? new Date(levelPassedAt) : new Date()
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
     daysOnLevel = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    // For historical levels (completed), format the precise duration
+    if (levelPassedAt) {
+      durationCompact = formatDurationCompact(diffTime)
+      durationVerbose = formatDurationVerbose(diffTime)
+    }
   }
 
   return {
@@ -152,6 +200,8 @@ export function calculateLevelProgress(
     },
     kanjiNeededToLevelUp: kanjiNeeded,
     daysOnLevel,
+    durationCompact,
+    durationVerbose,
     passedAt: levelPassedAt ?? null,
     isCurrentLevel: selectedLevel === userCurrentLevel,
   }

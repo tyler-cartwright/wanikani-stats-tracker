@@ -107,7 +107,7 @@ export function LevelProgress() {
           </button>
         </div>
         <span className="text-sm text-ink-400 dark:text-paper-300 font-medium">
-          Day {progress.daysOnLevel}
+          {progress.durationCompact || `Day ${progress.daysOnLevel}`}
         </span>
       </div>
 
@@ -147,7 +147,7 @@ export function LevelProgress() {
           ) : progress.passedAt && selectedLevelProgression?.passed_at ? (
             <p className="text-sm text-ink-400 dark:text-paper-300">
               Passed {format(new Date(progress.passedAt), 'MMM d, yyyy')}
-              {progress.daysOnLevel > 0 && <span> · {progress.daysOnLevel} days</span>}
+              {progress.durationVerbose && <span> · {progress.durationVerbose}</span>}
             </p>
           ) : selectedLevelProgression?.unlocked_at ? (
             <p className="text-sm text-ink-400 dark:text-paper-300">In progress</p>
