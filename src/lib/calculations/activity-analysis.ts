@@ -1,29 +1,34 @@
-// Activity Analysis and Break Detection
+// Activity Analysis with MAD (Median Absolute Deviation)
 import { differenceInDays } from 'date-fns'
 import type { LevelProgression } from '@/lib/api/types'
 
-export interface ActivityPeriod {
-  level: number
-  days: number
-  isActive: boolean // false if this was a break period
-  reason?: 'vacation' | 'extended_gap' | 'outlier'
-}
+export interface UnifiedLevelAnalysis {
+  median: number
+  mad: number
+  normalizedMad: number
+  outlierThreshold: number // Threshold for auto-detecting breaks (median + 2×MAD)
+  average: number // Trimmed mean of included levels
+  stdDev: number // Calculated from included levels for pace bands
 
-export interface ActiveAverageResult {
-  activeAverage: number
-  totalAverage: number
+  includedLevels: Array<{
+    level: number
+    days: number
+    milliseconds: number
+    pace: 'fast' | 'good' | 'slow' | 'very-slow'
+  }>
+
   excludedLevels: Array<{
     level: number
     days: number
-    reason: string
+    reason: 'outlier'
   }>
-  method: 'median' | 'trimmed_mean'
-}
 
-interface AnalysisOptions {
-  outlierThreshold?: number // default: 3x median
-  absoluteThreshold?: number // default: 60 days (or custom from settings)
-  useCustomThreshold?: boolean // whether to use custom threshold instead of default
+  bands: {
+    fast: number // < avg - 0.5σ
+    good: number // within ±0.5σ
+    slow: number // +0.5σ to +1.5σ
+    verySlow: number // > +1.5σ
+  }
 }
 
 /**
@@ -31,19 +36,21 @@ interface AnalysisOptions {
  */
 function calculateLevelDurations(
   levelProgressions: LevelProgression[]
-): Array<{ level: number; days: number }> {
-  const durations: Array<{ level: number; days: number }> = []
+): Array<{ level: number; days: number; milliseconds: number }> {
+  const durations: Array<{ level: number; days: number; milliseconds: number }> = []
 
   for (const progression of levelProgressions) {
     if (progression.passed_at && progression.unlocked_at) {
       const unlockedDate = new Date(progression.unlocked_at)
       const passedDate = new Date(progression.passed_at)
       const days = differenceInDays(passedDate, unlockedDate)
+      const milliseconds = passedDate.getTime() - unlockedDate.getTime()
 
       if (days >= 0) {
         durations.push({
           level: progression.level,
           days,
+          milliseconds,
         })
       }
     }
@@ -69,6 +76,16 @@ function calculateMedian(numbers: number[]): number {
 }
 
 /**
+ * Calculate MAD (Median Absolute Deviation)
+ */
+function calculateMAD(values: number[], median: number): number {
+  if (values.length === 0) return 0
+
+  const deviations = values.map(value => Math.abs(value - median))
+  return calculateMedian(deviations)
+}
+
+/**
  * Calculate trimmed mean (exclude top and bottom 10%)
  */
 function calculateTrimmedMean(numbers: number[]): number {
@@ -87,140 +104,117 @@ function calculateTrimmedMean(numbers: number[]): number {
 }
 
 /**
- * Analyze level progressions to detect break periods
+ * Calculate standard deviation
  */
-export function analyzeActivityPeriods(
-  levelProgressions: LevelProgression[],
-  options: AnalysisOptions = {}
-): ActivityPeriod[] {
-  const outlierThreshold = options.outlierThreshold ?? 3
-  const absoluteThreshold = options.absoluteThreshold ?? 60
-  const useCustomThreshold = options.useCustomThreshold ?? false
+function calculateStdDev(values: number[], mean: number): number {
+  if (values.length === 0) return 0
+  const squareDiffs = values.map((value) => Math.pow(value - mean, 2))
+  const avgSquareDiff = squareDiffs.reduce((sum, val) => sum + val, 0) / values.length
+  return Math.sqrt(avgSquareDiff)
+}
 
-  const durations = calculateLevelDurations(levelProgressions)
+/**
+ * Determine pace using statistical approach (standard deviation)
+ */
+function determinePace(
+  days: number,
+  mean: number,
+  stdDev: number
+): 'fast' | 'good' | 'slow' | 'very-slow' {
+  if (days < mean - 0.5 * stdDev) return 'fast'
+  if (days > mean + 1.5 * stdDev) return 'very-slow'
+  if (days > mean + 0.5 * stdDev) return 'slow'
+  return 'good'
+}
 
+/**
+ * New unified analysis function using MAD for outlier detection
+ * No settings needed - fully automatic!
+ */
+export function analyzeUnifiedLevelData(
+  progressions: LevelProgression[]
+): UnifiedLevelAnalysis {
+  const durations = calculateLevelDurations(progressions)
+
+  // Handle edge case: no data
   if (durations.length === 0) {
-    return []
-  }
-
-  // Calculate median for outlier detection
-  const median = calculateMedian(durations.map((d) => d.days))
-  const outlierCutoff = median * outlierThreshold
-
-  // Mark each period as active or inactive
-  return durations.map((duration) => {
-    // If custom threshold is enabled, only use absolute threshold
-    if (useCustomThreshold) {
-      if (duration.days >= absoluteThreshold) {
-        return {
-          level: duration.level,
-          days: duration.days,
-          isActive: false,
-          reason: 'extended_gap' as const,
-        }
-      }
-      return {
-        level: duration.level,
-        days: duration.days,
-        isActive: true,
-      }
-    }
-
-    // Default behavior: use both absolute threshold and outlier detection
-    // Check if this is a break period
-    if (duration.days >= absoluteThreshold) {
-      return {
-        level: duration.level,
-        days: duration.days,
-        isActive: false,
-        reason: 'extended_gap' as const,
-      }
-    }
-
-    if (duration.days > outlierCutoff && outlierCutoff > 0) {
-      return {
-        level: duration.level,
-        days: duration.days,
-        isActive: false,
-        reason: 'outlier' as const,
-      }
-    }
-
     return {
-      level: duration.level,
-      days: duration.days,
-      isActive: true,
-    }
-  })
-}
-
-/**
- * Get only active level durations (excluding breaks)
- */
-export function getActiveLevelDurations(
-  levelProgressions: LevelProgression[],
-  options: AnalysisOptions = {}
-): Array<{ level: number; days: number }> {
-  const periods = analyzeActivityPeriods(levelProgressions, options)
-  return periods.filter((p) => p.isActive).map((p) => ({ level: p.level, days: p.days }))
-}
-
-/**
- * Calculate active average excluding break periods
- * Uses trimmed mean (drop top/bottom 10%) or median based on method parameter
- */
-export function calculateActiveAverage(
-  levelProgressions: LevelProgression[],
-  options: AnalysisOptions = {},
-  method: 'trimmed_mean' | 'median' = 'trimmed_mean'
-): ActiveAverageResult {
-  const allDurations = calculateLevelDurations(levelProgressions)
-
-  if (allDurations.length === 0) {
-    return {
-      activeAverage: 0,
-      totalAverage: 0,
+      median: 0,
+      mad: 0,
+      normalizedMad: 0,
+      outlierThreshold: 0,
+      average: 0,
+      stdDev: 0,
+      includedLevels: [],
       excludedLevels: [],
-      method: 'trimmed_mean',
+      bands: { fast: 0, good: 0, slow: 0, verySlow: 0 },
     }
   }
 
-  // Calculate total average
-  const totalAverage = allDurations.reduce((sum, d) => sum + d.days, 0) / allDurations.length
+  const daysArray = durations.map(d => d.days)
 
-  // Get activity periods
-  const periods = analyzeActivityPeriods(levelProgressions, options)
-  const activePeriods = periods.filter((p) => p.isActive)
+  // Calculate MAD
+  const median = calculateMedian(daysArray)
+  const mad = calculateMAD(daysArray, median)
+  const normalizedMad = mad * 1.4826 // Convert to standard deviation equivalent
 
-  if (activePeriods.length === 0) {
-    // All periods are breaks - fall back to total average
-    return {
-      activeAverage: totalAverage,
-      totalAverage,
-      excludedLevels: [],
-      method,
+  // Outlier detection: exclude if > median + 2 × normalizedMAD
+  // Using 2× multiplier for tighter outlier detection (more aggressive than 3×)
+  // But only if we have 5+ levels (need sufficient data for outlier detection)
+  const outlierThreshold = median + 2 * normalizedMad
+  const shouldDetectOutliers = durations.length >= 5
+
+  const includedDurations: Array<{ level: number; days: number; milliseconds: number }> = []
+  const excludedDurations: Array<{ level: number; days: number; reason: 'outlier' }> = []
+
+  for (const duration of durations) {
+    if (shouldDetectOutliers && duration.days > outlierThreshold) {
+      excludedDurations.push({
+        level: duration.level,
+        days: duration.days,
+        reason: 'outlier',
+      })
+    } else {
+      includedDurations.push(duration)
     }
   }
 
-  // Calculate active average using specified method
-  const activeDays = activePeriods.map((p) => p.days)
-  const activeAverage = method === 'median'
-    ? calculateMedian(activeDays)
-    : calculateTrimmedMean(activeDays)
+  // Edge case: If all levels would be excluded (rare), include all
+  if (includedDurations.length === 0) {
+    includedDurations.push(...durations)
+    excludedDurations.length = 0
+  }
 
-  // Collect excluded levels
-  const excludedLevels = periods
-    .filter((p) => !p.isActive)
-    .map((p) => ({
-      level: p.level,
-      days: p.days,
-      reason: p.reason === 'extended_gap' ? 'Extended break (60+ days)' : 'Statistical outlier (3x median)',
-    }))
+  // Calculate statistics from included levels only
+  const includedDaysArray = includedDurations.map(d => d.days)
+  const average = calculateTrimmedMean(includedDaysArray)
+  const stdDev = calculateStdDev(includedDaysArray, average)
+
+  // Calculate pace bands
+  const bands = {
+    fast: average - 0.5 * stdDev,
+    good: average,
+    slow: average + 0.5 * stdDev,
+    verySlow: average + 1.5 * stdDev,
+  }
+
+  // Add pace to included levels
+  const includedLevels = includedDurations.map(d => ({
+    level: d.level,
+    days: d.days,
+    milliseconds: d.milliseconds,
+    pace: determinePace(d.days, average, stdDev),
+  }))
 
   return {
-    activeAverage: Math.round(activeAverage * 10) / 10,
-    totalAverage: Math.round(totalAverage * 10) / 10,
-    excludedLevels,
-    method,
+    median,
+    mad,
+    normalizedMad,
+    outlierThreshold: Math.round(outlierThreshold * 10) / 10,
+    average: Math.round(average * 10) / 10,
+    stdDev,
+    includedLevels,
+    excludedLevels: excludedDurations,
+    bands,
   }
 }

@@ -5,6 +5,88 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.0] - 2026-01-16
+
+### Changed
+- **Progress Page: Level History Statistical Analysis**: Complete redesign of averaging system using MAD (Median Absolute Deviation)
+  - Replaced dual threshold/standard-deviation system with single, automatic statistical approach
+  - Zero user configuration required - system adapts to individual learning patterns
+  - More aggressive outlier detection (2× multiplier instead of 3×) for tighter break identification
+  - Automatically detects and excludes unusually long levels as breaks
+  - Uses trimmed mean for all averages (excludes top/bottom 10%)
+  - Break detection requires minimum 5 completed levels for statistical validity
+  - Gray bars indicate auto-excluded breaks; colored bars represent active learning pace
+  - New info banner shows excluded level count with threshold explanation
+  - Enhanced excluded levels modal with clear MAD explanation and "days over threshold" indicator
+  - Level 60 projection now shows exact outlier threshold used for break detection
+
+- **Progress Page: Level History Visualization**: Replaced logarithmic scale with capped linear scale
+  - Cap set to maximum of included (non-break) levels for intuitive display
+  - All normal-pace levels fully visible at their actual heights
+  - Break levels (outliers) capped with gradient fade indicator
+  - Small duration differences now clearly visible (e.g., 3d vs 10d)
+  - Capped bars show actual duration in hover tooltip with "(capped)" label
+  - Y-axis shows "Max: X days (normal range) · Outliers capped"
+
+- **Progress Page: Level History Colors**: Changed "Fast" levels from green to blue for better distinction
+  - Fast levels now use SRS-Guru blue (#7B9EB8) instead of dark green
+  - Creates clear visual distinction from "Good" green levels
+  - Consistent with app's existing color language (SRS stages use different hues)
+  - Intuitive cool→warm gradient: blue (fast) → green (good) → yellow (slow) → red (very slow)
+  - Updated across all view modes: bar chart, cards, and compact list
+  - Stats display "Fastest: X days" now shows in blue
+
+- **Progress Page: Level History Legend**: Simplified with user-friendly language
+  - Removed statistical notation (σ, ±, etc.) in favor of plain language
+  - New descriptions: "Fast - Much quicker than your average", "Good - Near your typical pace", etc.
+  - Added "Break - Auto-excluded from average" with explanation
+  - More accessible and intuitive for all users
+
+### Removed
+- **Settings Page: Progress Calculations Section**: Removed entire settings section (zero configuration approach)
+  - Removed "Use active learning average" toggle (now always automatic)
+  - Removed "Averaging method" selection (trimmed mean/median) (now always trimmed mean)
+  - Removed "Use custom threshold" toggle (now always MAD-based)
+  - Removed "Custom threshold days" input (now statistically determined)
+  - Settings gracefully ignored if present in localStorage from previous versions
+
+### Technical
+- Updated `src/lib/calculations/activity-analysis.ts`:
+  - Complete rewrite with new `analyzeUnifiedLevelData()` function
+  - Added `calculateMAD()` for Median Absolute Deviation calculation
+  - Added `calculateMedian()`, `calculateTrimmedMean()`, `calculateStdDev()` helper functions
+  - Added `outlierThreshold` field to `UnifiedLevelAnalysis` interface
+  - Changed outlier detection from `median + 3×MAD` to `median + 2×MAD` for tighter detection
+  - Removed deprecated functions: `analyzeActivityPeriods()`, `calculateActiveAverage()`, `getActiveLevelDurations()`
+- Updated `src/components/progress/level-timeline.tsx`:
+  - Replaced logarithmic scale with capped linear scale in bar chart view
+  - Changed "Fast" color from `patina-600/500` to `srs-guru` across all view modes
+  - Added auto-detection info banner with tooltip
+  - Added cap calculation logic (max of included levels)
+  - Added gradient fade indicator for capped bars
+  - Updated legend with user-friendly descriptions
+  - Removed all settings-related imports and logic
+- Updated `src/lib/calculations/forecasting.ts`:
+  - Simplified `projectLevel60Date()` signature to 2 parameters (removed settings parameters)
+  - Added `outlierThreshold` to `Level60Projection` interface
+  - Updated all return statements to include threshold value
+- Updated `src/components/progress/level-60-projection.tsx`:
+  - Removed settings imports and state
+  - Updated projection call to use simplified signature
+  - Enhanced excluded levels modal with MAD explanation box and threshold display
+  - Added "days over threshold" calculation to excluded level list
+  - Changed modal title to "Auto-Detected Breaks"
+- Updated `src/stores/settings-store.ts`:
+  - Removed `useActiveAverage`, `averagingMethod`, `useCustomThreshold`, `customThresholdDays` state
+  - Removed corresponding setter functions
+- Updated `src/pages/settings.tsx`:
+  - Removed entire "Progress Calculations" settings section
+  - Removed related imports
+- Updated `src/lib/export/export-types.ts`:
+  - Removed 4 fields from `ExportSettings` interface
+- Updated `src/lib/export/data-collectors.ts`:
+  - Removed references to deleted settings in `collectSettings()`
+
 ## [2.13.1] - 2026-01-15
 
 ### Fixed

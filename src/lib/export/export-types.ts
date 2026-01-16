@@ -43,10 +43,6 @@ export interface ExportSettings {
   itemsPerPage: number
   autoRefreshEnabled: boolean
   autoRefreshInterval: number
-  useActiveAverage: boolean
-  averagingMethod: 'trimmed_mean' | 'median'
-  useCustomThreshold: boolean
-  customThresholdDays: number
   apiToken?: string // Only included if user explicitly opts in
 }
 
