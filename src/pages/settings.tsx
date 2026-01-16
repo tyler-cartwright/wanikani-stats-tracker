@@ -15,14 +15,6 @@ export function Settings() {
   const { clearAuth } = useUserStore()
   const { data: user } = useUser()
   const {
-    useActiveAverage,
-    setUseActiveAverage,
-    averagingMethod,
-    setAveragingMethod,
-    useCustomThreshold,
-    setUseCustomThreshold,
-    customThresholdDays,
-    setCustomThresholdDays,
     jlptThreshold,
     setJlptThreshold,
     showHiddenItems,
@@ -338,138 +330,6 @@ export function Settings() {
         </div>
       </div>
 
-      {/* Progress Calculations */}
-      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
-        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-          Progress Calculations
-        </h2>
-        <div className="space-y-6">
-          {/* Use Active Average Toggle */}
-          <div>
-            <label className="flex items-center justify-between cursor-pointer">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                  Use active learning average
-                </div>
-                <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                  Excludes extended breaks and vacation periods from pace calculations
-                </div>
-              </div>
-              <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out">
-                <input
-                  type="checkbox"
-                  checked={useActiveAverage}
-                  onChange={(e) => setUseActiveAverage(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-12 h-6 bg-paper-300 dark:bg-ink-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-vermillion-500/20 rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-paper-100 dark:after:bg-ink-100 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-vermillion-500"></div>
-              </div>
-            </label>
-
-            {/* Custom Threshold Setting - shown when active average is enabled */}
-            {useActiveAverage && (
-              <div className="mt-4 pl-4 border-l-2 border-paper-300 dark:border-ink-300">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="text-sm text-ink-100 dark:text-paper-100">
-                      Use custom day threshold
-                    </span>
-                    <InfoTooltip content="By default, the app uses smart filtering to exclude both very long breaks (60+ days) and statistical outliers (3x your median pace). Enable this to use only a specific day threshold that you define, ignoring the statistical outlier detection. This gives you precise control over what counts as a break." />
-                  </div>
-                  <label className="relative inline-block w-12 h-6 transition duration-200 ease-in-out ml-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={useCustomThreshold}
-                      onChange={(e) => setUseCustomThreshold(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-12 h-6 bg-paper-300 dark:bg-ink-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-vermillion-500/20 rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-paper-100 dark:after:bg-ink-100 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-vermillion-500"></div>
-                  </label>
-                </div>
-
-                {/* Day Threshold Input - shown when custom threshold is enabled */}
-                {useCustomThreshold && (
-                  <div className="mt-3">
-                    <label className="block">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm text-ink-100 dark:text-paper-100">
-                          Exclude levels longer than (days)
-                        </span>
-                      </div>
-                      <input
-                        type="number"
-                        min="1"
-                        max="365"
-                        value={customThresholdDays}
-                        onChange={(e) => setCustomThresholdDays(Number(e.target.value))}
-                        className="w-full px-3 py-2 text-sm bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-md text-ink-100 dark:text-paper-100 focus:outline-none focus:ring-2 focus:ring-vermillion-500/20"
-                      />
-                      <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                        Levels taking {customThresholdDays}+ days will be excluded from your average
-                      </div>
-                    </label>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Averaging Method Selection */}
-          <div>
-            <div className="text-sm font-medium text-ink-100 dark:text-paper-100 mb-3">
-              Averaging Method
-            </div>
-            <div className="space-y-3">
-              {/* Trimmed Mean Option */}
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="averagingMethod"
-                  value="trimmed_mean"
-                  checked={averagingMethod === 'trimmed_mean'}
-                  onChange={(e) => setAveragingMethod(e.target.value as 'trimmed_mean' | 'median')}
-                  className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-ink-100 dark:text-paper-100">
-                      Trimmed Mean (recommended)
-                    </span>
-                    <InfoTooltip content="Removes the top 10% and bottom 10% of your active learning pace, then averages the remaining 80%. This provides stable, long-term projections that ignore both your fastest and slowest periods. Best for realistic level 60 estimates." />
-                  </div>
-                  <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                    Most stable for long-term forecasting
-                  </div>
-                </div>
-              </label>
-
-              {/* Median Option */}
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="averagingMethod"
-                  value="median"
-                  checked={averagingMethod === 'median'}
-                  onChange={(e) => setAveragingMethod(e.target.value as 'trimmed_mean' | 'median')}
-                  className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-ink-100 dark:text-paper-100">
-                      Median
-                    </span>
-                    <InfoTooltip content="Uses the middle value of your level completion times. More resistant to extreme outliers but can be influenced by whether you have slightly more fast or slow levels. May produce less stable long-term projections." />
-                  </div>
-                  <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                    Simple middle-value approach
-                  </div>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Level History Display */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
         <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
@@ -495,10 +355,10 @@ export function Settings() {
                   <span className="text-sm text-ink-100 dark:text-paper-100">
                     Bar Chart (recommended)
                   </span>
-                  <InfoTooltip content="Vertical bars showing days per level with logarithmic scale to handle outliers. Best for visualizing progress patterns and comparing level completion times." />
+                  <InfoTooltip content="Vertical bars showing days per level with capped linear scale. All normal-pace levels are fully visible, while auto-detected breaks (outliers) are capped at your normal range maximum. Provides clear visual comparison of your typical level completion times." />
                 </div>
                 <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                  Vertical bars with logarithmic scale for outliers
+                  Vertical bars with capped linear scale (outliers capped)
                 </div>
               </div>
             </label>

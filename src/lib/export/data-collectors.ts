@@ -129,10 +129,6 @@ export function collectSettings(
       itemsPerPage: settingsStore.itemsPerPage,
       autoRefreshEnabled: settingsStore.autoRefreshEnabled,
       autoRefreshInterval: settingsStore.autoRefreshInterval,
-      useActiveAverage: settingsStore.useActiveAverage,
-      averagingMethod: settingsStore.averagingMethod,
-      useCustomThreshold: settingsStore.useCustomThreshold,
-      customThresholdDays: settingsStore.customThresholdDays,
     }
 
     // Only include API token if explicitly requested (SENSITIVE)

@@ -9,10 +9,6 @@ interface SettingsState {
   itemsPerPage: number
   autoRefreshEnabled: boolean
   autoRefreshInterval: number // seconds
-  useActiveAverage: boolean // default: true
-  averagingMethod: 'trimmed_mean' | 'median' // default: 'trimmed_mean'
-  useCustomThreshold: boolean // default: false
-  customThresholdDays: number // default: 60
   jlptThreshold: SRSThreshold // default: 'guru'
   showHiddenItems: boolean // default: false - show items removed from curriculum
   levelHistoryMode: 'bar-chart' | 'cards' | 'compact-list' // default: 'bar-chart'
@@ -25,10 +21,6 @@ interface SettingsState {
   toggleTheme: () => void
   setItemsPerPage: (count: number) => void
   setAutoRefresh: (enabled: boolean, interval?: number) => void
-  setUseActiveAverage: (value: boolean) => void
-  setAveragingMethod: (method: 'trimmed_mean' | 'median') => void
-  setUseCustomThreshold: (value: boolean) => void
-  setCustomThresholdDays: (days: number) => void
   setJlptThreshold: (threshold: SRSThreshold) => void
   setShowHiddenItems: (value: boolean) => void
   setLevelHistoryMode: (mode: 'bar-chart' | 'cards' | 'compact-list') => void
@@ -45,10 +37,6 @@ export const useSettingsStore = create<SettingsState>()(
       itemsPerPage: 50,
       autoRefreshEnabled: true,
       autoRefreshInterval: 30, // 30 seconds for summary data
-      useActiveAverage: true, // default to active average
-      averagingMethod: 'trimmed_mean', // default to trimmed mean
-      useCustomThreshold: false, // default to OFF
-      customThresholdDays: 60, // default 60 days
       jlptThreshold: 'guru', // default to Guru (SRS 5+)
       showHiddenItems: false, // default to hiding curriculum-removed items
       levelHistoryMode: 'bar-chart', // default to bar chart view
@@ -81,22 +69,6 @@ export const useSettingsStore = create<SettingsState>()(
           autoRefreshEnabled: enabled,
           ...(interval !== undefined && { autoRefreshInterval: interval }),
         })
-      },
-
-      setUseActiveAverage: (value: boolean) => {
-        set({ useActiveAverage: value })
-      },
-
-      setAveragingMethod: (method: 'trimmed_mean' | 'median') => {
-        set({ averagingMethod: method })
-      },
-
-      setUseCustomThreshold: (value: boolean) => {
-        set({ useCustomThreshold: value })
-      },
-
-      setCustomThresholdDays: (days: number) => {
-        set({ customThresholdDays: Math.max(1, Math.min(365, days)) }) // Clamp between 1-365 days
       },
 
       setJlptThreshold: (threshold: SRSThreshold) => {

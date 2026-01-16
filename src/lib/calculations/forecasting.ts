@@ -1,7 +1,7 @@
 // Forecasting and Projection Calculations
-import { addHours, addDays, addMonths, differenceInDays } from 'date-fns'
+import { addHours, addDays, addMonths } from 'date-fns'
 import type { Assignment, LevelProgression } from '@/lib/api/types'
-import { calculateActiveAverage } from './activity-analysis'
+import { analyzeUnifiedLevelData } from './activity-analysis'
 
 export interface ReviewForecast {
   current: number
@@ -21,12 +21,11 @@ export interface ReviewForecast {
 
 export interface Level60Projection {
   expected: Date
-  expectedActive: Date // NEW: projection using active average
   fastTrack: Date
   conservative: Date
   averageDaysPerLevel: number
-  activeDaysPerLevel: number // NEW: active average
   medianDaysPerLevel: number
+  outlierThreshold: number
   fastestLevel: {
     level: number
     days: number
@@ -36,7 +35,6 @@ export interface Level60Projection {
     days: number
   }
   excludedLevels: Array<{
-    // NEW: transparency
     level: number
     days: number
     reason: string
@@ -134,119 +132,94 @@ export function calculateReviewForecast(assignments: Assignment[]): ReviewForeca
 
 /**
  * Project date to reach level 60 based on historical pace
+ * Now using unified MAD analysis - no settings needed!
  */
 export function projectLevel60Date(
   currentLevel: number,
-  levelProgressions: LevelProgression[],
-  averagingMethod: 'trimmed_mean' | 'median' = 'trimmed_mean',
-  useCustomThreshold: boolean = false,
-  customThresholdDays: number = 60
+  levelProgressions: LevelProgression[]
 ): Level60Projection {
   if (currentLevel >= 60) {
     // Already at max level
     return {
       expected: new Date(),
-      expectedActive: new Date(),
       fastTrack: new Date(),
       conservative: new Date(),
       averageDaysPerLevel: 0,
-      activeDaysPerLevel: 0,
       medianDaysPerLevel: 0,
+      outlierThreshold: 0,
       fastestLevel: { level: 60, days: 0 },
       slowestLevel: { level: 60, days: 0 },
       excludedLevels: [],
     }
   }
 
-  // Calculate days per level for completed levels
-  const levelDurations: Array<{ level: number; days: number }> = []
+  // Use unified MAD analysis
+  const analysis = analyzeUnifiedLevelData(levelProgressions)
 
-  for (const progression of levelProgressions) {
-    if (progression.passed_at && progression.unlocked_at) {
-      const unlockedDate = new Date(progression.unlocked_at)
-      const passedDate = new Date(progression.passed_at)
-      const days = differenceInDays(passedDate, unlockedDate)
-
-      if (days >= 0) {
-        levelDurations.push({
-          level: progression.level,
-          days,
-        })
-      }
-    }
-  }
-
-  if (levelDurations.length === 0) {
+  if (analysis.includedLevels.length === 0) {
     // No historical data, use default estimates
     const now = new Date()
     return {
       expected: addMonths(now, (60 - currentLevel) * 0.4), // ~12 days/level
-      expectedActive: addMonths(now, (60 - currentLevel) * 0.4), // ~12 days/level
       fastTrack: addMonths(now, (60 - currentLevel) * 0.27), // ~8 days/level
       conservative: addMonths(now, (60 - currentLevel) * 0.6), // ~18 days/level
       averageDaysPerLevel: 12,
-      activeDaysPerLevel: 12,
       medianDaysPerLevel: 12,
+      outlierThreshold: 0,
       fastestLevel: { level: currentLevel, days: 8 },
       slowestLevel: { level: currentLevel, days: 18 },
       excludedLevels: [],
     }
   }
 
-  // Calculate average days per level
-  const totalDays = levelDurations.reduce((sum, item) => sum + item.days, 0)
-  const averageDaysPerLevel = totalDays / levelDurations.length
-
-  // Calculate active average (excluding breaks) using specified method and threshold
-  const activeResult = calculateActiveAverage(
-    levelProgressions,
-    {
-      absoluteThreshold: customThresholdDays,
-      useCustomThreshold: useCustomThreshold,
-    },
-    averagingMethod
-  )
+  // Calculate average days per level from included levels (trimmed mean)
+  const averageDaysPerLevel = analysis.average
 
   // Calculate median
-  const sortedDurations = [...levelDurations].sort((a, b) => a.days - b.days)
-  const medianDaysPerLevel =
-    sortedDurations[Math.floor(sortedDurations.length / 2)].days
+  const medianDaysPerLevel = analysis.median
 
-  // Find fastest and slowest
-  const fastestLevel = sortedDurations[0]
-  const slowestLevel = sortedDurations[sortedDurations.length - 1]
+  // Find fastest and slowest from included levels
+  const sortedIncluded = [...analysis.includedLevels].sort((a, b) => a.days - b.days)
+  const fastestLevel = {
+    level: sortedIncluded[0].level,
+    days: sortedIncluded[0].days,
+  }
+  const slowestLevel = {
+    level: sortedIncluded[sortedIncluded.length - 1].level,
+    days: sortedIncluded[sortedIncluded.length - 1].days,
+  }
 
   // Calculate projections
   const levelsRemaining = 60 - currentLevel
   const now = new Date()
 
-  // Use total average for "expected"
+  // Use trimmed mean for expected
   const expected = addDays(now, Math.round(averageDaysPerLevel * levelsRemaining))
-
-  // Use active average for "expectedActive"
-  const expectedActive = addDays(
-    now,
-    Math.round(activeResult.activeAverage * levelsRemaining)
-  )
 
   // Fast track: 8 days per level (WK speed run pace)
   const fastTrack = addDays(now, 8 * levelsRemaining)
 
-  // Conservative: Use active average * 1.5
-  const conservativePace = Math.max(activeResult.activeAverage * 1.5, 18)
+  // Conservative: Use trimmed mean * 1.5
+  const conservativePace = Math.max(averageDaysPerLevel * 1.5, 18)
   const conservative = addDays(now, Math.round(conservativePace * levelsRemaining))
+
+  // Format excluded levels for display
+  const excludedLevels = analysis.excludedLevels.map(level => ({
+    level: level.level,
+    days: level.days,
+    reason: 'Auto-detected break (statistical outlier)',
+  }))
 
   return {
     expected,
-    expectedActive,
     fastTrack,
     conservative,
     averageDaysPerLevel: Math.round(averageDaysPerLevel * 10) / 10,
-    activeDaysPerLevel: activeResult.activeAverage,
     medianDaysPerLevel,
+    outlierThreshold: analysis.outlierThreshold,
     fastestLevel,
     slowestLevel,
-    excludedLevels: activeResult.excludedLevels,
+    excludedLevels,
   }
 }
 

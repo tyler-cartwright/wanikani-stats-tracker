@@ -1,43 +1,22 @@
-import { differenceInDays } from 'date-fns'
 import { cn } from '@/lib/utils/cn'
 import { useUser, useLevelProgressions } from '@/lib/api/queries'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
-import { calculateActiveAverage } from '@/lib/calculations/activity-analysis'
+import { analyzeUnifiedLevelData } from '@/lib/calculations/activity-analysis'
 import { formatDurationCompact } from '@/lib/calculations/level-progress'
+import { InfoTooltip } from '@/components/shared/info-tooltip'
 
 interface LevelData {
   level: number
   days: number | null // null for current level
   durationFormatted: string | null // formatted duration with hours for historical levels
-  pace: 'fast' | 'good' | 'slow' | 'very-slow'
+  pace: 'fast' | 'good' | 'slow' | 'very-slow' | 'break'
 }
 
-// Calculate standard deviation
-function calculateStdDev(values: number[], mean: number): number {
-  if (values.length === 0) return 0
-  const squareDiffs = values.map((value) => Math.pow(value - mean, 2))
-  const avgSquareDiff = squareDiffs.reduce((sum, val) => sum + val, 0) / values.length
-  return Math.sqrt(avgSquareDiff)
-}
-
-// Determine pace using statistical approach (standard deviation)
-function determinePace(
-  days: number,
-  mean: number,
-  stdDev: number
-): 'fast' | 'good' | 'slow' | 'very-slow' {
-  if (days < mean - 0.5 * stdDev) return 'fast'
-  if (days > mean + 1.5 * stdDev) return 'very-slow'
-  if (days > mean + 0.5 * stdDev) return 'slow'
-  return 'good'
-}
-
-// Bar Chart View with logarithmic scale
-function BarChartView({ levelData, maxDays }: { levelData: LevelData[]; maxDays: number }) {
+// Bar Chart View with capped linear scale
+function BarChartView({ levelData, capDays }: { levelData: LevelData[]; capDays: number }) {
   const containerHeight = 400
-  const logScale = (days: number) => Math.log(days + 1) // +1 to handle 0
-  const maxLog = logScale(maxDays)
+  const maxBarHeight = containerHeight - 40
 
   return (
     <>
@@ -45,8 +24,10 @@ function BarChartView({ levelData, maxDays }: { levelData: LevelData[]; maxDays:
       <div className="relative overflow-x-auto pb-2">
         <div className="flex items-end gap-1 min-w-full" style={{ height: `${containerHeight}px` }}>
           {levelData.map((level) => {
-            const barHeight =
-              level.days !== null ? (logScale(level.days) / maxLog) * (containerHeight - 40) : 0
+            // Linear scale capped at capDays
+            const isCapped = level.days !== null && level.days > capDays
+            const effectiveDays = isCapped ? capDays : (level.days ?? 0)
+            const barHeight = level.days !== null ? (effectiveDays / capDays) * maxBarHeight : 0
 
             // Smart tooltip positioning - show below bar if it's too tall
             const isTallBar = barHeight > containerHeight - 80
@@ -68,19 +49,27 @@ function BarChartView({ levelData, maxDays }: { levelData: LevelData[]; maxDays:
                         )}
                       >
                         {level.durationFormatted}
+                        {isCapped && ' (capped)'}
                       </div>
 
                       {/* Vertical bar */}
                       <div
                         className={cn(
-                          'w-full rounded-t-md transition-all duration-slow ease-out group-hover:opacity-80',
-                          level.pace === 'fast' && 'bg-patina-600 dark:bg-patina-500',
+                          'w-full transition-all duration-slow ease-out group-hover:opacity-80 relative',
+                          level.pace === 'fast' && 'bg-srs-guru',
                           level.pace === 'good' && 'bg-patina-500 dark:bg-patina-400',
                           level.pace === 'slow' && 'bg-ochre',
-                          level.pace === 'very-slow' && 'bg-vermillion-500 dark:bg-vermillion-400'
+                          level.pace === 'very-slow' && 'bg-vermillion-500 dark:bg-vermillion-400',
+                          level.pace === 'break' && 'bg-ink-400 dark:bg-paper-400',
+                          isCapped ? 'rounded-t-sm' : 'rounded-t-md'
                         )}
                         style={{ height: `${barHeight}px` }}
-                      />
+                      >
+                        {/* Capped indicator - gradient fade at top */}
+                        {isCapped && (
+                          <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-white/40 dark:from-black/40 to-transparent rounded-t-sm" />
+                        )}
+                      </div>
                     </>
                   ) : (
                     // Current level indicator
@@ -109,7 +98,7 @@ function BarChartView({ levelData, maxDays }: { levelData: LevelData[]; maxDays:
 
       {/* Y-axis indicator */}
       <div className="text-xs text-ink-400 dark:text-paper-300 mt-2 text-right">
-        Max: {maxDays} days · Scale: logarithmic
+        Max: {capDays} days (normal range) · Outliers capped
       </div>
     </>
   )
@@ -127,13 +116,15 @@ function CardsView({ levelData }: { levelData: LevelData[] }) {
             level.days === null &&
               'border-vermillion-500',
             level.days !== null && level.pace === 'fast' &&
-              'border-patina-600 dark:border-patina-500',
+              'border-srs-guru',
             level.days !== null && level.pace === 'good' &&
               'border-patina-500 dark:border-patina-400',
             level.days !== null && level.pace === 'slow' &&
               'border-ochre',
             level.days !== null && level.pace === 'very-slow' &&
-              'border-vermillion-500 dark:border-vermillion-400'
+              'border-vermillion-500 dark:border-vermillion-400',
+            level.days !== null && level.pace === 'break' &&
+              'border-ink-400 dark:border-paper-400'
           )}
         >
           <div className="text-xs font-semibold text-ink-100 dark:text-paper-100">
@@ -143,10 +134,11 @@ function CardsView({ levelData }: { levelData: LevelData[] }) {
             className={cn(
               'text-sm font-bold tabular-nums',
               level.days === null && 'text-vermillion-500',
-              level.days !== null && level.pace === 'fast' && 'text-patina-700 dark:text-patina-400',
+              level.days !== null && level.pace === 'fast' && 'text-srs-guru',
               level.days !== null && level.pace === 'good' && 'text-patina-600 dark:text-patina-500',
               level.days !== null && level.pace === 'slow' && 'text-ochre',
-              level.days !== null && level.pace === 'very-slow' && 'text-vermillion-600 dark:text-vermillion-400'
+              level.days !== null && level.pace === 'very-slow' && 'text-vermillion-600 dark:text-vermillion-400',
+              level.days !== null && level.pace === 'break' && 'text-ink-400 dark:text-paper-400'
             )}
           >
             {level.durationFormatted ?? '...'}
@@ -169,13 +161,15 @@ function CompactListView({ levelData }: { levelData: LevelData[] }) {
             level.days === null &&
               'bg-vermillion-500 text-white',
             level.days !== null && level.pace === 'fast' &&
-              'bg-patina-600 text-white dark:bg-patina-500',
+              'bg-srs-guru text-white',
             level.days !== null && level.pace === 'good' &&
               'bg-patina-500 text-white dark:bg-patina-400',
             level.days !== null && level.pace === 'slow' &&
               'bg-ochre text-ink-100 dark:text-ink-100',
             level.days !== null && level.pace === 'very-slow' &&
-              'bg-vermillion-500 text-white dark:bg-vermillion-400'
+              'bg-vermillion-500 text-white dark:bg-vermillion-400',
+            level.days !== null && level.pace === 'break' &&
+              'bg-ink-400 text-white dark:bg-paper-400 dark:text-ink-100'
           )}
         >
           {level.level}: {level.durationFormatted ?? '...'}
@@ -189,75 +183,57 @@ export function LevelTimeline() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
   const isSyncing = useSyncStore((state) => state.isSyncing)
-  const useActiveAverage = useSettingsStore((state) => state.useActiveAverage)
-  const averagingMethod = useSettingsStore((state) => state.averagingMethod)
-  const useCustomThreshold = useSettingsStore((state) => state.useCustomThreshold)
-  const customThresholdDays = useSettingsStore((state) => state.customThresholdDays)
   const levelHistoryMode = useSettingsStore((state) => state.levelHistoryMode)
 
   const isLoading = userLoading || progressionsLoading || isSyncing
 
-  // Calculate level data from progressions
+  // Calculate level data from progressions using unified MAD analysis
   const levelData: LevelData[] = []
   let avgDays = 0
-  let stdDev = 0
   let fastestDays = 0
   let slowestDays = 0
+  let includedCount = 0
+  let outlierThreshold = 0
+  let excludedCount = 0
 
   if (levelProgressions && user) {
-    // First pass: calculate days for completed levels
-    const completedLevels: Array<{ level: number; days: number; milliseconds: number }> = []
+    // Use unified MAD analysis
+    const analysis = analyzeUnifiedLevelData(levelProgressions)
+    avgDays = analysis.average
+    outlierThreshold = analysis.outlierThreshold
+    excludedCount = analysis.excludedLevels.length
 
-    for (const progression of levelProgressions) {
-      if (progression.passed_at && progression.unlocked_at) {
+    // Add all completed levels with pace
+    for (const included of analysis.includedLevels) {
+      levelData.push({
+        level: included.level,
+        days: included.days,
+        durationFormatted: formatDurationCompact(included.milliseconds),
+        pace: included.pace,
+      })
+    }
+
+    // Add excluded levels as breaks
+    for (const excluded of analysis.excludedLevels) {
+      // Find the milliseconds for this level
+      const progression = levelProgressions.find(p => p.level === excluded.level)
+      let milliseconds = 0
+      if (progression?.passed_at && progression?.unlocked_at) {
         const unlockedDate = new Date(progression.unlocked_at)
         const passedDate = new Date(progression.passed_at)
-        const days = differenceInDays(passedDate, unlockedDate)
-        if (days >= 0) {
-          completedLevels.push({
-            level: progression.level,
-            days,
-            milliseconds: passedDate.getTime() - unlockedDate.getTime()
-          })
-        }
+        milliseconds = passedDate.getTime() - unlockedDate.getTime()
       }
-    }
 
-    // Calculate average for pace determination using settings
-    if (useActiveAverage && completedLevels.length > 0) {
-      // Use active average with settings
-      const activeResult = calculateActiveAverage(
-        levelProgressions,
-        {
-          absoluteThreshold: customThresholdDays,
-          useCustomThreshold: useCustomThreshold,
-        },
-        averagingMethod
-      )
-      avgDays = activeResult.activeAverage
-    } else {
-      // Use simple average
-      avgDays = completedLevels.length > 0
-        ? completedLevels.reduce((sum, l) => sum + l.days, 0) / completedLevels.length
-        : 12
-    }
-
-    // Calculate standard deviation
-    const daysArray = completedLevels.map(l => l.days)
-    stdDev = calculateStdDev(daysArray, avgDays)
-
-    // Add completed levels with pace
-    for (const { level, days, milliseconds } of completedLevels) {
       levelData.push({
-        level,
-        days,
+        level: excluded.level,
+        days: excluded.days,
         durationFormatted: formatDurationCompact(milliseconds),
-        pace: determinePace(days, avgDays, stdDev),
+        pace: 'break',
       })
     }
 
     // Add current level
-    if (user.level > 0 && !completedLevels.some(l => l.level === user.level)) {
+    if (user.level > 0 && !levelData.some(l => l.level === user.level)) {
       levelData.push({
         level: user.level,
         days: null,
@@ -271,6 +247,7 @@ export function LevelTimeline() {
 
     // Calculate stats for display
     const displayLevels = levelData.filter((l) => l.days !== null)
+    includedCount = analysis.includedLevels.length
     fastestDays = displayLevels.length > 0
       ? Math.min(...displayLevels.map((l) => l.days || Infinity))
       : 0
@@ -320,7 +297,7 @@ export function LevelTimeline() {
 
         {/* Legend */}
         <div className="flex flex-wrap gap-3 sm:gap-4 mt-6">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-4 w-20 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
           ))}
         </div>
@@ -339,19 +316,19 @@ export function LevelTimeline() {
       </h2>
 
       {/* Stats */}
-      <div className="flex flex-wrap gap-6 mb-8 text-sm">
+      <div className="flex flex-wrap gap-6 mb-6 text-sm">
         <div>
           <span className="text-ink-400 dark:text-paper-300">Average:</span>{' '}
           <span className="text-ink-100 dark:text-paper-100 font-semibold">{Math.round(avgDays)} days</span>
-          {useActiveAverage && (
+          {includedCount > 0 && (
             <span className="text-xs text-ink-400 dark:text-paper-300 ml-1">
-              ({averagingMethod === 'median' ? 'median' : 'trimmed'})
+              (of {includedCount} levels)
             </span>
           )}
         </div>
         <div>
           <span className="text-ink-400 dark:text-paper-300">Fastest:</span>{' '}
-          <span className="text-patina-600 dark:text-patina-500 font-semibold">{fastestDays} days</span>
+          <span className="text-srs-guru font-semibold">{fastestDays} days</span>
         </div>
         <div>
           <span className="text-ink-400 dark:text-paper-300">Slowest:</span>{' '}
@@ -359,36 +336,60 @@ export function LevelTimeline() {
         </div>
       </div>
 
+      {/* Automatic break detection info - only show if there are excluded levels */}
+      {excludedCount > 0 && (
+        <div className="mb-8 p-3 bg-paper-300/50 dark:bg-ink-300/50 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-ink-100 dark:text-paper-100">
+            <div className="w-3 h-3 bg-ink-400 dark:bg-paper-400 rounded-sm flex-shrink-0" />
+            <span className="font-medium">
+              {excludedCount} {excludedCount === 1 ? 'level' : 'levels'} auto-detected as {excludedCount === 1 ? 'a break' : 'breaks'}
+            </span>
+            <InfoTooltip content={`Levels longer than ${Math.round(outlierThreshold)} days are automatically detected as breaks using statistical analysis (MAD - Median Absolute Deviation). These are shown in gray and excluded from your average to give you a more accurate picture of your active learning pace.`} />
+          </div>
+        </div>
+      )}
+
       {/* Visualization - conditional based on mode */}
       {(() => {
-        const maxDays = Math.max(...levelData.filter((l) => l.days !== null).map((l) => l.days || 0))
+        // Calculate cap as maximum of included (non-break) levels
+        // This ensures all colored bars fit naturally, only gray bars overflow
+        const includedLevelDays = levelData
+          .filter((l) => l.days !== null && l.pace !== 'break')
+          .map((l) => l.days || 0)
+        const capDays = includedLevelDays.length > 0
+          ? Math.max(...includedLevelDays)
+          : 30 // Fallback if no included levels
 
         return (
           <div className="relative">
-            {levelHistoryMode === 'bar-chart' && <BarChartView levelData={levelData} maxDays={maxDays} />}
+            {levelHistoryMode === 'bar-chart' && <BarChartView levelData={levelData} capDays={capDays} />}
             {levelHistoryMode === 'cards' && <CardsView levelData={levelData} />}
             {levelHistoryMode === 'compact-list' && <CompactListView levelData={levelData} />}
           </div>
         )
       })()}
 
-      {/* Legend - Traffic light system */}
+      {/* Legend - Pace indicators */}
       <div className="flex flex-wrap gap-4 mt-6 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-2 bg-patina-600 dark:bg-patina-500 rounded-full" />
-          <span className="text-ink-400 dark:text-paper-300">Fast (&lt; avg - 0.5σ)</span>
+          <div className="w-4 h-2 bg-srs-guru rounded-full" />
+          <span className="text-ink-400 dark:text-paper-300">Fast - Much quicker than your average</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-2 bg-patina-500 dark:bg-patina-400 rounded-full" />
-          <span className="text-ink-400 dark:text-paper-300">Good (within ±0.5σ)</span>
+          <span className="text-ink-400 dark:text-paper-300">Good - Near your typical pace</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-2 bg-ochre rounded-full" />
-          <span className="text-ink-400 dark:text-paper-300">Slow (avg + 0.5σ to 1.5σ)</span>
+          <span className="text-ink-400 dark:text-paper-300">Slow - Taking longer than usual</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-2 bg-vermillion-500 dark:bg-vermillion-400 rounded-full" />
-          <span className="text-ink-400 dark:text-paper-300">Very Slow (&gt; avg + 1.5σ)</span>
+          <span className="text-ink-400 dark:text-paper-300">Very Slow - Significantly slower</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-2 bg-ink-400 dark:bg-paper-400 rounded-full" />
+          <span className="text-ink-400 dark:text-paper-300">Break - Auto-excluded from average</span>
         </div>
       </div>
     </div>

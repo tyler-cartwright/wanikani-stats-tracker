@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.13.1
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.14.0
 
 ---
 
@@ -67,7 +67,6 @@ Understand your performance patterns:
 Full control over your data and preferences:
 - **Data Export**: Export complete WaniKani data as JSON or leeches as CSV
 - **Sync Management**: Force full sync, view last sync status
-- **Calculation Preferences**: Active learning averages, averaging methods (trimmed mean vs median)
 - **Display Options**: Dark/light mode, level history visualization, grid display settings
 - **Privacy**: Disconnect and clear all local data anytime
 

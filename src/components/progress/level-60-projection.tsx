@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils/cn'
 import { useUser, useLevelProgressions } from '@/lib/api/queries'
 import { projectLevel60Date } from '@/lib/calculations/forecasting'
 import { useSyncStore } from '@/stores/sync-store'
-import { useSettingsStore } from '@/stores/settings-store'
 import { Modal } from '@/components/shared/modal'
 
 interface Scenario {
@@ -23,32 +22,17 @@ export function Level60Projection() {
   const [showExcludedLevels, setShowExcludedLevels] = useState(false)
   const [selectedScenario, setSelectedScenario] = useState<'fast' | 'expected' | 'conservative'>('expected')
   const isSyncing = useSyncStore((state) => state.isSyncing)
-  const useActiveAverage = useSettingsStore((state) => state.useActiveAverage)
-  const averagingMethod = useSettingsStore((state) => state.averagingMethod)
-  const useCustomThreshold = useSettingsStore((state) => state.useCustomThreshold)
-  const customThresholdDays = useSettingsStore((state) => state.customThresholdDays)
 
   const isLoading = userLoading || progressionsLoading || isSyncing
 
-  // Calculate projection with selected averaging method and threshold settings
+  // Calculate projection using unified MAD analysis
   const projection = user && levelProgressions
-    ? projectLevel60Date(
-        user.level,
-        levelProgressions,
-        averagingMethod,
-        useCustomThreshold,
-        customThresholdDays
-      )
+    ? projectLevel60Date(user.level, levelProgressions)
     : null
 
-  // Use setting to determine which average to use
-  const primaryDate = projection ? (useActiveAverage ? projection.expectedActive : projection.expected) : null
-  const primaryPace = projection ? (useActiveAverage ? projection.activeDaysPerLevel : projection.averageDaysPerLevel) : 0
-
-  // Calculate conservative date based on selected pace
-  const conservativeDate = user && projection
-    ? addDays(new Date(), Math.round(primaryPace * 1.5 * (60 - user.level)))
-    : null
+  // Use the trimmed mean from unified analysis
+  const primaryDate = projection ? projection.expected : null
+  const primaryPace = projection ? projection.averageDaysPerLevel : 0
 
   // Calculate pace based on selected scenario
   const selectedPace = projection
@@ -127,8 +111,8 @@ export function Level60Projection() {
     ? levelProgressions.filter(p => p.passed_at && p.unlocked_at).length
     : 0
 
-  // Build scenarios based on selected average
-  const scenarios: Scenario[] = projection && primaryDate && conservativeDate
+  // Build scenarios
+  const scenarios: Scenario[] = projection && primaryDate
     ? [
         {
           icon: Rocket,
@@ -141,9 +125,7 @@ export function Level60Projection() {
         {
           icon: TrendingUp,
           label: 'Expected',
-          description: useActiveAverage
-            ? 'Based on active learning pace (excludes breaks)'
-            : 'Based on all completed levels',
+          description: 'Based on your trimmed mean pace (auto-excludes breaks)',
           date: primaryDate,
           pace: `${Math.round(primaryPace)} days/level`,
           color: 'text-ink-100 dark:text-paper-100',
@@ -152,7 +134,7 @@ export function Level60Projection() {
           icon: Turtle,
           label: 'Conservative',
           description: '50% slower than your current pace',
-          date: conservativeDate,
+          date: projection.conservative,
           pace: `${Math.round(primaryPace * 1.5)} days/level`,
           color: 'text-ink-400 dark:text-paper-300',
         },
@@ -266,10 +248,8 @@ export function Level60Projection() {
         {/* Method indicator - small, subtle */}
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap items-center justify-center gap-1.5 text-xs text-ink-400 dark:text-paper-300 bg-paper-300/50 dark:bg-ink-300/50 px-3 py-1 rounded-full">
-            <span>{useActiveAverage ? 'Active pace' : 'All levels'}</span>
-            <span className="w-1 h-1 rounded-full bg-ink-400/40 dark:bg-paper-300/40" aria-hidden="true" />
-            <span>{averagingMethod === 'median' ? 'Median' : 'Trimmed mean'}</span>
-            {useActiveAverage && projection.excludedLevels.length > 0 && (
+            <span>Trimmed mean</span>
+            {projection && projection.excludedLevels.length > 0 && (
               <>
                 <span className="w-1 h-1 rounded-full bg-ink-400/40 dark:bg-paper-300/40" aria-hidden="true" />
                 <span>{completedLevels - projection.excludedLevels.length} levels</span>
@@ -491,25 +471,39 @@ export function Level60Projection() {
       >
         <div className="p-6">
           <h3 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-            Filtered Levels
+            Auto-Detected Breaks
           </h3>
-          <p className="text-sm text-ink-400 dark:text-paper-300 mb-6">
-            These levels were excluded from your active average to provide a more accurate
-            learning pace estimate:
-          </p>
+
+          {/* Explanation box */}
+          <div className="mb-6 p-4 bg-patina-500/10 dark:bg-patina-400/10 border border-patina-500/20 dark:border-patina-400/20 rounded-lg">
+            <p className="text-sm text-ink-100 dark:text-paper-100 mb-2">
+              <strong>How it works:</strong> Using statistical analysis (MAD - Median Absolute Deviation),
+              the app automatically identifies unusually long levels as breaks.
+            </p>
+            <p className="text-sm text-ink-400 dark:text-paper-300">
+              Levels longer than <strong className="text-ink-100 dark:text-paper-100">{Math.round(projection.outlierThreshold)} days</strong> are
+              excluded from your average to show your true active learning pace.
+            </p>
+          </div>
+
+          {/* Excluded levels list */}
           <div className="space-y-3 mb-6">
             {projection.excludedLevels.map((level) => (
               <div
                 key={level.level}
-                className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 text-sm p-3 bg-paper-300 dark:bg-ink-300 rounded"
+                className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-4 text-sm p-3 bg-paper-300 dark:bg-ink-300 rounded"
               >
                 <span className="text-ink-100 dark:text-paper-100 font-medium">Level {level.level}</span>
-                <span className="text-ink-400 dark:text-paper-300">
-                  {level.days} days · {level.reason}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-ink-400 dark:text-paper-300">{level.days} days</span>
+                  <span className="text-xs text-ink-400 dark:text-paper-300 opacity-75">
+                    ({level.days - Math.round(projection.outlierThreshold)}d over threshold)
+                  </span>
+                </div>
               </div>
             ))}
           </div>
+
           <button
             onClick={() => setShowExcludedLevels(false)}
             className="w-full px-4 py-2 text-sm font-medium rounded-md bg-vermillion-500 hover:bg-vermillion-600 text-paper-100 dark:text-ink-100 transition-smooth focus-ring"
