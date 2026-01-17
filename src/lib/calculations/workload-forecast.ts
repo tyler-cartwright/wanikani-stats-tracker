@@ -7,6 +7,7 @@ import {
   getNextStageOnIncorrect,
   isActiveStage,
 } from './srs-intervals'
+import { SeededRandom, createForecastSeed } from '@/lib/utils/seeded-random'
 
 export interface DailyForecast {
   date: Date
@@ -59,6 +60,7 @@ export interface WorkloadForecastInput {
   reviewStatistics: ReviewStatistic[]
   lessonsPerDay: number
   forecastDays?: number
+  userId: string
 }
 
 /**
@@ -93,7 +95,8 @@ function projectItemReviews(
   userAccuracy: number,
   dailyBuckets: Map<string, { existing: number; newLessons: number }>,
   forecastEndDate: Date,
-  isNewLesson: boolean
+  isNewLesson: boolean,
+  rng: SeededRandom
 ) {
   let currentDate = new Date(startDate)
   let currentStage = initialStage
@@ -118,8 +121,8 @@ function projectItemReviews(
       bucket.existing++
     }
 
-    // Determine if user passes or fails (probabilistic)
-    const passes = Math.random() < userAccuracy
+    // Determine if user passes or fails (deterministic based on seed)
+    const passes = rng.next() < userAccuracy
 
     if (passes) {
       // Correct answer: move to next stage
@@ -179,15 +182,19 @@ function calculateStabilizationPoint(dailyForecast: DailyForecast[]): number | n
 export function calculateWorkloadForecast(
   input: WorkloadForecastInput
 ): WorkloadForecastResult {
-  const { assignments, reviewStatistics, lessonsPerDay, forecastDays = 30 } = input
+  const { assignments, reviewStatistics, lessonsPerDay, forecastDays = 30, userId } = input
 
   // Calculate user's accuracy rate
   const userAccuracy = calculateUserAccuracy(reviewStatistics)
 
+  // Create deterministic RNG for consistent forecasts
+  const now = new Date()
+  const seed = createForecastSeed(userId, now, lessonsPerDay)
+  const rng = new SeededRandom(seed)
+
   // Initialize daily buckets
   const dailyBuckets = new Map<string, { existing: number; newLessons: number }>()
 
-  const now = new Date()
   const forecastEndDate = addDays(startOfDay(now), forecastDays)
 
   // Project existing assignments
@@ -206,7 +213,8 @@ export function calculateWorkloadForecast(
         userAccuracy,
         dailyBuckets,
         forecastEndDate,
-        false // Not a new lesson
+        false, // Not a new lesson
+        rng
       )
     }
   }
@@ -223,7 +231,8 @@ export function calculateWorkloadForecast(
         userAccuracy,
         dailyBuckets,
         forecastEndDate,
-        true // Is a new lesson
+        true, // Is a new lesson
+        rng
       )
     }
   }

@@ -5,6 +5,75 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.16.0] - 2026-01-17
+
+### Changed
+- **Forecast Page: Streamlined Interface & Metrics Simplification**
+  - Removed speculative metrics: Peak Day and Stabilization cards
+  - Removed redundant Workload Breakdown section (info available in chart tooltips)
+  - Simplified metrics to two essential cards: Average Daily and Total Reviews
+  - Retained all critical information in existing tooltips and chart visualizations
+  - Cleaner, more focused interface prioritizing actionable data
+
+- **Forecast Page: Removed Peak Day Highlighting**
+  - Removed red highlighting from peak days in workload chart (both daily and weekly views)
+  - All chart bars now use consistent green color scheme for better visual clarity
+  - Dark green: Reviews from existing items in queue
+  - Light green: Reviews from new lessons
+  - Removed "(Peak)" suffix from date/week labels in hover tooltips
+  - Updated main chart tooltip to remove peak day reference
+
+- **Forecast Page: Improved Layout & Visual Balance**
+  - Reorganized top section into balanced two-column layout
+  - Left column: Lesson Pace selector (full height)
+  - Right column: Two metric cards (top row) + Level Progression card (bottom row, grows to fill space)
+  - Equal-height columns on desktop for improved visual hierarchy
+  - Maintains single-column stack on mobile
+
+### Added
+- **Forecast Consistency: Deterministic Seeded RNG**
+  - Implemented seeded random number generator (Mulberry32 algorithm) for forecast calculations
+  - Forecasts now stable between page refreshes for identical settings
+  - Seed based on: User ID + current date + lesson pace
+  - Forecasts still update daily as real progress happens and when settings change
+  - Maintains realistic probabilistic simulation while providing trustworthy, consistent predictions
+  - Eliminates confusing variation in metrics (Average Daily, Total Reviews) on refresh
+
+### Technical
+- Created `src/lib/utils/seeded-random.ts`:
+  - `SeededRandom` class implementing Mulberry32 algorithm
+  - `createForecastSeed()` function for deterministic seed generation
+- Updated `src/lib/calculations/workload-forecast.ts`:
+  - Added `userId` parameter to `WorkloadForecastInput` interface
+  - Modified `projectItemReviews()` to accept and use `SeededRandom` instance
+  - Replaced `Math.random()` with seeded RNG for pass/fail simulation
+  - Creates deterministic RNG based on user ID, date, and lesson pace
+- Updated `src/pages/forecast.tsx`:
+  - Removed `WorkloadBreakdown` component import and usage
+  - Added `user.id` parameter to forecast calculation
+  - Reorganized layout with nested grid structure for equal-height columns
+  - Added `className` prop support to LessonPaceSelector and LevelProgressionCard
+- Updated `src/components/forecast/forecast-metrics.tsx`:
+  - Removed Peak Day card (previously lines 34-46)
+  - Removed Stabilization card (previously lines 60-85)
+  - Reduced loading skeleton from 4 to 2 cards
+  - Simplified grid to `grid-cols-2` (removed responsive 1-col)
+  - Removed unused `date-fns` import
+- Updated `src/components/forecast/workload-chart.tsx`:
+  - Removed `getBarColor()` function that applied peak/intensity coloring
+  - Simplified bar colors to consistent green scheme
+  - Removed all `isPeak` and `isPeakWeek` variables and conditional checks
+  - Removed red/ochre highlighting from bars and labels (daily and weekly views)
+  - Removed "(Peak)" from tooltip text
+  - Updated main InfoTooltip to remove "Peak days are highlighted in red." reference
+- Updated `src/components/forecast/level-progression-card.tsx`:
+  - Added `className` prop support for flex layout compatibility
+  - Applied className to both loading and content states using `cn()` utility
+- Updated `src/components/forecast/lesson-pace-selector.tsx`:
+  - Added `className` prop support for height control
+  - Applied className to both loading and content states using `cn()` utility
+- Deleted `src/components/forecast/workload-breakdown.tsx` (no longer used)
+
 ## [2.15.0] - 2026-01-17
 
 ### Added
@@ -1251,6 +1320,14 @@ WaniTrack v2.0.0 - Complete WaniKani statistics tracker and analytics platform.
 
 ## Version History Summary
 
+- **2.16.0** (Jan 17, 2026) - Forecast page streamlined: removed Peak Day/Stabilization/Breakdown, deterministic seeded RNG
+- **2.15.0** (Jan 17, 2026) - Progress page auto-detect breaks toggle, UX polish, settings reorganization
+- **2.14.0** (Jan 16, 2026) - Progress page MAD-based statistical analysis, capped linear scale, fast levels now blue
+- **2.13.0** (Jan 15, 2026) - Accuracy page leech focus toggle, simplified UX without separate leeches page
+- **2.12.0** (Jan 14, 2026) - Leeches page standalone feature with severity calculation, confusion pairs, root causes
+- **2.11.0** (Jan 13, 2026) - Settings page complete redesign with sectioned layout
+- **2.10.0** (Jan 12, 2026) - Kanji grid interactive filtering, accuracy distribution breakdown, navbar polish
+- **2.9.0** (Jan 11, 2026) - Dashboard review forecast rework with hourly breakdown, item detail modal accuracy improvements
 - **2.8.1** (Dec 14, 2025) - Fixed Accuracy Distribution skeleton loading state
 - **2.8.0** (Dec 14, 2025) - Progress page enhancement: Knowledge Stability, Burn Velocity, Milestone Timeline
 - **2.7.0** (Dec 14, 2025) - Readiness hero redesign, hidden items filter, UX improvements

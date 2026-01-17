@@ -8,7 +8,6 @@ import { LessonPaceSelector } from '@/components/forecast/lesson-pace-selector'
 import { ForecastMetrics } from '@/components/forecast/forecast-metrics'
 import { LevelProgressionCard } from '@/components/forecast/level-progression-card'
 import { WorkloadChart } from '@/components/forecast/workload-chart'
-import { WorkloadBreakdown } from '@/components/forecast/workload-breakdown'
 
 export function Forecast() {
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
@@ -27,15 +26,16 @@ export function Forecast() {
 
   // Calculate forecast with memoization for performance
   const forecast = useMemo(() => {
-    if (!assignments || !reviewStatistics) return null
+    if (!assignments || !reviewStatistics || !user) return null
 
     return calculateWorkloadForecast({
       assignments,
       reviewStatistics,
       lessonsPerDay,
       forecastDays,
+      userId: user.id,
     })
-  }, [assignments, reviewStatistics, lessonsPerDay, forecastDays])
+  }, [assignments, reviewStatistics, lessonsPerDay, forecastDays, user])
 
   // Calculate level progression forecast
   const levelProgression = useMemo(() => {
@@ -83,29 +83,30 @@ export function Forecast() {
         </div>
       )}
 
-      {/* Lesson Pace Selector + Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Lesson Pace Selector + Metrics + Level Progression */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6 lg:items-stretch">
         <LessonPaceSelector
           lessonsPerDay={lessonsPerDay}
           onLessonsChange={setLessonsPerDay}
           forecastDays={forecastDays}
           onForecastDaysChange={setForecastDays}
           isLoading={isLoading}
+          className="h-full"
         />
-        <ForecastMetrics
-          metrics={forecast?.metrics || null}
-          isLoading={isLoading}
-          forecastDays={forecastDays}
-          className="lg:col-span-2"
-        />
+        <div className="flex flex-col gap-6 h-full">
+          <ForecastMetrics
+            metrics={forecast?.metrics || null}
+            isLoading={isLoading}
+            forecastDays={forecastDays}
+          />
+          <LevelProgressionCard
+            result={levelProgression}
+            isLoading={isLoading}
+            forecastDays={forecastDays}
+            className="flex-1"
+          />
+        </div>
       </div>
-
-      {/* Level Progression */}
-      <LevelProgressionCard
-        result={levelProgression}
-        isLoading={isLoading}
-        forecastDays={forecastDays}
-      />
 
       {/* Chart */}
       <WorkloadChart
@@ -115,13 +116,6 @@ export function Forecast() {
         forecastDays={forecastDays}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-      />
-
-      {/* Breakdown */}
-      <WorkloadBreakdown
-        breakdown={forecast?.breakdown || null}
-        isLoading={isLoading}
-        forecastDays={forecastDays}
       />
     </div>
   )

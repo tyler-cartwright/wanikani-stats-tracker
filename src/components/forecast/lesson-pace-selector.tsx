@@ -8,6 +8,7 @@ interface LessonPaceSelectorProps {
   forecastDays: number
   onForecastDaysChange: (value: number) => void
   isLoading?: boolean
+  className?: string
 }
 
 const PRESET_PACES = [0, 5, 10, 15, 20]
@@ -19,6 +20,7 @@ export function LessonPaceSelector({
   forecastDays,
   onForecastDaysChange,
   isLoading = false,
+  className,
 }: LessonPaceSelectorProps) {
   const [customPaceValue, setCustomPaceValue] = useState('')
   const [isCustomPaceMode, setIsCustomPaceMode] = useState(
@@ -76,7 +78,7 @@ export function LessonPaceSelector({
 
   if (isLoading) {
     return (
-      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+      <div className={cn("bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm", className)}>
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-4" />
         <div className="space-y-3 mb-6">
           <div className="flex gap-2">
@@ -102,7 +104,7 @@ export function LessonPaceSelector({
   }
 
   return (
-    <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+    <div className={cn("bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm", className)}>
       {/* Lesson Pace Section */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-4">
