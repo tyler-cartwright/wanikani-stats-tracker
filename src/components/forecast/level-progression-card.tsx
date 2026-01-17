@@ -1,17 +1,19 @@
 import { TrendingUp, PartyPopper } from 'lucide-react'
 import type { LevelProgressionForecastResult } from '@/lib/calculations/level-progression-forecast'
 import { InfoTooltip } from '@/components/shared/info-tooltip'
+import { cn } from '@/lib/utils/cn'
 
 interface LevelProgressionCardProps {
   result: LevelProgressionForecastResult | null
   isLoading: boolean
   forecastDays: number
+  className?: string
 }
 
-export function LevelProgressionCard({ result, isLoading, forecastDays }: LevelProgressionCardProps) {
+export function LevelProgressionCard({ result, isLoading, forecastDays, className }: LevelProgressionCardProps) {
   if (isLoading) {
     return (
-      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+      <div className={cn("bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm", className)}>
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-4" />
         <div className="h-20 bg-paper-300 dark:bg-ink-300 rounded animate-pulse" />
       </div>
@@ -25,7 +27,7 @@ export function LevelProgressionCard({ result, isLoading, forecastDays }: LevelP
   const noLevelsGained = result.levelsGained === 0 && result.progressInFinalLevel === 0
 
   return (
-    <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+    <div className={cn("bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm", className)}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100">

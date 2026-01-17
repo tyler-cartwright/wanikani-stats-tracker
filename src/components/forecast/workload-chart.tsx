@@ -57,14 +57,6 @@ export function WorkloadChart({
   const weeklyForecast = viewMode === 'weekly' ? aggregateToWeekly(dailyForecast) : null
   const maxCount = metrics.maxDaily
 
-  // Determine bar color based on count relative to average
-  const getBarColor = (count: number, isPeak: boolean): string => {
-    if (isPeak) return 'bg-vermillion-500 dark:bg-vermillion-400'
-    if (count > metrics.averageDaily * 1.5) return 'bg-ochre'
-    if (count > metrics.averageDaily * 1.2) return 'bg-patina-400 dark:bg-patina-500'
-    return 'bg-patina-500 dark:bg-patina-400'
-  }
-
   return (
     <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
       {/* Header with view toggle */}
@@ -73,7 +65,7 @@ export function WorkloadChart({
           <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100">
             {forecastDays}-Day Workload Forecast
           </h2>
-          <InfoTooltip content="Predicts your daily review workload based on your current assignments and planned lessons (starting tomorrow). Dark green shows reviews from items already in your queue. Light green shows reviews from new lessons. The forecast uses your historical accuracy rate to estimate how items progress through the SRS system. Peak days are highlighted in red." />
+          <InfoTooltip content="Predicts your daily review workload based on your current assignments and planned lessons (starting tomorrow). Dark green shows reviews from items already in your queue. Light green shows reviews from new lessons. The forecast uses your historical accuracy rate to estimate how items progress through the SRS system." />
         </div>
 
         {/* View toggle - full width on mobile, right-aligned on desktop */}
@@ -108,7 +100,6 @@ export function WorkloadChart({
       {/* Chart container with horizontal bars */}
       <div className="space-y-2 w-full overflow-visible">
         {viewMode === 'daily' && dailyForecast && dailyForecast.map((day, index) => {
-          const isPeak = index === metrics.peakDay.dayIndex
           const widthPercentage = maxCount > 0 ? (day.totalReviews / maxCount) * 100 : 0
           const existingPercentage = day.totalReviews > 0 ? (day.existingReviews / day.totalReviews) * 100 : 0
 
@@ -119,10 +110,7 @@ export function WorkloadChart({
             >
               {/* Day label */}
               <div className="w-16 sm:w-20 flex-shrink-0 text-sm tabular-nums">
-                <span className={cn(
-                  'font-medium',
-                  isPeak ? 'text-vermillion-500 font-semibold' : 'text-ink-400 dark:text-paper-300'
-                )}>
+                <span className="font-medium text-ink-400 dark:text-paper-300">
                   {format(day.date, 'MMM d')}
                 </span>
               </div>
@@ -139,19 +127,14 @@ export function WorkloadChart({
                       {day.existingReviews > 0 && (
                         <div
                           style={{ width: `${existingPercentage}%` }}
-                          className={cn('h-full', getBarColor(day.totalReviews, isPeak))}
+                          className="h-full bg-patina-500 dark:bg-patina-400"
                         />
                       )}
                       {/* New lesson reviews portion */}
                       {day.newLessonReviews > 0 && (
                         <div
                           style={{ width: `${100 - existingPercentage}%` }}
-                          className={cn(
-                            'h-full',
-                            isPeak
-                              ? 'bg-vermillion-300 dark:bg-vermillion-600'
-                              : 'bg-patina-300 dark:bg-patina-600'
-                          )}
+                          className="h-full bg-patina-300 dark:bg-patina-600"
                         />
                       )}
                     </div>
@@ -160,7 +143,6 @@ export function WorkloadChart({
                     <div className="absolute left-0 top-full mt-2 opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none z-10 bg-ink-100 dark:bg-paper-100 text-paper-100 dark:text-ink-100 text-xs px-3 py-2 rounded-lg shadow-lg" style={{ minWidth: '200px' }}>
                       <div className="font-semibold mb-1">
                         {format(day.date, 'MMMM d, yyyy')}
-                        {isPeak && ' (Peak)'}
                       </div>
                       <div className="mb-2">Total: {day.totalReviews} reviews</div>
                       <div className="text-[10px] opacity-80 space-y-0.5">
@@ -181,10 +163,7 @@ export function WorkloadChart({
 
               {/* Count label */}
               <div className="w-12 sm:w-16 flex-shrink-0 text-right text-sm tabular-nums">
-                <span className={cn(
-                  'font-semibold',
-                  isPeak ? 'text-vermillion-500' : 'text-ink-100 dark:text-paper-100'
-                )}>
+                <span className="font-semibold text-ink-100 dark:text-paper-100">
                   {day.totalReviews}
                 </span>
               </div>
@@ -195,24 +174,16 @@ export function WorkloadChart({
         {viewMode === 'weekly' && weeklyForecast && weeklyForecast.map((week) => {
           const widthPercentage = maxCount > 0 ? (week.dailyAverage / maxCount) * 100 : 0
           const existingPercentage = week.totalReviews > 0 ? (week.existingReviews / week.totalReviews) * 100 : 0
-          // Check if this week contains the peak day
-          const isPeakWeek = metrics.peakDay.date >= week.startDate && metrics.peakDay.date <= week.endDate
 
           return (
             <div key={week.weekNumber} className="group py-2">
               {/* Mobile: stacked layout */}
               <div className="sm:hidden space-y-1">
                 <div className="flex justify-between items-baseline">
-                  <span className={cn(
-                    'text-sm font-medium',
-                    isPeakWeek ? 'text-vermillion-500 font-semibold' : 'text-ink-400 dark:text-paper-300'
-                  )}>
+                  <span className="text-sm font-medium text-ink-400 dark:text-paper-300">
                     Week {week.weekNumber}
                   </span>
-                  <span className={cn(
-                    'text-sm font-semibold tabular-nums',
-                    isPeakWeek ? 'text-vermillion-500' : 'text-ink-100 dark:text-paper-100'
-                  )}>
+                  <span className="text-sm font-semibold tabular-nums text-ink-100 dark:text-paper-100">
                     {week.totalReviews}
                   </span>
                 </div>
@@ -232,19 +203,14 @@ export function WorkloadChart({
                         {week.existingReviews > 0 && (
                           <div
                             style={{ width: `${existingPercentage}%` }}
-                            className={cn('h-full', getBarColor(week.dailyAverage, isPeakWeek))}
+                            className="h-full bg-patina-500 dark:bg-patina-400"
                           />
                         )}
                         {/* New lesson reviews portion */}
                         {week.newLessonReviews > 0 && (
                           <div
                             style={{ width: `${100 - existingPercentage}%` }}
-                            className={cn(
-                              'h-full',
-                              isPeakWeek
-                                ? 'bg-vermillion-300 dark:bg-vermillion-600'
-                                : 'bg-patina-300 dark:bg-patina-600'
-                            )}
+                            className="h-full bg-patina-300 dark:bg-patina-600"
                           />
                         )}
                       </div>
@@ -253,7 +219,6 @@ export function WorkloadChart({
                       <div className="absolute left-0 top-full mt-2 opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none z-10 bg-ink-100 dark:bg-paper-100 text-paper-100 dark:text-ink-100 text-xs px-3 py-2 rounded-lg shadow-lg" style={{ minWidth: '200px' }}>
                         <div className="font-semibold mb-1">
                           Week {week.weekNumber}
-                          {isPeakWeek && ' (Peak)'}
                         </div>
                         <div className="mb-2">Total: {week.totalReviews} reviews</div>
                         <div className="mb-2">Daily avg: {week.dailyAverage} reviews/day</div>
@@ -282,10 +247,7 @@ export function WorkloadChart({
               <div className="hidden sm:flex items-center gap-3">
                 {/* Week label */}
                 <div className="w-32 flex-shrink-0 text-sm">
-                  <div className={cn(
-                    'font-medium',
-                    isPeakWeek ? 'text-vermillion-500 font-semibold' : 'text-ink-400 dark:text-paper-300'
-                  )}>
+                  <div className="font-medium text-ink-400 dark:text-paper-300">
                     Week {week.weekNumber}
                   </div>
                   <div className="text-xs text-ink-400 dark:text-paper-300 tabular-nums">
@@ -305,19 +267,14 @@ export function WorkloadChart({
                         {week.existingReviews > 0 && (
                           <div
                             style={{ width: `${existingPercentage}%` }}
-                            className={cn('h-full', getBarColor(week.dailyAverage, isPeakWeek))}
+                            className="h-full bg-patina-500 dark:bg-patina-400"
                           />
                         )}
                         {/* New lesson reviews portion */}
                         {week.newLessonReviews > 0 && (
                           <div
                             style={{ width: `${100 - existingPercentage}%` }}
-                            className={cn(
-                              'h-full',
-                              isPeakWeek
-                                ? 'bg-vermillion-300 dark:bg-vermillion-600'
-                                : 'bg-patina-300 dark:bg-patina-600'
-                            )}
+                            className="h-full bg-patina-300 dark:bg-patina-600"
                           />
                         )}
                       </div>
@@ -326,7 +283,6 @@ export function WorkloadChart({
                       <div className="absolute left-0 top-full mt-2 opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none z-10 bg-ink-100 dark:bg-paper-100 text-paper-100 dark:text-ink-100 text-xs px-3 py-2 rounded-lg shadow-lg" style={{ minWidth: '200px' }}>
                         <div className="font-semibold mb-1">
                           Week {week.weekNumber}
-                          {isPeakWeek && ' (Peak)'}
                         </div>
                         <div className="mb-2">Total: {week.totalReviews} reviews</div>
                         <div className="mb-2">Daily avg: {week.dailyAverage} reviews/day</div>
@@ -348,10 +304,7 @@ export function WorkloadChart({
 
                 {/* Count label */}
                 <div className="w-24 flex-shrink-0 text-right text-sm">
-                  <div className={cn(
-                    'font-semibold tabular-nums',
-                    isPeakWeek ? 'text-vermillion-500' : 'text-ink-100 dark:text-paper-100'
-                  )}>
+                  <div className="font-semibold tabular-nums text-ink-100 dark:text-paper-100">
                     {week.totalReviews}
                   </div>
                   <div className="text-xs text-ink-400 dark:text-paper-300 tabular-nums">
