@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils/cn'
 import { useUser, useLevelProgressions } from '@/lib/api/queries'
 import { projectLevel60Date } from '@/lib/calculations/forecasting'
 import { useSyncStore } from '@/stores/sync-store'
+import { useSettingsStore } from '@/stores/settings-store'
 import { Modal } from '@/components/shared/modal'
 
 interface Scenario {
@@ -22,12 +23,13 @@ export function Level60Projection() {
   const [showExcludedLevels, setShowExcludedLevels] = useState(false)
   const [selectedScenario, setSelectedScenario] = useState<'fast' | 'expected' | 'conservative'>('expected')
   const isSyncing = useSyncStore((state) => state.isSyncing)
+  const autoExcludeBreaks = useSettingsStore((state) => state.autoExcludeBreaks)
 
   const isLoading = userLoading || progressionsLoading || isSyncing
 
   // Calculate projection using unified MAD analysis
   const projection = user && levelProgressions
-    ? projectLevel60Date(user.level, levelProgressions)
+    ? projectLevel60Date(user.level, levelProgressions, autoExcludeBreaks)
     : null
 
   // Use the trimmed mean from unified analysis
@@ -125,7 +127,9 @@ export function Level60Projection() {
         {
           icon: TrendingUp,
           label: 'Expected',
-          description: 'Based on your trimmed mean pace (auto-excludes breaks)',
+          description: autoExcludeBreaks && projection.excludedLevels.length > 0
+            ? 'Based on your active pace (excludes breaks)'
+            : 'Based on your average pace (all levels)',
           date: primaryDate,
           pace: `${Math.round(primaryPace)} days/level`,
           color: 'text-ink-100 dark:text-paper-100',
@@ -248,11 +252,9 @@ export function Level60Projection() {
         {/* Method indicator - small, subtle */}
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap items-center justify-center gap-1.5 text-xs text-ink-400 dark:text-paper-300 bg-paper-300/50 dark:bg-ink-300/50 px-3 py-1 rounded-full">
-            <span>Trimmed mean</span>
-            {projection && projection.excludedLevels.length > 0 && (
+            {autoExcludeBreaks && projection && projection.excludedLevels.length > 0 ? (
               <>
-                <span className="w-1 h-1 rounded-full bg-ink-400/40 dark:bg-paper-300/40" aria-hidden="true" />
-                <span>{completedLevels - projection.excludedLevels.length} levels</span>
+                <span>Based on {completedLevels - projection.excludedLevels.length} active {(completedLevels - projection.excludedLevels.length) === 1 ? 'level' : 'levels'}</span>
                 <button
                   onClick={() => setShowExcludedLevels(true)}
                   className="text-vermillion-500 hover:underline"
@@ -260,6 +262,8 @@ export function Level60Projection() {
                   (details)
                 </button>
               </>
+            ) : (
+              <span>Based on all {completedLevels} completed {completedLevels === 1 ? 'level' : 'levels'}</span>
             )}
           </div>
         </div>

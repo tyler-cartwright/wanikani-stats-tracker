@@ -5,6 +5,56 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] - 2026-01-17
+
+### Added
+- **Progress Page: Auto-Detect Breaks Toggle**: New user-controllable setting for outlier exclusion behavior
+  - New "Auto-detect breaks" toggle in Settings → Progress section
+  - When enabled (default): Automatically excludes outlier levels using MAD-based statistical analysis
+  - When disabled: All levels included in averages; long levels still colored based on pace but not excluded
+  - Visual indicators adapt based on setting (e.g., break legend only shown when auto-exclusion is active)
+  - Consistent story across Progress page and Journey to Level 60 component
+
+### Changed
+- **Progress Page: UX Polish & Clarity Improvements**
+  - Removed confusing small grey box next to "x levels auto-detected as breaks" text
+  - Replaced "Trimmed mean" technical jargon with user-friendly "Based on X active levels" text
+  - Updated Journey to Level 60 expected scenario description to reflect setting state:
+    - Auto-exclude ON: "Based on your active pace (excludes breaks)"
+    - Auto-exclude OFF: "Based on your average pace (all levels)"
+  - Level history average now shows clearer wording:
+    - Auto-exclude ON: "Average: 24 days (16 active levels)"
+    - Auto-exclude OFF: "Average: 24 days (all 16 levels)"
+  - Break legend item conditionally shown only when breaks are auto-detected
+  - Integrated break detection info into stats section (removed isolated container)
+- **Settings Page: Reorganized Sections** to match navbar order for improved discoverability
+  - New order: Account → Data Sync → Data Export → Progress → Accuracy → Forecast → Leeches → Kanji → Readiness → Danger Zone
+  - Consolidated Progress settings: auto-detect breaks toggle + level history visualization mode
+
+### Technical
+- Updated `src/stores/settings-store.ts`:
+  - Added `autoExcludeBreaks` boolean setting (default: true)
+  - Added `setAutoExcludeBreaks()` action
+- Updated `src/lib/calculations/activity-analysis.ts`:
+  - Modified `analyzeUnifiedLevelData()` signature to accept `autoExcludeBreaks` parameter
+  - Outlier detection now conditional based on setting
+- Updated `src/lib/calculations/forecasting.ts`:
+  - Modified `projectLevel60Date()` signature to accept `autoExcludeBreaks` parameter
+  - Passes setting through to `analyzeUnifiedLevelData()` call
+- Updated `src/components/progress/level-timeline.tsx`:
+  - Retrieves and passes `autoExcludeBreaks` setting to analysis function
+  - Conditional rendering of break legend based on setting and excluded level count
+  - Updated average text to adapt based on setting
+  - Integrated break detection info into stats section (removed separate container)
+- Updated `src/components/progress/level-60-projection.tsx`:
+  - Retrieves and passes `autoExcludeBreaks` setting to projection function
+  - Dynamic "Based on" text adapts to setting state
+  - Dynamic expected scenario description reflects exclusion behavior
+- Updated `src/pages/settings.tsx`:
+  - Created new "Progress" settings section with auto-detect breaks toggle
+  - Consolidated level history visualization mode under Progress section
+  - Reordered all settings sections to match navbar order
+
 ## [2.14.0] - 2026-01-16
 
 ### Changed

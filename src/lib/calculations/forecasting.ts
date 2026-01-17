@@ -132,11 +132,16 @@ export function calculateReviewForecast(assignments: Assignment[]): ReviewForeca
 
 /**
  * Project date to reach level 60 based on historical pace
- * Now using unified MAD analysis - no settings needed!
+ * Now using unified MAD analysis
+ *
+ * @param currentLevel - User's current level
+ * @param levelProgressions - Array of level progressions
+ * @param autoExcludeBreaks - Whether to automatically exclude outlier levels as breaks (default: true)
  */
 export function projectLevel60Date(
   currentLevel: number,
-  levelProgressions: LevelProgression[]
+  levelProgressions: LevelProgression[],
+  autoExcludeBreaks: boolean = true
 ): Level60Projection {
   if (currentLevel >= 60) {
     // Already at max level
@@ -154,7 +159,7 @@ export function projectLevel60Date(
   }
 
   // Use unified MAD analysis
-  const analysis = analyzeUnifiedLevelData(levelProgressions)
+  const analysis = analyzeUnifiedLevelData(levelProgressions, autoExcludeBreaks)
 
   if (analysis.includedLevels.length === 0) {
     // No historical data, use default estimates

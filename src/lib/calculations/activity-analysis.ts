@@ -129,10 +129,13 @@ function determinePace(
 
 /**
  * New unified analysis function using MAD for outlier detection
- * No settings needed - fully automatic!
+ *
+ * @param progressions - Array of level progressions
+ * @param autoExcludeBreaks - Whether to automatically exclude outlier levels as breaks (default: true)
  */
 export function analyzeUnifiedLevelData(
-  progressions: LevelProgression[]
+  progressions: LevelProgression[],
+  autoExcludeBreaks: boolean = true
 ): UnifiedLevelAnalysis {
   const durations = calculateLevelDurations(progressions)
 
@@ -162,7 +165,7 @@ export function analyzeUnifiedLevelData(
   // Using 2× multiplier for tighter outlier detection (more aggressive than 3×)
   // But only if we have 5+ levels (need sufficient data for outlier detection)
   const outlierThreshold = median + 2 * normalizedMad
-  const shouldDetectOutliers = durations.length >= 5
+  const shouldDetectOutliers = autoExcludeBreaks && durations.length >= 5
 
   const includedDurations: Array<{ level: number; days: number; milliseconds: number }> = []
   const excludedDurations: Array<{ level: number; days: number; reason: 'outlier' }> = []
