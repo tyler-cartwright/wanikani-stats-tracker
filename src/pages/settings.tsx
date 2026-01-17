@@ -26,7 +26,9 @@ export function Settings() {
     forecastIncludeVocabulary,
     setForecastIncludeVocabulary,
     showAllLevelsInAccuracy,
-    setShowAllLevelsInAccuracy
+    setShowAllLevelsInAccuracy,
+    autoExcludeBreaks,
+    setAutoExcludeBreaks
   } = useSettingsStore()
   const { confirm, ConfirmDialog } = useConfirm()
 
@@ -173,94 +175,139 @@ export function Settings() {
       {/* Data Export */}
       <DataExportSection />
 
-      {/* Exam Readiness Settings */}
+      {/* Progress Settings */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
         <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-          Exam Readiness
+          Progress
         </h2>
-        <div className="space-y-4">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                SRS Threshold
-              </label>
-              <InfoTooltip content="Choose what SRS stage counts as 'known' for exam readiness calculations (Jōyō kanji and JLPT approximations). Higher thresholds are stricter - Guru+ (recommended) means kanji must be at Guru stage or higher to count as known." />
-            </div>
-            <select
-              value={jlptThreshold}
-              onChange={(e) => setJlptThreshold(e.target.value as SRSThreshold)}
-              className="w-full px-4 py-2 text-sm bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-md text-ink-100 dark:text-paper-100 focus:outline-none focus:ring-2 focus:ring-vermillion-500/20"
-            >
-              {(['apprentice_4', 'guru', 'master', 'enlightened', 'burned'] as SRSThreshold[]).map(
-                (threshold) => (
-                  <option key={threshold} value={threshold}>
-                    {SRS_THRESHOLD_LABELS[threshold]}
-                  </option>
-                )
-              )}
-            </select>
-            <div className="text-xs text-ink-400 dark:text-paper-300 mt-2">
-              {SRS_THRESHOLD_DESCRIPTIONS[jlptThreshold]}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Kanji Grid Settings */}
-      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
-        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-          Kanji Grid
-        </h2>
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Auto-exclude breaks toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                Show Removed Items
+                Auto-detect breaks
               </label>
-              <InfoTooltip content="Show items that have been removed from the WaniKani curriculum. These are subjects you may have studied before they were removed, but are no longer taught to new students." />
+              <InfoTooltip content="Automatically exclude unusually long levels (statistical outliers) from your average pace calculation. These levels are detected using MAD (Median Absolute Deviation) and shown in gray on the timeline. When disabled, all levels are included in averages." />
             </div>
             <button
-              onClick={() => setShowHiddenItems(!showHiddenItems)}
+              onClick={() => setAutoExcludeBreaks(!autoExcludeBreaks)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                showHiddenItems
+                autoExcludeBreaks
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-paper-100 dark:bg-ink-100 transition-transform ${
-                  showHiddenItems ? 'translate-x-6' : 'translate-x-1'
+                  autoExcludeBreaks ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
           </div>
+
+          {/* Level History Display Mode */}
+          <div>
+            <div className="text-sm font-medium text-ink-100 dark:text-paper-100 mb-3">
+              Level History Visualization
+            </div>
+            <div className="space-y-3">
+              {/* Bar Chart Option */}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="levelHistoryMode"
+                  value="bar-chart"
+                  checked={levelHistoryMode === 'bar-chart'}
+                  onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
+                  className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-ink-100 dark:text-paper-100">
+                      Bar Chart (recommended)
+                    </span>
+                    <InfoTooltip content="Vertical bars showing days per level with capped linear scale. All normal-pace levels are fully visible, while auto-detected breaks (outliers) are capped at your normal range maximum. Provides clear visual comparison of your typical level completion times." />
+                  </div>
+                  <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
+                    Vertical bars with capped linear scale (outliers capped)
+                  </div>
+                </div>
+              </label>
+
+              {/* Level Cards Option */}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="levelHistoryMode"
+                  value="cards"
+                  checked={levelHistoryMode === 'cards'}
+                  onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
+                  className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-ink-100 dark:text-paper-100">
+                      Level Cards
+                    </span>
+                    <InfoTooltip content="Grid of cards showing level number, days, and pace color. Easy to scan individual level stats at a glance." />
+                  </div>
+                  <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
+                    Grid of cards showing level, days, and pace color
+                  </div>
+                </div>
+              </label>
+
+              {/* Compact List Option */}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="levelHistoryMode"
+                  value="compact-list"
+                  checked={levelHistoryMode === 'compact-list'}
+                  onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
+                  className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-ink-100 dark:text-paper-100">
+                      Compact List
+                    </span>
+                    <InfoTooltip content="Horizontal scrollable colored badges showing all levels compactly. Most space-efficient option." />
+                  </div>
+                  <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
+                    Horizontal scrollable colored badges
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Leeches Settings */}
+      {/* Accuracy Settings */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
         <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-          Leeches
+          Accuracy
         </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                Include Burned Items
+                Show all levels in Accuracy by Level
               </label>
-              <InfoTooltip content="Show items that eventually reached burned status in the leeches list. Useful to see items you struggled with historically, even if they're now burned." />
+              <InfoTooltip content="When enabled, shows accuracy data for items that have moved to levels beyond your current level due to curriculum updates. When disabled (default), only shows levels up to your current level to avoid confusion." />
             </div>
             <button
-              onClick={() => setIncludeBurnedLeeches(!includeBurnedLeeches)}
+              onClick={() => setShowAllLevelsInAccuracy(!showAllLevelsInAccuracy)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                includeBurnedLeeches
+                showAllLevelsInAccuracy
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-paper-100 dark:bg-ink-100 transition-transform ${
-                  includeBurnedLeeches ? 'translate-x-6' : 'translate-x-1'
+                  showAllLevelsInAccuracy ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -299,30 +346,30 @@ export function Settings() {
         </div>
       </div>
 
-      {/* Accuracy Settings */}
+      {/* Leeches Settings */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
         <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-          Accuracy
+          Leeches
         </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
-                Show all levels in Accuracy by Level
+                Include Burned Items
               </label>
-              <InfoTooltip content="When enabled, shows accuracy data for items that have moved to levels beyond your current level due to curriculum updates. When disabled (default), only shows levels up to your current level to avoid confusion." />
+              <InfoTooltip content="Show items that eventually reached burned status in the leeches list. Useful to see items you struggled with historically, even if they're now burned." />
             </div>
             <button
-              onClick={() => setShowAllLevelsInAccuracy(!showAllLevelsInAccuracy)}
+              onClick={() => setIncludeBurnedLeeches(!includeBurnedLeeches)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                showAllLevelsInAccuracy
+                includeBurnedLeeches
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-paper-100 dark:bg-ink-100 transition-transform ${
-                  showAllLevelsInAccuracy ? 'translate-x-6' : 'translate-x-1'
+                  includeBurnedLeeches ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -330,84 +377,66 @@ export function Settings() {
         </div>
       </div>
 
-      {/* Level History Display */}
+      {/* Kanji Grid Settings */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
         <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-          Level History Display
+          Kanji Grid
         </h2>
-        <div>
-          <div className="text-sm font-medium text-ink-100 dark:text-paper-100 mb-3">
-            Visualization Mode
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
+                Show Removed Items
+              </label>
+              <InfoTooltip content="Show items that have been removed from the WaniKani curriculum. These are subjects you may have studied before they were removed, but are no longer taught to new students." />
+            </div>
+            <button
+              onClick={() => setShowHiddenItems(!showHiddenItems)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                showHiddenItems
+                  ? 'bg-vermillion-500'
+                  : 'bg-paper-300 dark:bg-ink-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-paper-100 dark:bg-ink-100 transition-transform ${
+                  showHiddenItems ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
-          <div className="space-y-3">
-            {/* Bar Chart Option */}
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="radio"
-                name="levelHistoryMode"
-                value="bar-chart"
-                checked={levelHistoryMode === 'bar-chart'}
-                onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
-                className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-ink-100 dark:text-paper-100">
-                    Bar Chart (recommended)
-                  </span>
-                  <InfoTooltip content="Vertical bars showing days per level with capped linear scale. All normal-pace levels are fully visible, while auto-detected breaks (outliers) are capped at your normal range maximum. Provides clear visual comparison of your typical level completion times." />
-                </div>
-                <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                  Vertical bars with capped linear scale (outliers capped)
-                </div>
-              </div>
-            </label>
+        </div>
+      </div>
 
-            {/* Level Cards Option */}
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="radio"
-                name="levelHistoryMode"
-                value="cards"
-                checked={levelHistoryMode === 'cards'}
-                onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
-                className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-ink-100 dark:text-paper-100">
-                    Level Cards
-                  </span>
-                  <InfoTooltip content="Grid of cards showing level number, days, and pace color. Easy to scan individual level stats at a glance." />
-                </div>
-                <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                  Grid of cards showing level, days, and pace color
-                </div>
-              </div>
-            </label>
-
-            {/* Compact List Option */}
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="radio"
-                name="levelHistoryMode"
-                value="compact-list"
-                checked={levelHistoryMode === 'compact-list'}
-                onChange={(e) => setLevelHistoryMode(e.target.value as 'bar-chart' | 'cards' | 'compact-list')}
-                className="w-4 h-4 text-vermillion-500 border-paper-300 dark:border-ink-300 focus:ring-2 focus:ring-vermillion-500/20"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-ink-100 dark:text-paper-100">
-                    Compact List
-                  </span>
-                  <InfoTooltip content="Horizontal scrollable colored badges showing all levels compactly. Most space-efficient option." />
-                </div>
-                <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">
-                  Horizontal scrollable colored badges
-                </div>
-              </div>
-            </label>
+      {/* Exam Readiness Settings */}
+      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+          Exam Readiness
+        </h2>
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
+                SRS Threshold
+              </label>
+              <InfoTooltip content="Choose what SRS stage counts as 'known' for exam readiness calculations (Jōyō kanji and JLPT approximations). Higher thresholds are stricter - Guru+ (recommended) means kanji must be at Guru stage or higher to count as known." />
+            </div>
+            <select
+              value={jlptThreshold}
+              onChange={(e) => setJlptThreshold(e.target.value as SRSThreshold)}
+              className="w-full px-4 py-2 text-sm bg-paper-100 dark:bg-ink-100 border border-paper-300 dark:border-ink-300 rounded-md text-ink-100 dark:text-paper-100 focus:outline-none focus:ring-2 focus:ring-vermillion-500/20"
+            >
+              {(['apprentice_4', 'guru', 'master', 'enlightened', 'burned'] as SRSThreshold[]).map(
+                (threshold) => (
+                  <option key={threshold} value={threshold}>
+                    {SRS_THRESHOLD_LABELS[threshold]}
+                  </option>
+                )
+              )}
+            </select>
+            <div className="text-xs text-ink-400 dark:text-paper-300 mt-2">
+              {SRS_THRESHOLD_DESCRIPTIONS[jlptThreshold]}
+            </div>
           </div>
         </div>
       </div>

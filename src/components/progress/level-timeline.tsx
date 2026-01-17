@@ -184,6 +184,7 @@ export function LevelTimeline() {
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const levelHistoryMode = useSettingsStore((state) => state.levelHistoryMode)
+  const autoExcludeBreaks = useSettingsStore((state) => state.autoExcludeBreaks)
 
   const isLoading = userLoading || progressionsLoading || isSyncing
 
@@ -198,7 +199,7 @@ export function LevelTimeline() {
 
   if (levelProgressions && user) {
     // Use unified MAD analysis
-    const analysis = analyzeUnifiedLevelData(levelProgressions)
+    const analysis = analyzeUnifiedLevelData(levelProgressions, autoExcludeBreaks)
     avgDays = analysis.average
     outlierThreshold = analysis.outlierThreshold
     excludedCount = analysis.excludedLevels.length
@@ -322,7 +323,7 @@ export function LevelTimeline() {
           <span className="text-ink-100 dark:text-paper-100 font-semibold">{Math.round(avgDays)} days</span>
           {includedCount > 0 && (
             <span className="text-xs text-ink-400 dark:text-paper-300 ml-1">
-              (of {includedCount} levels)
+              ({autoExcludeBreaks && excludedCount > 0 ? `${includedCount} active levels` : `all ${includedCount} levels`})
             </span>
           )}
         </div>
@@ -334,20 +335,15 @@ export function LevelTimeline() {
           <span className="text-ink-400 dark:text-paper-300">Slowest:</span>{' '}
           <span className="text-vermillion-500 dark:text-vermillion-400 font-semibold">{slowestDays} days</span>
         </div>
-      </div>
-
-      {/* Automatic break detection info - only show if there are excluded levels */}
-      {excludedCount > 0 && (
-        <div className="mb-8 p-3 bg-paper-300/50 dark:bg-ink-300/50 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-ink-100 dark:text-paper-100">
-            <div className="w-3 h-3 bg-ink-400 dark:bg-paper-400 rounded-sm flex-shrink-0" />
-            <span className="font-medium">
+        {autoExcludeBreaks && excludedCount > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-ink-400 dark:text-paper-300">
               {excludedCount} {excludedCount === 1 ? 'level' : 'levels'} auto-detected as {excludedCount === 1 ? 'a break' : 'breaks'}
             </span>
             <InfoTooltip content={`Levels longer than ${Math.round(outlierThreshold)} days are automatically detected as breaks using statistical analysis (MAD - Median Absolute Deviation). These are shown in gray and excluded from your average to give you a more accurate picture of your active learning pace.`} />
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Visualization - conditional based on mode */}
       {(() => {
@@ -387,10 +383,12 @@ export function LevelTimeline() {
           <div className="w-4 h-2 bg-vermillion-500 dark:bg-vermillion-400 rounded-full" />
           <span className="text-ink-400 dark:text-paper-300">Very Slow - Significantly slower</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-2 bg-ink-400 dark:bg-paper-400 rounded-full" />
-          <span className="text-ink-400 dark:text-paper-300">Break - Auto-excluded from average</span>
-        </div>
+        {autoExcludeBreaks && excludedCount > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-2 bg-ink-400 dark:bg-paper-400 rounded-full" />
+            <span className="text-ink-400 dark:text-paper-300">Break - Auto-excluded from average</span>
+          </div>
+        )}
       </div>
     </div>
   )
