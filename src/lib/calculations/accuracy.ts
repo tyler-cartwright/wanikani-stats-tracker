@@ -5,13 +5,18 @@ export interface AccuracyMetrics {
   overall: number
   meaning: number
   reading: number
+  totalReviews: number
+  counts: {
+    reading: { correct: number; incorrect: number; total: number }
+    meaning: { correct: number; incorrect: number; total: number }
+    total: { correct: number; incorrect: number; total: number }
+  }
   byType: {
-    radicals: number
-    kanji: number
-    vocabulary: number
+    radicals: { overall: number; reading: number | null; meaning: number }
+    kanji: { overall: number; reading: number; meaning: number }
+    vocabulary: { overall: number; reading: number; meaning: number }
   }
   byLevel: Map<number, number>
-  totalReviews: number
 }
 
 /**
@@ -34,11 +39,11 @@ export function calculateAccuracyMetrics(
   let readingCorrect = 0
   let readingIncorrect = 0
 
-  // By type
+  // By type — track reading and meaning separately
   const typeStats = {
-    radicals: { correct: 0, incorrect: 0 },
-    kanji: { correct: 0, incorrect: 0 },
-    vocabulary: { correct: 0, incorrect: 0 },
+    radicals: { meaningCorrect: 0, meaningIncorrect: 0, readingCorrect: 0, readingIncorrect: 0 },
+    kanji: { meaningCorrect: 0, meaningIncorrect: 0, readingCorrect: 0, readingIncorrect: 0 },
+    vocabulary: { meaningCorrect: 0, meaningIncorrect: 0, readingCorrect: 0, readingIncorrect: 0 },
   }
 
   // By level
@@ -51,31 +56,48 @@ export function calculateAccuracyMetrics(
     const subject = subjectMap.get(stat.subject_id)
     if (!subject) continue
 
+    // Only kanji and vocabulary have a reading component.
+    // Radicals have none by design; kana_vocabulary is meaning-only.
+    // Both may carry non-zero reading_correct in the API due to historical data,
+    // so we derive reading counts from subject_type rather than trusting API fields to be zero.
+    const hasReadingComponent =
+      stat.subject_type === 'kanji' || stat.subject_type === 'vocabulary'
+    const statReadingCorrect = hasReadingComponent ? stat.reading_correct : 0
+    const statReadingIncorrect = hasReadingComponent ? stat.reading_incorrect : 0
+
     // Overall
-    const statTotalCorrect = stat.meaning_correct + stat.reading_correct
-    const statTotalIncorrect = stat.meaning_incorrect + stat.reading_incorrect
+    const statTotalCorrect = stat.meaning_correct + statReadingCorrect
+    const statTotalIncorrect = stat.meaning_incorrect + statReadingIncorrect
     totalCorrect += statTotalCorrect
     totalIncorrect += statTotalIncorrect
 
     // Meaning vs Reading
     meaningCorrect += stat.meaning_correct
     meaningIncorrect += stat.meaning_incorrect
-    readingCorrect += stat.reading_correct
-    readingIncorrect += stat.reading_incorrect
+    readingCorrect += statReadingCorrect
+    readingIncorrect += statReadingIncorrect
 
     // By type
     const typeKey =
       stat.subject_type === 'kana_vocabulary' ? 'vocabulary' : stat.subject_type
 
-    if (typeKey === 'radical' && typeStats.radicals) {
-      typeStats.radicals.correct += statTotalCorrect
-      typeStats.radicals.incorrect += statTotalIncorrect
-    } else if (typeKey === 'kanji' && typeStats.kanji) {
-      typeStats.kanji.correct += statTotalCorrect
-      typeStats.kanji.incorrect += statTotalIncorrect
-    } else if (typeKey === 'vocabulary' && typeStats.vocabulary) {
-      typeStats.vocabulary.correct += statTotalCorrect
-      typeStats.vocabulary.incorrect += statTotalIncorrect
+    if (typeKey === 'radical') {
+      typeStats.radicals.meaningCorrect += stat.meaning_correct
+      typeStats.radicals.meaningIncorrect += stat.meaning_incorrect
+      // radicals have no reading reviews; reading fields on their stats should be 0
+      typeStats.radicals.readingCorrect += stat.reading_correct
+      typeStats.radicals.readingIncorrect += stat.reading_incorrect
+    } else if (typeKey === 'kanji') {
+      typeStats.kanji.meaningCorrect += stat.meaning_correct
+      typeStats.kanji.meaningIncorrect += stat.meaning_incorrect
+      typeStats.kanji.readingCorrect += stat.reading_correct
+      typeStats.kanji.readingIncorrect += stat.reading_incorrect
+    } else if (typeKey === 'vocabulary') {
+      typeStats.vocabulary.meaningCorrect += stat.meaning_correct
+      typeStats.vocabulary.meaningIncorrect += stat.meaning_incorrect
+      // kana_vocabulary has no reading component
+      typeStats.vocabulary.readingCorrect += statReadingCorrect
+      typeStats.vocabulary.readingIncorrect += statReadingIncorrect
     }
 
     // By level
@@ -97,20 +119,36 @@ export function calculateAccuracyMetrics(
   const meaningTotal = meaningCorrect + meaningIncorrect
   const readingTotal = readingCorrect + readingIncorrect
 
-  const overall = overallTotal > 0 ? Math.round((totalCorrect / overallTotal) * 100) : 0
-  const meaning = meaningTotal > 0 ? Math.round((meaningCorrect / meaningTotal) * 100) : 0
-  const reading = readingTotal > 0 ? Math.round((readingCorrect / readingTotal) * 100) : 0
+  const overall = overallTotal > 0 ? parseFloat(((totalCorrect / overallTotal) * 100).toFixed(2)) : 0
+  const meaning = meaningTotal > 0 ? parseFloat(((meaningCorrect / meaningTotal) * 100).toFixed(2)) : 0
+  const reading = readingTotal > 0 ? parseFloat(((readingCorrect / readingTotal) * 100).toFixed(2)) : 0
 
   // By type percentages
-  const radicalsTotal = typeStats.radicals.correct + typeStats.radicals.incorrect
-  const kanjiTotal = typeStats.kanji.correct + typeStats.kanji.incorrect
-  const vocabularyTotal = typeStats.vocabulary.correct + typeStats.vocabulary.incorrect
+  const radMeaningTotal = typeStats.radicals.meaningCorrect + typeStats.radicals.meaningIncorrect
+  const radOverallTotal = radMeaningTotal // radicals have no reading
+  const kanjiMeaningTotal = typeStats.kanji.meaningCorrect + typeStats.kanji.meaningIncorrect
+  const kanjiReadingTotal = typeStats.kanji.readingCorrect + typeStats.kanji.readingIncorrect
+  const kanjiOverallTotal = kanjiMeaningTotal + kanjiReadingTotal
+  const vocabMeaningTotal = typeStats.vocabulary.meaningCorrect + typeStats.vocabulary.meaningIncorrect
+  const vocabReadingTotal = typeStats.vocabulary.readingCorrect + typeStats.vocabulary.readingIncorrect
+  const vocabOverallTotal = vocabMeaningTotal + vocabReadingTotal
 
   const byType = {
-    radicals: radicalsTotal > 0 ? Math.round((typeStats.radicals.correct / radicalsTotal) * 100) : 0,
-    kanji: kanjiTotal > 0 ? Math.round((typeStats.kanji.correct / kanjiTotal) * 100) : 0,
-    vocabulary:
-      vocabularyTotal > 0 ? Math.round((typeStats.vocabulary.correct / vocabularyTotal) * 100) : 0,
+    radicals: {
+      overall: radOverallTotal > 0 ? parseFloat(((typeStats.radicals.meaningCorrect / radOverallTotal) * 100).toFixed(2)) : 0,
+      reading: null as number | null,
+      meaning: radMeaningTotal > 0 ? parseFloat(((typeStats.radicals.meaningCorrect / radMeaningTotal) * 100).toFixed(2)) : 0,
+    },
+    kanji: {
+      overall: kanjiOverallTotal > 0 ? parseFloat((((typeStats.kanji.meaningCorrect + typeStats.kanji.readingCorrect) / kanjiOverallTotal) * 100).toFixed(2)) : 0,
+      reading: kanjiReadingTotal > 0 ? parseFloat(((typeStats.kanji.readingCorrect / kanjiReadingTotal) * 100).toFixed(2)) : 0,
+      meaning: kanjiMeaningTotal > 0 ? parseFloat(((typeStats.kanji.meaningCorrect / kanjiMeaningTotal) * 100).toFixed(2)) : 0,
+    },
+    vocabulary: {
+      overall: vocabOverallTotal > 0 ? parseFloat((((typeStats.vocabulary.meaningCorrect + typeStats.vocabulary.readingCorrect) / vocabOverallTotal) * 100).toFixed(2)) : 0,
+      reading: vocabReadingTotal > 0 ? parseFloat(((typeStats.vocabulary.readingCorrect / vocabReadingTotal) * 100).toFixed(2)) : 0,
+      meaning: vocabMeaningTotal > 0 ? parseFloat(((typeStats.vocabulary.meaningCorrect / vocabMeaningTotal) * 100).toFixed(2)) : 0,
+    },
   }
 
   // By level percentages
@@ -118,7 +156,7 @@ export function calculateAccuracyMetrics(
   levelStats.forEach((stat, level) => {
     const levelTotal = stat.correct + stat.incorrect
     if (levelTotal > 0) {
-      byLevel.set(level, Math.round((stat.correct / levelTotal) * 100))
+      byLevel.set(level, parseFloat(((stat.correct / levelTotal) * 100).toFixed(2)))
     }
   })
 
@@ -126,9 +164,26 @@ export function calculateAccuracyMetrics(
     overall,
     meaning,
     reading,
+    totalReviews: totalCorrect + totalIncorrect,
+    counts: {
+      reading: {
+        correct: readingCorrect,
+        incorrect: readingIncorrect,
+        total: readingTotal,
+      },
+      meaning: {
+        correct: meaningCorrect,
+        incorrect: meaningIncorrect,
+        total: meaningTotal,
+      },
+      total: {
+        correct: totalCorrect,
+        incorrect: totalIncorrect,
+        total: overallTotal,
+      },
+    },
     byType,
     byLevel,
-    totalReviews: totalCorrect + totalIncorrect,
   }
 }
 

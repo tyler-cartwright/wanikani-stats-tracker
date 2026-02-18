@@ -7,6 +7,7 @@ interface DistributionBucket {
   count: number
   percentage: number
   color: string
+  darkColor: string
   bgColor: string
 }
 
@@ -16,10 +17,10 @@ export function AccuracyDistribution() {
 
   // Calculate distribution buckets
   const buckets: DistributionBucket[] = [
-    { label: 'Excellent', range: '90-100%', count: 0, percentage: 0, color: 'text-patina-500', bgColor: 'bg-patina-500' },
-    { label: 'Good', range: '75-89%', count: 0, percentage: 0, color: 'text-ink-100', bgColor: 'bg-ink-400' },
-    { label: 'Fair', range: '60-74%', count: 0, percentage: 0, color: 'text-ochre', bgColor: 'bg-ochre' },
-    { label: 'Poor', range: '0-59%', count: 0, percentage: 0, color: 'text-vermillion-500', bgColor: 'bg-vermillion-500' },
+    { label: 'Excellent', range: '90-100%', count: 0, percentage: 0, color: 'text-patina-500', darkColor: 'dark:text-patina-400', bgColor: 'bg-patina-500' },
+    { label: 'Good', range: '75-89%', count: 0, percentage: 0, color: 'text-ink-100', darkColor: 'dark:text-paper-100', bgColor: 'bg-ink-400' },
+    { label: 'Fair', range: '60-74%', count: 0, percentage: 0, color: 'text-ochre', darkColor: 'dark:text-ochre', bgColor: 'bg-ochre' },
+    { label: 'Poor', range: '0-59%', count: 0, percentage: 0, color: 'text-vermillion-500', darkColor: 'dark:text-vermillion-400', bgColor: 'bg-vermillion-500' },
   ]
 
   if (reviewStats) {
@@ -45,7 +46,7 @@ export function AccuracyDistribution() {
     const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0)
     if (total > 0) {
       buckets.forEach((bucket) => {
-        bucket.percentage = Math.round((bucket.count / total) * 100)
+        bucket.percentage = parseFloat(((bucket.count / total) * 100).toFixed(2))
       })
     }
   }
@@ -103,7 +104,7 @@ export function AccuracyDistribution() {
           <div key={bucket.label}>
             <div className="flex items-center justify-between mb-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className={`font-medium ${bucket.color} dark:${bucket.color}`}>
+                <span className={`font-medium ${bucket.color} ${bucket.darkColor}`}>
                   {bucket.label}
                 </span>
                 <span className="text-ink-400 dark:text-paper-400 text-xs">
@@ -114,8 +115,8 @@ export function AccuracyDistribution() {
                 <span className="text-ink-100 dark:text-paper-100 font-semibold tabular-nums">
                   {bucket.count}
                 </span>
-                <span className="text-ink-400 dark:text-paper-300 text-xs w-10 text-right tabular-nums">
-                  {bucket.percentage}%
+                <span className="text-ink-400 dark:text-paper-300 text-xs w-14 text-right tabular-nums">
+                  {bucket.percentage.toFixed(2)}%
                 </span>
               </div>
             </div>

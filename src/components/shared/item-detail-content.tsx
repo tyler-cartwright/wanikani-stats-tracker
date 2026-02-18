@@ -129,19 +129,19 @@ export function ItemDetailContent({ item }: ItemDetailContentProps) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="text-center p-3 rounded-lg bg-paper-300/50 dark:bg-ink-300/50">
             <div className="text-2xl font-semibold text-vermillion-500 dark:text-vermillion-400">
-              {item.accuracy}%
+              {item.accuracy.toFixed(2)}%
             </div>
             <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">Overall</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-paper-300/50 dark:bg-ink-300/50">
             <div className="text-2xl font-semibold text-ink-100 dark:text-paper-100">
-              {item.meaningAccuracy}%
+              {item.meaningAccuracy.toFixed(2)}%
             </div>
             <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">Meaning</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-paper-300/50 dark:bg-ink-300/50">
             <div className="text-2xl font-semibold text-ink-100 dark:text-paper-100">
-              {item.readingAccuracy}%
+              {item.readingAccuracy.toFixed(2)}%
             </div>
             <div className="text-xs text-ink-400 dark:text-paper-300 mt-1">Reading</div>
           </div>

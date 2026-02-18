@@ -196,10 +196,10 @@ export function enrichAtRiskItem(
   const incorrectCount = stat.meaning_incorrect + stat.reading_incorrect
 
   const meaningAccuracy =
-    meaningTotal > 0 ? Math.round((stat.meaning_correct / meaningTotal) * 100) : 100
+    meaningTotal > 0 ? parseFloat(((stat.meaning_correct / meaningTotal) * 100).toFixed(2)) : 100
 
   const readingAccuracy =
-    readingTotal > 0 ? Math.round((stat.reading_correct / readingTotal) * 100) : 100
+    readingTotal > 0 ? parseFloat(((stat.reading_correct / readingTotal) * 100).toFixed(2)) : 100
 
   // Extract all meanings
   const allMeanings = subject.meanings.filter((m) => m.accepted_answer).map((m) => m.meaning)

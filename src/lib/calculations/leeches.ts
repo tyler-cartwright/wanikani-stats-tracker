@@ -148,10 +148,10 @@ export function detectLeeches(
       const readingTotal = stat.reading_correct + stat.reading_incorrect
 
       const meaningAccuracy =
-        meaningTotal > 0 ? Math.round((stat.meaning_correct / meaningTotal) * 100) : 100
+        meaningTotal > 0 ? parseFloat(((stat.meaning_correct / meaningTotal) * 100).toFixed(2)) : 100
 
       const readingAccuracy =
-        readingTotal > 0 ? Math.round((stat.reading_correct / readingTotal) * 100) : 100
+        readingTotal > 0 ? parseFloat(((stat.reading_correct / readingTotal) * 100).toFixed(2)) : 100
 
       // Calculate severity (higher is worse)
       const severity = calculateSeverity(incorrectCount, totalReviews, stat.percentage_correct)
