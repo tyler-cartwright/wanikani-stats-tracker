@@ -8,8 +8,10 @@ import { JLPTHero } from '@/components/jlpt/jlpt-hero'
 import { JLPTLevelCard } from '@/components/jlpt/jlpt-level-card'
 import { JLPTLevelDetail } from '@/components/jlpt/jlpt-level-detail'
 import type { JoyoGrade } from '@/data/jlpt'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Readiness() {
+  useDocumentTitle('Readiness')
   const { jlptThreshold } = useSettingsStore()
   const [expandedLevel, setExpandedLevel] = useState<JoyoGrade | null>(null)
   const isSyncing = useSyncStore((state) => state.isSyncing)

@@ -5,8 +5,10 @@ import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/quer
 import { detectLeeches } from '@/lib/calculations/leeches'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Leeches() {
+  useDocumentTitle('Leeches')
   const { data: reviewStats, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
