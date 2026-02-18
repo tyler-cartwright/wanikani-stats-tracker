@@ -9,8 +9,10 @@ import { InfoTooltip } from '@/components/shared/info-tooltip'
 import { useUser } from '@/lib/api/queries'
 import { DataExportSection } from '@/components/settings/data-export-section'
 import { SRS_THRESHOLD_LABELS, SRS_THRESHOLD_DESCRIPTIONS, type SRSThreshold } from '@/data/jlpt'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Settings() {
+  useDocumentTitle('Settings')
   const { sync, forceSync, isSyncing, lastSyncAt, lastSyncResult, error } = useSync()
   const { clearAuth } = useUserStore()
   const { data: user } = useUser()

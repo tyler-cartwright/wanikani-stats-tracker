@@ -3,8 +3,10 @@ import { SRSSummary } from '@/components/dashboard/srs-summary'
 import { LevelProgress } from '@/components/dashboard/level-progress'
 import { ReviewForecast } from '@/components/dashboard/review-forecast'
 import { GuruForecast } from '@/components/dashboard/guru-forecast'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Dashboard() {
+  useDocumentTitle('Dashboard')
   return (
     <div className="space-y-10">
       {/* Hero Stats - generous spacing */}

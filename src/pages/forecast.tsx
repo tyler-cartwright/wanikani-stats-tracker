@@ -8,8 +8,10 @@ import { LessonPaceSelector } from '@/components/forecast/lesson-pace-selector'
 import { ForecastMetrics } from '@/components/forecast/forecast-metrics'
 import { LevelProgressionCard } from '@/components/forecast/level-progression-card'
 import { WorkloadChart } from '@/components/forecast/workload-chart'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Forecast() {
+  useDocumentTitle('Forecast')
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const { data: reviewStatistics, isLoading: statsLoading } = useReviewStatistics()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()

@@ -5,6 +5,47 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.17.0] - 2026-02-18
+
+### Added
+- **Accuracy Page: Accuracy Breakdown Component**: Replaced the separate "Overall Accuracy" and "Accuracy by Type" cards with a single unified component
+  - Three stat pillars (Reading / Meaning / Total), each showing accuracy %, a progress bar, and correct/incorrect/review counts
+  - Per-type accuracy grid (Radicals / Kanji / Vocabulary) with Reading, Meaning, and Total columns
+  - Radicals reading column shows `—` (no reading reviews)
+  - Insight box retained: flags when reading vs meaning gap is ≥5%
+
+### Changed
+- **Accuracy Page: Consistent Performance-Based Colouring**: All accuracy bars and hero numbers now use the same threshold system
+  - ≥90%: patina (green) — excellent
+  - 80–89%: neutral — solid
+  - <80%: vermillion (red) — needs attention
+  - Previously bars were coloured by column identity (reading=red, total=grey) which was arbitrary and misleading
+
+### Fixed
+- **Accuracy Data: Reading Count Correctness**: Reading statistics now correctly exclude subject types with no reading component
+  - Radicals and `kana_vocabulary` items may carry non-zero `reading_correct` values in the WaniKani API due to historical data from subject type migrations; these are now excluded from all reading calculations
+  - Reading correct, reading total, and overall accuracy now match WKStats exactly
+- **Accuracy Page: 2 Decimal Places**: All accuracy percentages across the app now display to 2 decimal places (e.g., `87.62%` instead of `88%`)
+  - Affects: accuracy breakdown pillars and type grid, accuracy by level bars, accuracy distribution buckets, item detail modals (leeches, at-risk items)
+- **Accuracy Distribution: "Good" Label in Dark Mode**: The "Good" bucket label was rendered in near-black (`text-ink-100`) in dark mode, making it almost invisible
+  - Fixed by adding explicit `dark:text-paper-100` — dark mode classes must be statically declared; the previous dynamic `dark:${bucket.color}` pattern was not included in the Tailwind build
+
+### Technical
+- Created `src/components/accuracy/accuracy-breakdown.tsx`: New unified accuracy component with `Pillar` sub-component and `accuracyTextColor`/`accuracyBarColor` threshold helpers
+- Deleted `src/components/accuracy/accuracy-overview.tsx`: Replaced by AccuracyBreakdown
+- Deleted `src/components/accuracy/type-breakdown.tsx`: Replaced by AccuracyBreakdown
+- Updated `src/lib/calculations/accuracy.ts`:
+  - Expanded `AccuracyMetrics` interface with `counts` (raw reading/meaning/total correct/incorrect/total) and per-type `reading`/`meaning` breakdown in `byType`
+  - `byType.radicals.reading` is `null` (no reading component)
+  - Added `hasReadingComponent` guard: only `kanji` and `vocabulary` contribute to reading stats
+  - All accuracy calculations use `parseFloat((x * 100).toFixed(2))` for 2dp
+- Updated `src/pages/accuracy.tsx`: Replaced `AccuracyOverview` + grid layout with `AccuracyBreakdown` full-width; `AccuracyDistribution` and `TimeHeatmap` each occupy their own full-width row
+- Updated `src/components/accuracy/time-heatmap.tsx`: Level accuracy uses `toFixed(2)` in bars, tooltips, and stat lines
+- Updated `src/components/accuracy/accuracy-distribution.tsx`: Added `darkColor` field to bucket data; bucket percentage uses `toFixed(2)`; fixed dark mode label rendering
+- Updated `src/components/shared/item-detail-content.tsx`: Accuracy stats display with `toFixed(2)`
+- Updated `src/lib/calculations/leeches.ts`: `meaningAccuracy` and `readingAccuracy` use `toFixed(2)`
+- Updated `src/lib/calculations/knowledge-stability.ts`: `meaningAccuracy` and `readingAccuracy` use `toFixed(2)`
+
 ## [2.16.0] - 2026-01-17
 
 ### Changed
@@ -1320,6 +1361,7 @@ WaniTrack v2.0.0 - Complete WaniKani statistics tracker and analytics platform.
 
 ## Version History Summary
 
+- **2.17.0** (Feb 18, 2026) - Accuracy breakdown redesign, 2dp accuracy everywhere, reading count correctness fix, dark mode fix
 - **2.16.0** (Jan 17, 2026) - Forecast page streamlined: removed Peak Day/Stabilization/Breakdown, deterministic seeded RNG
 - **2.15.0** (Jan 17, 2026) - Progress page auto-detect breaks toggle, UX polish, settings reorganization
 - **2.14.0** (Jan 16, 2026) - Progress page MAD-based statistical analysis, capped linear scale, fast levels now blue

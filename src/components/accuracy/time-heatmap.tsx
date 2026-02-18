@@ -56,7 +56,7 @@ function calculateAccuracyByLevel(
   levelMap.forEach((data, level) => {
     levelData.push({
       level,
-      accuracy: Math.round(data.totalAccuracy / data.count),
+      accuracy: parseFloat((data.totalAccuracy / data.count).toFixed(2)),
       itemCount: data.count,
     })
   })
@@ -186,10 +186,10 @@ export function TimeHeatmap() {
                   getAccuracyColor(item.accuracy)
                 )}
                 style={{ width: `${item.accuracy}%` }}
-                title={`Level ${item.level}: ${item.accuracy}% (${item.itemCount} items)`}
+                title={`Level ${item.level}: ${item.accuracy.toFixed(2)}% (${item.itemCount} items)`}
               >
                 <span className="text-xs font-semibold text-white dark:text-ink-100">
-                  {item.accuracy}%
+                  {item.accuracy.toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -204,14 +204,14 @@ export function TimeHeatmap() {
             <TrendingUp className="w-4 h-4 text-patina-500 dark:text-patina-400" />
             <span className="text-ink-400 dark:text-paper-300">Best:</span>{' '}
             <span className="text-patina-500 dark:text-patina-400 font-semibold">
-              Level {bestLevel.level} ({bestLevel.accuracy}%)
+              Level {bestLevel.level} ({bestLevel.accuracy.toFixed(2)}%)
             </span>
           </div>
           <div className="flex items-center gap-2">
             <TrendingDown className="w-4 h-4 text-vermillion-500 dark:text-vermillion-400" />
             <span className="text-ink-400 dark:text-paper-300">Worst:</span>{' '}
             <span className="text-vermillion-500 dark:text-vermillion-400 font-semibold">
-              Level {worstLevel.level} ({worstLevel.accuracy}%)
+              Level {worstLevel.level} ({worstLevel.accuracy.toFixed(2)}%)
             </span>
           </div>
         </div>
@@ -223,7 +223,7 @@ export function TimeHeatmap() {
           <div className="flex gap-3">
             <Lightbulb className="w-5 h-5 text-vermillion-500 dark:text-vermillion-400 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-ink-100 dark:text-paper-100">
-              Level {worstLevel.level} needs attention ({worstLevel.accuracy}% accuracy).
+              Level {worstLevel.level} needs attention ({worstLevel.accuracy.toFixed(2)}% accuracy).
               Review these items more frequently to improve retention.
             </div>
           </div>
