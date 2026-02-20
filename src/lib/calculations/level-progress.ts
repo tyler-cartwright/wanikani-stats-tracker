@@ -165,9 +165,11 @@ export function calculateLevelProgress(
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
     daysOnLevel = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
-    // For historical levels (completed), format the precise duration
+    // Always compute compact duration (used in tag for both current and historical levels)
+    durationCompact = formatDurationCompact(diffTime)
+
+    // Verbose duration only for completed levels (used in footer)
     if (levelPassedAt) {
-      durationCompact = formatDurationCompact(diffTime)
       durationVerbose = formatDurationVerbose(diffTime)
     }
   }
