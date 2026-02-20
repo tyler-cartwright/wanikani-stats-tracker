@@ -5,6 +5,13 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.0] - 2026-02-20
+
+### Changed
+- **Dashboard: Level Progress — Granular "Time So Far" Tag**: The time tag on the current level now shows a precise compact duration (e.g., `2d 4h so far`) instead of the coarser `Day X` counter
+  - Historical (completed) levels continue to show their compact duration without the suffix
+  - Compact duration is now computed for all levels, not just completed ones
+
 ## [2.17.0] - 2026-02-18
 
 ### Added
