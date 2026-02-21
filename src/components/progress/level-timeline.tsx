@@ -18,12 +18,16 @@ function BarChartView({ levelData, capDays }: { levelData: LevelData[]; capDays:
   const containerHeight = 400
   const maxBarHeight = containerHeight - 40
 
+  // Calculate label step to prevent overlap on narrow screens
+  const levelCount = levelData.length
+  const labelStep = levelCount > 50 ? 5 : levelCount > 35 ? 3 : levelCount > 20 ? 2 : 1
+
   return (
     <>
       {/* Chart container with fixed height */}
       <div className="relative overflow-x-auto pb-2">
         <div className="flex items-end gap-1 min-w-full" style={{ height: `${containerHeight}px` }}>
-          {levelData.map((level) => {
+          {levelData.map((level, index) => {
             // Linear scale capped at capDays
             const isCapped = level.days !== null && level.days > capDays
             const effectiveDays = isCapped ? capDays : (level.days ?? 0)
@@ -31,6 +35,12 @@ function BarChartView({ levelData, capDays }: { levelData: LevelData[]; capDays:
 
             // Smart tooltip positioning - show below bar if it's too tall
             const isTallBar = barHeight > containerHeight - 80
+
+            // Determine whether to show the level number or a tick dot
+            const isFirst = index === 0
+            const isLast = index === levelData.length - 1
+            const isCurrent = level.days === null
+            const showLabel = isCurrent || isFirst || isLast || index % labelStep === 0
 
             return (
               <div
@@ -79,16 +89,19 @@ function BarChartView({ levelData, capDays }: { levelData: LevelData[]; capDays:
                   )}
                 </div>
 
-                {/* Level number below bar */}
+                {/* Level number below bar, or tick dot for skipped labels */}
                 <div
                   className={cn(
-                    'text-xs font-medium mt-2 tabular-nums',
+                    'text-xs font-medium mt-2 tabular-nums h-4 flex items-center justify-center',
                     level.days === null
                       ? 'text-vermillion-500 font-semibold'
                       : 'text-ink-400 dark:text-paper-300'
                   )}
                 >
-                  {level.level}
+                  {showLabel
+                    ? level.level
+                    : <span className="inline-block w-1 h-1 rounded-full bg-ink-300 dark:bg-paper-400" />
+                  }
                 </div>
               </div>
             )
@@ -340,7 +353,7 @@ export function LevelTimeline() {
             <span className="text-ink-400 dark:text-paper-300">
               {excludedCount} {excludedCount === 1 ? 'level' : 'levels'} auto-detected as {excludedCount === 1 ? 'a break' : 'breaks'}
             </span>
-            <InfoTooltip content={`Levels longer than ${Math.round(outlierThreshold)} days are automatically detected as breaks using statistical analysis (MAD - Median Absolute Deviation). These are shown in gray and excluded from your average to give you a more accurate picture of your active learning pace.`} />
+            <InfoTooltip content={`Levels longer than ${outlierThreshold} days are automatically detected as breaks using statistical analysis (MAD - Median Absolute Deviation). These are shown in gray and excluded from your average to give you a more accurate picture of your active learning pace.`} />
           </div>
         )}
       </div>

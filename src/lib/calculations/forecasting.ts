@@ -37,6 +37,7 @@ export interface Level60Projection {
   excludedLevels: Array<{
     level: number
     days: number
+    milliseconds: number
     reason: string
   }>
 }
@@ -212,6 +213,7 @@ export function projectLevel60Date(
   const excludedLevels = analysis.excludedLevels.map(level => ({
     level: level.level,
     days: level.days,
+    milliseconds: level.milliseconds,
     reason: 'Auto-detected break (statistical outlier)',
   }))
 

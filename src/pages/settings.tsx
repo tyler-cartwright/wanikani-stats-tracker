@@ -185,7 +185,7 @@ export function Settings() {
         <div className="space-y-6">
           {/* Auto-exclude breaks toggle */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
                 Auto-detect breaks
               </label>
@@ -193,7 +193,7 @@ export function Settings() {
             </div>
             <button
               onClick={() => setAutoExcludeBreaks(!autoExcludeBreaks)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                 autoExcludeBreaks
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'
@@ -293,7 +293,7 @@ export function Settings() {
         </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
                 Show all levels in Accuracy by Level
               </label>
@@ -301,7 +301,7 @@ export function Settings() {
             </div>
             <button
               onClick={() => setShowAllLevelsInAccuracy(!showAllLevelsInAccuracy)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                 showAllLevelsInAccuracy
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'
@@ -324,7 +324,7 @@ export function Settings() {
         </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
                 Include vocabulary in level progression
               </label>
@@ -332,7 +332,7 @@ export function Settings() {
             </div>
             <button
               onClick={() => setForecastIncludeVocabulary(!forecastIncludeVocabulary)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                 forecastIncludeVocabulary
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'
@@ -355,7 +355,7 @@ export function Settings() {
         </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
                 Include Burned Items
               </label>
@@ -363,7 +363,7 @@ export function Settings() {
             </div>
             <button
               onClick={() => setIncludeBurnedLeeches(!includeBurnedLeeches)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                 includeBurnedLeeches
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'
@@ -386,7 +386,7 @@ export function Settings() {
         </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <label className="text-sm font-medium text-ink-100 dark:text-paper-100">
                 Show Removed Items
               </label>
@@ -394,7 +394,7 @@ export function Settings() {
             </div>
             <button
               onClick={() => setShowHiddenItems(!showHiddenItems)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                 showHiddenItems
                   ? 'bg-vermillion-500'
                   : 'bg-paper-300 dark:bg-ink-300'

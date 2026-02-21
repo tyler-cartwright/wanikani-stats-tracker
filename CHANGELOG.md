@@ -5,6 +5,22 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.1] - 2026-02-21
+
+### Fixed
+- **Settings: Toggle Switches Overflowing on Narrow Screens**: Toggle button dots were pushed outside their track at ~360px viewport widths
+  - Added `shrink-0` to all 5 toggle buttons so they cannot be compressed below their intended 44px (`w-11`) width
+  - Added `min-w-0` to the label containers so long text wraps naturally instead of forcing the row wider
+  - Affects: Auto-detect breaks, Show all levels in Accuracy by Level, Include vocabulary in level progression, Include Burned Items, Show Removed Items
+- **Dashboard: Level Progress — "So Far" Hidden on Mobile**: The "so far" suffix on the current level time tag is now hidden on small screens (`hidden sm:inline`) to prevent text overflow in the narrow progress row
+- **Progress: Level Timeline — Bar Chart X-Axis Label Crowding**: Level numbers on the bar chart now step intelligently based on how many levels are shown (step of 1 / 2 / 3 / 5) to prevent overlapping labels; skipped positions show a small dot instead
+- **Progress: Level 60 Projection — Outlier Threshold Precision**: Outlier threshold is now displayed as a fractional value (e.g., `18.3 days`) rather than rounded to the nearest integer, matching the actual detection logic
+- **Progress: Level 60 Projection — Excluded Level Duration**: Excluded levels in the break detection panel now display compact durations (e.g., `25d 4h`) instead of whole-day counts, and the "over threshold" delta uses millisecond-precise arithmetic for accuracy
+
+### Technical
+- Added `milliseconds` field to `UnifiedLevelAnalysis.excludedLevels` and `Level60Projection.excludedLevels` for precise duration arithmetic
+- Outlier detection in `activity-analysis.ts` now compares fractional days (computed from milliseconds) against the threshold rather than rounded integer days
+
 ## [2.18.0] - 2026-02-20
 
 ### Changed
