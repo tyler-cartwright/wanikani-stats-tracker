@@ -108,9 +108,10 @@ export function LevelProgress() {
         </div>
         <span className="text-sm text-ink-400 dark:text-paper-300 font-medium">
           {progress.durationCompact
-            ? progress.isCurrentLevel
-              ? `${progress.durationCompact} so far`
-              : progress.durationCompact
+            ? <>
+                {progress.durationCompact}
+                {progress.isCurrentLevel && <span className="hidden sm:inline"> so far</span>}
+              </>
             : `Day ${progress.daysOnLevel}`}
         </span>
       </div>

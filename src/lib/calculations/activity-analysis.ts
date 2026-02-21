@@ -20,6 +20,7 @@ export interface UnifiedLevelAnalysis {
   excludedLevels: Array<{
     level: number
     days: number
+    milliseconds: number
     reason: 'outlier'
   }>
 
@@ -168,13 +169,15 @@ export function analyzeUnifiedLevelData(
   const shouldDetectOutliers = autoExcludeBreaks && durations.length >= 5
 
   const includedDurations: Array<{ level: number; days: number; milliseconds: number }> = []
-  const excludedDurations: Array<{ level: number; days: number; reason: 'outlier' }> = []
+  const excludedDurations: Array<{ level: number; days: number; milliseconds: number; reason: 'outlier' }> = []
 
   for (const duration of durations) {
-    if (shouldDetectOutliers && duration.days > outlierThreshold) {
+    const fractionalDays = duration.milliseconds / (1000 * 60 * 60 * 24)
+    if (shouldDetectOutliers && fractionalDays > outlierThreshold) {
       excludedDurations.push({
         level: duration.level,
         days: duration.days,
+        milliseconds: duration.milliseconds,
         reason: 'outlier',
       })
     } else {

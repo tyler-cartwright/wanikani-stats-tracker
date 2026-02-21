@@ -4,6 +4,7 @@ import { Rocket, TrendingUp, Turtle } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useUser, useLevelProgressions } from '@/lib/api/queries'
 import { projectLevel60Date } from '@/lib/calculations/forecasting'
+import { formatDurationCompact } from '@/lib/calculations/level-progress'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { Modal } from '@/components/shared/modal'
@@ -485,7 +486,7 @@ export function Level60Projection() {
               the app automatically identifies unusually long levels as breaks.
             </p>
             <p className="text-sm text-ink-400 dark:text-paper-300">
-              Levels longer than <strong className="text-ink-100 dark:text-paper-100">{Math.round(projection.outlierThreshold)} days</strong> are
+              Levels longer than <strong className="text-ink-100 dark:text-paper-100">{projection.outlierThreshold} days</strong> are
               excluded from your average to show your true active learning pace.
             </p>
           </div>
@@ -499,9 +500,9 @@ export function Level60Projection() {
               >
                 <span className="text-ink-100 dark:text-paper-100 font-medium">Level {level.level}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-ink-400 dark:text-paper-300">{level.days} days</span>
+                  <span className="text-ink-400 dark:text-paper-300">{formatDurationCompact(level.milliseconds)}</span>
                   <span className="text-xs text-ink-400 dark:text-paper-300 opacity-75">
-                    ({level.days - Math.round(projection.outlierThreshold)}d over threshold)
+                    ({((level.milliseconds / (1000 * 60 * 60 * 24)) - projection.outlierThreshold).toFixed(1)}d over threshold)
                   </span>
                 </div>
               </div>
