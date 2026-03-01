@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Search, Grid2X2, List } from 'lucide-react'
 import type { SRSStage } from '@/lib/api/types'
 import type { SubjectType } from '@/lib/calculations/kanji-grid'
@@ -47,6 +48,25 @@ export function KanjiGridFilters({
   totalCount,
   filteredCount,
 }: KanjiGridFiltersProps) {
+  const [minLevelInput, setMinLevelInput] = useState(String(levelRange[0]))
+  const [maxLevelInput, setMaxLevelInput] = useState(String(levelRange[1]))
+
+  const handleMinLevelBlur = () => {
+    const parsed = parseInt(minLevelInput, 10)
+    const clamped = isNaN(parsed) ? levelRange[0] : Math.max(1, Math.min(60, parsed))
+    const newMin = Math.min(clamped, levelRange[1])
+    setMinLevelInput(String(newMin))
+    onLevelRangeChange([newMin, levelRange[1]])
+  }
+
+  const handleMaxLevelBlur = () => {
+    const parsed = parseInt(maxLevelInput, 10)
+    const clamped = isNaN(parsed) ? levelRange[1] : Math.max(1, Math.min(60, parsed))
+    const newMax = Math.max(clamped, levelRange[0])
+    setMaxLevelInput(String(newMax))
+    onLevelRangeChange([levelRange[0], newMax])
+  }
+
   const toggleSrsStage = (stage: SRSStage) => {
     if (srsFilter.includes(stage)) {
       onSrsFilterChange(srsFilter.filter((s) => s !== stage))
@@ -126,11 +146,9 @@ export function KanjiGridFilters({
               type="number"
               min={1}
               max={60}
-              value={levelRange[0]}
-              onChange={(e) => {
-                const min = Math.max(1, Math.min(60, parseInt(e.target.value) || 1))
-                onLevelRangeChange([min, Math.max(min, levelRange[1])])
-              }}
+              value={minLevelInput}
+              onChange={(e) => setMinLevelInput(e.target.value)}
+              onBlur={handleMinLevelBlur}
               className="w-16 px-2 py-1.5 bg-paper-200 dark:bg-ink-200 text-ink-100 dark:text-paper-100 border border-paper-300 dark:border-ink-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-vermillion-500"
             />
             <span className="text-ink-300 dark:text-paper-300">to</span>
@@ -138,11 +156,9 @@ export function KanjiGridFilters({
               type="number"
               min={1}
               max={60}
-              value={levelRange[1]}
-              onChange={(e) => {
-                const max = Math.max(1, Math.min(60, parseInt(e.target.value) || 60))
-                onLevelRangeChange([Math.min(levelRange[0], max), max])
-              }}
+              value={maxLevelInput}
+              onChange={(e) => setMaxLevelInput(e.target.value)}
+              onBlur={handleMaxLevelBlur}
               className="w-16 px-2 py-1.5 bg-paper-200 dark:bg-ink-200 text-ink-100 dark:text-paper-100 border border-paper-300 dark:border-ink-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-vermillion-500"
             />
           </div>

@@ -3,6 +3,7 @@ import { Level60Projection } from '@/components/progress/level-60-projection'
 import { BurnVelocity } from '@/components/progress/burn-velocity'
 import { KnowledgeStability } from '@/components/progress/knowledge-stability'
 import { MilestoneTimeline } from '@/components/progress/milestone-timeline'
+import { ResetHistoryNotice } from '@/components/progress/reset-history-notice'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Progress() {
@@ -23,6 +24,9 @@ export function Progress() {
 
       {/* Level Timeline */}
       <LevelTimeline />
+
+      {/* Reset History Notice */}
+      <ResetHistoryNotice />
     </div>
   )
 }

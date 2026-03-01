@@ -43,9 +43,21 @@ export function LessonPaceSelector({
     setCustomPaceValue(inputValue)
 
     const numValue = parseInt(inputValue, 10)
-    if (!isNaN(numValue) && numValue >= 0 && numValue <= 999) {
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
       setIsCustomPaceMode(true)
       onLessonsChange(numValue)
+    }
+  }
+
+  const handleCustomPaceBlur = () => {
+    const numValue = parseInt(customPaceValue, 10)
+    if (isNaN(numValue) || customPaceValue === '') {
+      setCustomPaceValue(lessonsPerDay.toString())
+    } else {
+      const clamped = Math.max(0, Math.min(100, numValue))
+      setCustomPaceValue(clamped.toString())
+      setIsCustomPaceMode(true)
+      onLessonsChange(clamped)
     }
   }
 
@@ -60,16 +72,21 @@ export function LessonPaceSelector({
     setCustomDaysValue(inputValue)
 
     const numValue = parseInt(inputValue, 10)
-    if (!isNaN(numValue)) {
-      // Clamp to valid range: 7-180 days
-      const clampedValue = Math.max(7, Math.min(180, numValue))
+    if (!isNaN(numValue) && numValue >= 7 && numValue <= 180) {
       setIsCustomDaysMode(true)
-      onForecastDaysChange(clampedValue)
+      onForecastDaysChange(numValue)
+    }
+  }
 
-      // Update display to show clamped value if different
-      if (clampedValue !== numValue) {
-        setCustomDaysValue(clampedValue.toString())
-      }
+  const handleCustomDaysBlur = () => {
+    const numValue = parseInt(customDaysValue, 10)
+    if (isNaN(numValue) || customDaysValue === '') {
+      setCustomDaysValue(forecastDays.toString())
+    } else {
+      const clamped = Math.max(7, Math.min(180, numValue))
+      setCustomDaysValue(clamped.toString())
+      setIsCustomDaysMode(true)
+      onForecastDaysChange(clamped)
     }
   }
 
@@ -144,9 +161,10 @@ export function LessonPaceSelector({
             id="custom-pace"
             type="number"
             min="0"
-            max="999"
+            max="100"
             value={customPaceValue}
             onChange={handleCustomPaceChange}
+            onBlur={handleCustomPaceBlur}
             onFocus={() => setIsCustomPaceMode(true)}
             placeholder="Enter amount..."
             className={cn(
@@ -214,6 +232,7 @@ export function LessonPaceSelector({
             max="180"
             value={customDaysValue}
             onChange={handleCustomDaysChange}
+            onBlur={handleCustomDaysBlur}
             onFocus={() => setIsCustomDaysMode(true)}
             placeholder="7-180 days..."
             className={cn(
