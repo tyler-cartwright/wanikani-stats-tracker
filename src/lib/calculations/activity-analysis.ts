@@ -38,9 +38,14 @@ export interface UnifiedLevelAnalysis {
 function calculateLevelDurations(
   levelProgressions: LevelProgression[]
 ): Array<{ level: number; days: number; milliseconds: number }> {
+  // After a reset, WaniKani sets abandoned_at on every progression above the reset level.
+  // Filtering to only active (non-abandoned) progressions correctly excludes all stale
+  // pre-reset data while keeping current-journey levels and levels below the reset point.
+  const activeProgressions = levelProgressions.filter(p => p.abandoned_at === null)
+
   const durations: Array<{ level: number; days: number; milliseconds: number }> = []
 
-  for (const progression of levelProgressions) {
+  for (const progression of activeProgressions) {
     if (progression.passed_at && progression.unlocked_at) {
       const unlockedDate = new Date(progression.unlocked_at)
       const passedDate = new Date(progression.passed_at)

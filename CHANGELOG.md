@@ -5,6 +5,28 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.0] - 2026-03-01
+
+### Added
+- **Progress: Reset History Notice**: Users who have reset their WaniKani account now see an informational notice at the bottom of the Progress page (below the Level Timeline) listing each detected reset with the original level, target level, and date
+  - Resets are inferred from existing `LevelProgression` data — no new API calls required; progressions with a matching `abandoned_at` timestamp are grouped to derive each reset event
+  - The notice is invisible to users with no reset history
+  - Includes a note explaining that pre-reset progression data is excluded from calculations on the page
+
+### Fixed
+- **Progress: Pre-Reset Progressions Skewing Level Data**: Level duration calculations now filter out abandoned progressions (`abandoned_at !== null`) before computing pace, projections, and the level timeline
+  - Previously, stale progressions from before a WaniKani account reset were included, which skewed average pace and Level 60 projections for affected users
+- **Forecast: Lesson Pace Inputs Jump or Clear While Typing**: Custom lessons-per-day and forecast-days inputs now only validate and clamp on blur rather than on every keystroke
+  - Typing an intermediate value (e.g., `1` while intending `15`) no longer immediately triggers a state change or resets the field
+  - On blur, invalid or out-of-range values are clamped to the valid range (0–100 lessons, 7–180 days) and the field is corrected; empty fields restore the last valid value
+  - Maximum custom lessons per day corrected from 999 to 100
+- **Kanji Grid: Level Range Inputs Jump or Clear While Typing**: Min/max level inputs in the Kanji Grid filter now use local input state committed on blur, matching the fix applied to the Forecast inputs
+  - Previously, typing `2` while intending `20` would immediately filter to level 2 mid-input
+
+### Technical
+- Created `src/lib/calculations/reset-detection.ts`: `detectResets()` utility that groups abandoned level progressions by `abandoned_at` (rounded to the nearest minute) and returns a sorted `DetectedReset[]`
+- Created `src/components/progress/reset-history-notice.tsx`: Conditional component that calls `useLevelProgressions()` and renders nothing if no resets are detected
+
 ## [2.18.1] - 2026-02-21
 
 ### Fixed
