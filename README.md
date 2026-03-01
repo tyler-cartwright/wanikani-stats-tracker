@@ -81,7 +81,7 @@ WaniTrack is a **Progressive Web App** that connects directly to the WaniKani AP
 ### Privacy & Security
 - ✅ Direct connection to WaniKani API only
 - ✅ No intermediary servers
-- ✅ No analytics or tracking
+- ✅ Privacy-respecting, cookieless analytics (Cloudflare Web Analytics — no personal data)
 - ✅ API token stored locally in your browser
 - ✅ All calculations performed client-side
 
