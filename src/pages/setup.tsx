@@ -138,7 +138,7 @@ export function Setup() {
           </h2>
           <p className="text-center text-sm text-ink-400 dark:text-paper-300 mb-10 flex items-center justify-center gap-2">
             <Shield className="w-4 h-4 text-vermillion-500 shrink-0" />
-            Runs entirely in your browser. No server, no tracking.
+            Runs entirely in your browser. No server, no cookies, no personal data collected.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {steps.map(({ step, icon: Icon, title, description }) => (
