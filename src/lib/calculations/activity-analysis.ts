@@ -1,6 +1,7 @@
 // Activity Analysis with MAD (Median Absolute Deviation)
 import { differenceInDays } from 'date-fns'
-import type { LevelProgression } from '@/lib/api/types'
+import type { LevelProgression, Reset } from '@/lib/api/types'
+import { filterPostResetProgressions } from './progression-filter'
 
 export interface UnifiedLevelAnalysis {
   median: number
@@ -36,12 +37,17 @@ export interface UnifiedLevelAnalysis {
  * Calculate level durations from progressions
  */
 function calculateLevelDurations(
-  levelProgressions: LevelProgression[]
+  levelProgressions: LevelProgression[],
+  resets: Reset[] = []
 ): Array<{ level: number; days: number; milliseconds: number }> {
-  // After a reset, WaniKani sets abandoned_at on every progression above the reset level.
-  // Filtering to only active (non-abandoned) progressions correctly excludes all stale
-  // pre-reset data while keeping current-journey levels and levels below the reset point.
-  const activeProgressions = levelProgressions.filter(p => p.abandoned_at === null)
+  // Use authoritative reset data to exclude pre-reset progressions.
+  // WaniKani only sets abandoned_at on the level actively in progress at reset time,
+  // so previously completed levels for the same level numbers pass a simple abandoned_at
+  // filter incorrectly. filterPostResetProgressions handles this correctly.
+  const postResetProgressions = filterPostResetProgressions(levelProgressions, resets)
+
+  // Belt-and-suspenders: also exclude any remaining abandoned progressions
+  const activeProgressions = postResetProgressions.filter(p => p.abandoned_at === null)
 
   const durations: Array<{ level: number; days: number; milliseconds: number }> = []
 
@@ -138,12 +144,14 @@ function determinePace(
  *
  * @param progressions - Array of level progressions
  * @param autoExcludeBreaks - Whether to automatically exclude outlier levels as breaks (default: true)
+ * @param resets - Array of confirmed resets from the API (default: [])
  */
 export function analyzeUnifiedLevelData(
   progressions: LevelProgression[],
-  autoExcludeBreaks: boolean = true
+  autoExcludeBreaks: boolean = true,
+  resets: Reset[] = []
 ): UnifiedLevelAnalysis {
-  const durations = calculateLevelDurations(progressions)
+  const durations = calculateLevelDurations(progressions, resets)
 
   // Handle edge case: no data
   if (durations.length === 0) {

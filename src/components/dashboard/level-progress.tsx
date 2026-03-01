@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { LayeredProgressBar } from '@/components/shared/layered-progress-bar'
-import { useUser, useAssignments, useSubjects, useLevelProgressions } from '@/lib/api/queries'
+import { useUser, useAssignments, useSubjects, useLevelProgressions, useResets } from '@/lib/api/queries'
 import { calculateLevelProgress } from '@/lib/calculations/level-progress'
+import { filterPostResetProgressions } from '@/lib/calculations/progression-filter'
 import { useSyncStore } from '@/stores/sync-store'
 import { cn } from '@/lib/utils/cn'
 
@@ -12,6 +13,7 @@ export function LevelProgress() {
   const { data: assignments, isLoading: assignmentsLoading } = useAssignments()
   const { data: subjects, isLoading: subjectsLoading } = useSubjects()
   const { data: levelProgressions } = useLevelProgressions()
+  const { data: resets = [], isLoading: resetsLoading } = useResets()
   const isSyncing = useSyncStore((state) => state.isSyncing)
 
   const [selectedLevel, setSelectedLevel] = useState(1)
@@ -23,19 +25,20 @@ export function LevelProgress() {
     }
   }, [user?.level])
 
-  const isLoading = assignmentsLoading || subjectsLoading || isSyncing
+  const isLoading = assignmentsLoading || subjectsLoading || resetsLoading || isSyncing
 
-  // Get progression data for selected level
-  // For reset levels, prefer the progression with passed_at (completed) over abandoned ones
+  // Get progression data for selected level, filtered to post-reset data only
   const selectedLevelProgression = levelProgressions
-    ?.filter((lp) => lp.level === selectedLevel)
-    .sort((a, b) => {
-      // Prioritize passed levels
-      if (a.passed_at && !b.passed_at) return -1
-      if (!a.passed_at && b.passed_at) return 1
-      // Otherwise use most recent created_at
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })[0]
+    ? filterPostResetProgressions(levelProgressions, resets)
+        .filter((lp) => lp.level === selectedLevel)
+        .sort((a, b) => {
+          // Prioritize passed levels
+          if (a.passed_at && !b.passed_at) return -1
+          if (!a.passed_at && b.passed_at) return 1
+          // Otherwise use most recent created_at
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        })[0]
+    : undefined
 
   // Calculate level progress
   const progress =

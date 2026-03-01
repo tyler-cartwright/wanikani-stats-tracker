@@ -5,6 +5,21 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.1] - 2026-03-01
+
+### Fixed
+- **Progress: Level History Showing Pre-Reset Levels**: For users who have reset their WaniKani account, the Level History graph, Level 60 Projection, and dashboard Level Progress panel now correctly show only post-reset data
+  - Root cause: the previous fix filtered on `abandoned_at === null`, but WaniKani only sets `abandoned_at` on the level actively in progress at reset time — previously completed levels for the same level numbers kept `abandoned_at === null` and incorrectly passed the filter
+  - Fix: the app now calls the WaniKani `/resets` API endpoint to get authoritative reset data (`original_level`, `target_level`, `confirmed_at`) and uses it to exclude any progression where `level >= target_level` and `created_at < confirmed_at`
+  - The Reset History notice now uses the same API data instead of inferring resets from `abandoned_at` heuristics, giving accurate dates and level numbers
+  - Non-reset users are unaffected
+
+### Technical
+- Added `Reset` type to `src/lib/api/types.ts`
+- Added `fetchResets()` to `src/lib/api/endpoints.ts` and `useResets()` query hook to `src/lib/api/queries.ts` — fetched live from API (no IndexedDB), shared via React Query cache across all consumers
+- Created `src/lib/calculations/progression-filter.ts`: `filterPostResetProgressions(progressions, resets)` — single reusable utility used by both the analysis pipeline and the dashboard level selector
+- Removed `src/lib/calculations/reset-detection.ts` (superseded by API data)
+
 ## [2.19.0] - 2026-03-01
 
 ### Added

@@ -7,6 +7,7 @@ import type {
   Assignment,
   Subject,
   LevelProgression,
+  Reset,
   ReviewStatistic,
   Summary,
 } from './types'
@@ -159,6 +160,20 @@ export async function fetchLevelProgressions(
   }
   const endpoint = params.toString() ? `/level_progressions?${params}` : '/level_progressions'
   return fetchAllPages<LevelProgression>(endpoint, token, onProgress)
+}
+
+// ============================================================================
+// Resets
+// ============================================================================
+
+/**
+ * Fetch all account resets
+ * https://docs.api.wanikani.com/20170710/#get-all-resets
+ */
+export async function fetchResets(
+  token: string
+): Promise<(Reset & { id: number })[]> {
+  return fetchAllPages<Reset>('/resets', token)
 }
 
 // ============================================================================
