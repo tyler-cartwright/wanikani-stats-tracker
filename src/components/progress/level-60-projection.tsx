@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { format, formatDistanceToNow, addDays } from 'date-fns'
 import { Rocket, TrendingUp, Turtle } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import { useUser, useLevelProgressions } from '@/lib/api/queries'
+import { useUser, useLevelProgressions, useResets } from '@/lib/api/queries'
 import { projectLevel60Date } from '@/lib/calculations/forecasting'
 import { formatDurationCompact } from '@/lib/calculations/level-progress'
 import { useSyncStore } from '@/stores/sync-store'
@@ -21,16 +21,17 @@ interface Scenario {
 export function Level60Projection() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
+  const { data: resets = [], isLoading: resetsLoading } = useResets()
   const [showExcludedLevels, setShowExcludedLevels] = useState(false)
   const [selectedScenario, setSelectedScenario] = useState<'fast' | 'expected' | 'conservative'>('expected')
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const autoExcludeBreaks = useSettingsStore((state) => state.autoExcludeBreaks)
 
-  const isLoading = userLoading || progressionsLoading || isSyncing
+  const isLoading = userLoading || progressionsLoading || resetsLoading || isSyncing
 
-  // Calculate projection using unified MAD analysis
+  // Calculate projection using unified MAD analysis with authoritative reset data
   const projection = user && levelProgressions
-    ? projectLevel60Date(user.level, levelProgressions, autoExcludeBreaks)
+    ? projectLevel60Date(user.level, levelProgressions, autoExcludeBreaks, resets)
     : null
 
   // Use the trimmed mean from unified analysis

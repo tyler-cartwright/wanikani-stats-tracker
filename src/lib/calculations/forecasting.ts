@@ -1,6 +1,6 @@
 // Forecasting and Projection Calculations
 import { addHours, addDays, addMonths } from 'date-fns'
-import type { Assignment, LevelProgression } from '@/lib/api/types'
+import type { Assignment, LevelProgression, Reset } from '@/lib/api/types'
 import { analyzeUnifiedLevelData } from './activity-analysis'
 
 export interface ReviewForecast {
@@ -138,11 +138,13 @@ export function calculateReviewForecast(assignments: Assignment[]): ReviewForeca
  * @param currentLevel - User's current level
  * @param levelProgressions - Array of level progressions
  * @param autoExcludeBreaks - Whether to automatically exclude outlier levels as breaks (default: true)
+ * @param resets - Array of confirmed resets from the API (default: [])
  */
 export function projectLevel60Date(
   currentLevel: number,
   levelProgressions: LevelProgression[],
-  autoExcludeBreaks: boolean = true
+  autoExcludeBreaks: boolean = true,
+  resets: Reset[] = []
 ): Level60Projection {
   if (currentLevel >= 60) {
     // Already at max level
@@ -160,7 +162,7 @@ export function projectLevel60Date(
   }
 
   // Use unified MAD analysis
-  const analysis = analyzeUnifiedLevelData(levelProgressions, autoExcludeBreaks)
+  const analysis = analyzeUnifiedLevelData(levelProgressions, autoExcludeBreaks, resets)
 
   if (analysis.includedLevels.length === 0) {
     // No historical data, use default estimates

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils/cn'
-import { useUser, useLevelProgressions } from '@/lib/api/queries'
+import { useUser, useLevelProgressions, useResets } from '@/lib/api/queries'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { analyzeUnifiedLevelData } from '@/lib/calculations/activity-analysis'
@@ -195,11 +195,12 @@ function CompactListView({ levelData }: { levelData: LevelData[] }) {
 export function LevelTimeline() {
   const { data: user, isLoading: userLoading } = useUser()
   const { data: levelProgressions, isLoading: progressionsLoading } = useLevelProgressions()
+  const { data: resets = [], isLoading: resetsLoading } = useResets()
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const levelHistoryMode = useSettingsStore((state) => state.levelHistoryMode)
   const autoExcludeBreaks = useSettingsStore((state) => state.autoExcludeBreaks)
 
-  const isLoading = userLoading || progressionsLoading || isSyncing
+  const isLoading = userLoading || progressionsLoading || resetsLoading || isSyncing
 
   // Calculate level data from progressions using unified MAD analysis
   const levelData: LevelData[] = []
@@ -211,8 +212,8 @@ export function LevelTimeline() {
   let excludedCount = 0
 
   if (levelProgressions && user) {
-    // Use unified MAD analysis
-    const analysis = analyzeUnifiedLevelData(levelProgressions, autoExcludeBreaks)
+    // Use unified MAD analysis with authoritative reset data
+    const analysis = analyzeUnifiedLevelData(levelProgressions, autoExcludeBreaks, resets)
     avgDays = analysis.average
     outlierThreshold = analysis.outlierThreshold
     excludedCount = analysis.excludedLevels.length

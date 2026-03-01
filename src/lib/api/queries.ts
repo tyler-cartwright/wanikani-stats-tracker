@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useUserStore } from '@/stores/user-store'
 import { useSyncStore } from '@/stores/sync-store'
-import { fetchUser, fetchSummary } from './endpoints'
+import { fetchUser, fetchSummary, fetchResets } from './endpoints'
 import { getCachedSubjects } from '@/lib/db/repositories/subjects'
 import { getCachedAssignments } from '@/lib/db/repositories/assignments'
 import { getCachedReviewStatistics } from '@/lib/db/repositories/review-statistics'
@@ -17,6 +17,7 @@ export const queryKeys = {
   reviewStatistics: ['reviewStatistics'] as const,
   summary: ['summary'] as const,
   syncStatus: ['syncStatus'] as const,
+  resets: ['resets'] as const,
 }
 
 /**
@@ -30,6 +31,25 @@ export function useUser() {
     queryFn: () => {
       if (!token) throw new Error('No API token available')
       return fetchUser(token)
+    },
+    enabled: !!token,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+  })
+}
+
+/**
+ * Resets - fetched fresh from API (tiny payload, rarely changes)
+ */
+export function useResets() {
+  const token = useUserStore((state) => state.token)
+
+  return useQuery({
+    queryKey: queryKeys.resets,
+    queryFn: () => {
+      if (!token) throw new Error('No API token available')
+      return fetchResets(token)
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
