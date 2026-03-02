@@ -23,8 +23,8 @@ const Setup = lazyWithRetry(() => import('./pages/setup').then(m => ({ default: 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60000, // 1 minute default
-      gcTime: 300000, // 5 minutes (formerly cacheTime)
+      staleTime: 5 * 60 * 1000, // 5 minutes default (increased from 1 minute)
+      gcTime: 30 * 60 * 1000, // 30 minutes (increased from 5 minutes)
       retry: 1,
       refetchOnWindowFocus: false,
       // Disable structural sharing to ensure fresh object references

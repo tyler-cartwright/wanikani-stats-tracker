@@ -52,25 +52,25 @@ export async function performSync(
     result.subjects = subjectsResult.updated
     result.isFullSync = subjectsResult.isFullSync
 
-    // Sync assignments
-    onProgress?.({ phase: 'assignments', message: 'Syncing assignments...', isFullSync: result.isFullSync })
-    const assignmentsResult = await syncAssignments(token, (msg) =>
-      onProgress?.({ phase: 'assignments', message: msg, isFullSync: result.isFullSync })
-    )
+    // Sync assignments, review statistics, and level progressions in parallel
+    // These don't depend on each other, only on subjects being complete
+    console.log('[SYNC] Starting parallel sync of assignments, review stats, and level progressions...')
+    onProgress?.({ phase: 'assignments', message: 'Syncing remaining data...', isFullSync: result.isFullSync })
+    
+    const [assignmentsResult, statsResult, progressionsResult] = await Promise.all([
+      syncAssignments(token, (msg) =>
+        onProgress?.({ phase: 'assignments', message: msg, isFullSync: result.isFullSync })
+      ),
+      syncReviewStatistics(token, (msg) =>
+        onProgress?.({ phase: 'reviewStats', message: msg, isFullSync: result.isFullSync })
+      ),
+      syncLevelProgressions(token, (msg) =>
+        onProgress?.({ phase: 'levelProgressions', message: msg, isFullSync: result.isFullSync })
+      ),
+    ])
+    
     result.assignments = assignmentsResult.updated
-
-    // Sync review statistics
-    onProgress?.({ phase: 'reviewStats', message: 'Syncing review statistics...', isFullSync: result.isFullSync })
-    const statsResult = await syncReviewStatistics(token, (msg) =>
-      onProgress?.({ phase: 'reviewStats', message: msg, isFullSync: result.isFullSync })
-    )
     result.reviewStatistics = statsResult.updated
-
-    // Sync level progressions
-    onProgress?.({ phase: 'levelProgressions', message: 'Syncing level progressions...', isFullSync: result.isFullSync })
-    const progressionsResult = await syncLevelProgressions(token, (msg) =>
-      onProgress?.({ phase: 'levelProgressions', message: msg, isFullSync: result.isFullSync })
-    )
     result.levelProgressions = progressionsResult.updated
 
     // Update last full sync time

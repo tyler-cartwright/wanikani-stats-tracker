@@ -80,7 +80,7 @@ export function useSummary() {
 
 /**
  * Subjects - loaded from IndexedDB cache
- * Always checks for updates on mount to ensure fresh data
+ * Cached for 5 minutes to avoid unnecessary refetches
  */
 export function useSubjects() {
   const token = useUserStore((state) => state.token)
@@ -90,16 +90,16 @@ export function useSubjects() {
     queryKey: queryKeys.subjects,
     queryFn: getCachedSubjects,
     enabled: !!token && !isSyncing,
-    staleTime: 0, // Always check for fresh data
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnMount: 'always',
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: false, // Don't refetch on every mount
     retry: 1,
   })
 }
 
 /**
  * Assignments - loaded from IndexedDB cache
- * Always checks for updates on mount to ensure fresh data
+ * Cached for 5 minutes to avoid unnecessary refetches
  */
 export function useAssignments() {
   const token = useUserStore((state) => state.token)
@@ -109,16 +109,16 @@ export function useAssignments() {
     queryKey: queryKeys.assignments,
     queryFn: getCachedAssignments,
     enabled: !!token && !isSyncing,
-    staleTime: 0, // Always check for fresh data
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnMount: 'always',
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: false, // Don't refetch on every mount
     retry: 1,
   })
 }
 
 /**
  * Review Statistics - loaded from IndexedDB cache
- * Always checks for updates on mount to ensure fresh data
+ * Cached for 5 minutes to avoid unnecessary refetches
  */
 export function useReviewStatistics() {
   const token = useUserStore((state) => state.token)
@@ -128,16 +128,16 @@ export function useReviewStatistics() {
     queryKey: queryKeys.reviewStatistics,
     queryFn: getCachedReviewStatistics,
     enabled: !!token && !isSyncing,
-    staleTime: 0, // Always check for fresh data
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnMount: 'always',
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: false, // Don't refetch on every mount
     retry: 1,
   })
 }
 
 /**
  * Level Progressions - loaded from IndexedDB cache
- * Always checks for updates on mount to ensure fresh data
+ * Cached for 5 minutes to avoid unnecessary refetches
  */
 export function useLevelProgressions() {
   const token = useUserStore((state) => state.token)
@@ -147,9 +147,9 @@ export function useLevelProgressions() {
     queryKey: queryKeys.levelProgressions,
     queryFn: getCachedLevelProgressions,
     enabled: !!token && !isSyncing,
-    staleTime: 0, // Always check for fresh data
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnMount: 'always',
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: false, // Don't refetch on every mount
     retry: 1,
   })
 }

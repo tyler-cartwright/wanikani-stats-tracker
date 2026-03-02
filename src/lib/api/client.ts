@@ -18,18 +18,37 @@ const MIN_REQUEST_INTERVAL = 1000 // milliseconds
 // ============================================================================
 
 class RateLimiter {
-  private lastRequestTime = 0
+  private tokens: number
+  private readonly maxTokens = 5 // Allow burst of 5 requests
+  private readonly refillRate = 1000 // 1 token per second
+  private lastRefillTime = Date.now()
+
+  constructor() {
+    this.tokens = this.maxTokens
+  }
 
   async waitIfNeeded(): Promise<void> {
+    // Refill tokens based on time elapsed
     const now = Date.now()
-    const timeSinceLastRequest = now - this.lastRequestTime
-
-    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-      const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastRequest
-      await new Promise(resolve => setTimeout(resolve, waitTime))
+    const timeSinceLastRefill = now - this.lastRefillTime
+    const tokensToAdd = Math.floor(timeSinceLastRefill / this.refillRate)
+    
+    if (tokensToAdd > 0) {
+      this.tokens = Math.min(this.maxTokens, this.tokens + tokensToAdd)
+      this.lastRefillTime = now
     }
 
-    this.lastRequestTime = Date.now()
+    // If we have tokens, use one immediately
+    if (this.tokens > 0) {
+      this.tokens--
+      return
+    }
+
+    // Otherwise wait for next token
+    const waitTime = this.refillRate - (now - this.lastRefillTime)
+    await new Promise(resolve => setTimeout(resolve, waitTime))
+    this.tokens = 0 // Token was just used
+    this.lastRefillTime = Date.now()
   }
 }
 
