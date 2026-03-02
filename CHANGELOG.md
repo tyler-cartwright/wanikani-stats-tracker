@@ -5,6 +5,11 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Progress: Level 60 Projection Completed Levels Count**: The "Based on X completed levels" text now correctly counts only post-reset levels using the same `filterPostResetProgressions()` utility, ensuring consistency with other reset-aware calculations
+
 ## [2.19.1] - 2026-03-01
 
 ### Fixed
