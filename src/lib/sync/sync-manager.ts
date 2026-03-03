@@ -52,26 +52,45 @@ export async function performSync(
     result.subjects = subjectsResult.updated
     result.isFullSync = subjectsResult.isFullSync
 
-    // Sync assignments
-    onProgress?.({ phase: 'assignments', message: 'Syncing assignments...', isFullSync: result.isFullSync })
-    const assignmentsResult = await syncAssignments(token, (msg) =>
-      onProgress?.({ phase: 'assignments', message: msg, isFullSync: result.isFullSync })
-    )
-    result.assignments = assignmentsResult.updated
+    // Sync assignments, review stats, and level progressions in parallel —
+    // they're all independent of each other; only subjects needed to go first.
+    onProgress?.({ phase: 'assignments', message: 'Syncing remaining data...', isFullSync: result.isFullSync })
 
-    // Sync review statistics
-    onProgress?.({ phase: 'reviewStats', message: 'Syncing review statistics...', isFullSync: result.isFullSync })
-    const statsResult = await syncReviewStatistics(token, (msg) =>
-      onProgress?.({ phase: 'reviewStats', message: msg, isFullSync: result.isFullSync })
-    )
-    result.reviewStatistics = statsResult.updated
+    let completedCount = 0
+    const phases = ['reviewStats', 'levelProgressions'] as const
+    const advanceProgress = () => {
+      const phase = phases[completedCount++]
+      if (phase) onProgress?.({ phase, message: 'Syncing remaining data...', isFullSync: result.isFullSync })
+    }
 
-    // Sync level progressions
-    onProgress?.({ phase: 'levelProgressions', message: 'Syncing level progressions...', isFullSync: result.isFullSync })
-    const progressionsResult = await syncLevelProgressions(token, (msg) =>
-      onProgress?.({ phase: 'levelProgressions', message: msg, isFullSync: result.isFullSync })
-    )
-    result.levelProgressions = progressionsResult.updated
+    const [assignmentsOutcome, statsOutcome, progressionsOutcome] = await Promise.allSettled([
+      syncAssignments(token).then(r => { advanceProgress(); return r }),
+      syncReviewStatistics(token).then(r => { advanceProgress(); return r }),
+      syncLevelProgressions(token).then(r => { advanceProgress(); return r }),
+    ])
+
+    const errors: string[] = []
+    if (assignmentsOutcome.status === 'fulfilled') {
+      result.assignments = assignmentsOutcome.value.updated
+    } else {
+      errors.push(`assignments: ${assignmentsOutcome.reason instanceof Error ? assignmentsOutcome.reason.message : String(assignmentsOutcome.reason)}`)
+    }
+    if (statsOutcome.status === 'fulfilled') {
+      result.reviewStatistics = statsOutcome.value.updated
+    } else {
+      errors.push(`reviewStats: ${statsOutcome.reason instanceof Error ? statsOutcome.reason.message : String(statsOutcome.reason)}`)
+    }
+    if (progressionsOutcome.status === 'fulfilled') {
+      result.levelProgressions = progressionsOutcome.value.updated
+    } else {
+      errors.push(`levelProgressions: ${progressionsOutcome.reason instanceof Error ? progressionsOutcome.reason.message : String(progressionsOutcome.reason)}`)
+    }
+
+    if (errors.length === 3) {
+      throw new Error(`All parallel syncs failed: ${errors.join('; ')}`)
+    } else if (errors.length > 0) {
+      console.warn('[SYNC] Some parallel syncs failed (partial sync):', errors)
+    }
 
     // Update last full sync time
     await updateSyncMetadata({

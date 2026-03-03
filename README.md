@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.19.1
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.19.2
 
 ---
 
@@ -25,7 +25,7 @@ Long-term analysis and projections:
 
 ### Workload Forecasting
 Plan your lesson pace and predict future review workload:
-- **Lesson Pace Configuration**: Set lessons per day (0-999) and forecast period (7-180 days) with presets or custom values
+- **Lesson Pace Configuration**: Set lessons per day (0-100) and forecast period (7-180 days) with presets or custom values
 - **Workload Metrics**: Track peak day, average daily reviews, stabilization point, and total reviews over the forecast period
 - **Level Progression Forecast**: Projects what level you'll reach based on your lesson pace, accounting for your current progress
 - **Interactive Charts**: Daily or weekly view of projected workload, split between existing items and new lessons
