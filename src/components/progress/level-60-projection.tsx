@@ -4,6 +4,7 @@ import { Rocket, TrendingUp, Turtle } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useUser, useLevelProgressions, useResets } from '@/lib/api/queries'
 import { projectLevel60Date } from '@/lib/calculations/forecasting'
+import { filterPostResetProgressions } from '@/lib/calculations/progression-filter'
 import { formatDurationCompact } from '@/lib/calculations/level-progress'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
@@ -110,9 +111,9 @@ export function Level60Projection() {
       })()
     : []
 
-  // Calculate completed levels count
+  // Calculate completed levels count (post-reset only, so it's consistent with the projection)
   const completedLevels = levelProgressions
-    ? levelProgressions.filter(p => p.passed_at && p.unlocked_at).length
+    ? filterPostResetProgressions(levelProgressions, resets).filter(p => p.passed_at && p.unlocked_at).length
     : 0
 
   // Build scenarios

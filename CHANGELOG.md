@@ -5,6 +5,17 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.2] - 2026-03-03
+
+### Fixed
+- **Progress: Level 60 Projection — "Based on X completed levels" Count Incorrect After Reset**: The completed levels count shown in the projection footer now filters to post-reset progressions only, consistent with how the rest of the projection is calculated
+  - Previously the count included all historical progressions, so a user who reset from level 30 to level 1 would see a completed level count that included their pre-reset history
+  - Non-reset users are unaffected
+
+### Technical
+- **Sync: Parallel data sync with improved error handling**: Assignments, review statistics, and level progressions now sync concurrently after subjects complete, rather than sequentially. Wall-clock sync time is unchanged (WaniKani's 60 req/min rate limit is the bottleneck regardless), but partial failures are now handled gracefully — if one or two syncs fail, the others still complete and the app continues with the data it has, rather than aborting the entire sync
+- **Queries: Eliminated redundant IndexedDB reads on page navigation**: The four IndexedDB-backed query hooks (`useSubjects`, `useAssignments`, `useReviewStatistics`, `useLevelProgressions`) now use `staleTime: 5min`, `gcTime: 30min`, and `refetchOnMount: false`. Previously `staleTime: 0` + `refetchOnMount: 'always'` caused a full IndexedDB read on every page mount. Post-sync query invalidation already handles freshness after a sync, making the per-navigation reads redundant
+
 ## [2.19.1] - 2026-03-01
 
 ### Fixed
