@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.19.2
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.19.3
 
 ---
 

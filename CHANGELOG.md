@@ -5,6 +5,18 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.3] - 2026-04-10
+
+### Fixed
+- **Accuracy: Accuracy by Level — Inflated Accuracy Values**: Per-level accuracy bars now use the correct weighted calculation (`total correct / total answers`) instead of an unweighted average of per-item `percentage_correct` values
+  - Previously, a lightly-reviewed item contributed equally to its level's accuracy as one with hundreds of reviews, inflating the displayed values above overall accuracy
+  - Now consistent with how overall, reading, and meaning accuracy are all calculated elsewhere in the app
+  - Also fixes two secondary issues: hidden items were previously included in the chart (they are now excluded, matching the rest of the accuracy page), and kana_vocabulary/radical reading fields were not handled correctly in the old local calculation
+
+### Technical
+- Removed duplicate `calculateAccuracyByLevel()` from `src/components/accuracy/time-heatmap.tsx`; the component now calls the existing `calculateAccuracyMetrics()` from `src/lib/calculations/accuracy.ts`, matching the pattern used by `AccuracyBreakdown` on the same page
+- `AccuracyMetrics.byLevel` enriched from `Map<number, number>` to `Map<number, { accuracy: number; itemCount: number }>` to carry item count alongside accuracy (used for bar tooltips)
+
 ## [2.19.2] - 2026-03-03
 
 ### Fixed
