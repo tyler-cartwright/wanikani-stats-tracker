@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Lightbulb, TrendingDown, TrendingUp } from 'lucide-react'
 import { useReviewStatistics, useSubjects, useUser } from '@/lib/api/queries'
-import type { ReviewStatistic, Subject } from '@/lib/api/types'
+import { calculateAccuracyMetrics } from '@/lib/calculations/accuracy'
 import { useSyncStore } from '@/stores/sync-store'
 import { useSettingsStore } from '@/stores/settings-store'
 
@@ -23,48 +23,6 @@ const getAccuracyColor = (accuracy: number): string => {
   return 'bg-vermillion-500 dark:bg-vermillion-400'
 }
 
-function calculateAccuracyByLevel(
-  reviewStats: ReviewStatistic[],
-  subjects: (Subject & { id: number })[]
-): LevelData[] {
-  // Create a map of subject_id -> level
-  const subjectLevelMap = new Map<number, number>()
-  subjects.forEach((subject) => {
-    if ('level' in subject) {
-      subjectLevelMap.set(subject.id, subject.level)
-    }
-  })
-
-  // Group review statistics by level
-  const levelMap = new Map<number, { totalAccuracy: number; count: number }>()
-
-  reviewStats.forEach((stat) => {
-    const level = subjectLevelMap.get(stat.subject_id)
-    if (!level) return // Skip if we don't have level info
-
-    if (!levelMap.has(level)) {
-      levelMap.set(level, { totalAccuracy: 0, count: 0 })
-    }
-
-    const data = levelMap.get(level)!
-    data.totalAccuracy += stat.percentage_correct
-    data.count += 1
-  })
-
-  // Convert to array and calculate averages
-  const levelData: LevelData[] = []
-  levelMap.forEach((data, level) => {
-    levelData.push({
-      level,
-      accuracy: parseFloat((data.totalAccuracy / data.count).toFixed(2)),
-      itemCount: data.count,
-    })
-  })
-
-  // Sort by level
-  return levelData.sort((a, b) => a.level - b.level)
-}
-
 export function TimeHeatmap() {
   const { data: reviewStats, isLoading: isLoadingStats } = useReviewStatistics()
   const { data: subjects, isLoading: isLoadingSubjects } = useSubjects()
@@ -72,17 +30,25 @@ export function TimeHeatmap() {
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const showAllLevelsInAccuracy = useSettingsStore((state) => state.showAllLevelsInAccuracy)
 
-  const levelData = useMemo(() => {
-    if (!reviewStats || !subjects) return []
-    const allLevelData = calculateAccuracyByLevel(reviewStats, subjects)
+  const metrics = useMemo(() => {
+    if (!reviewStats || !subjects) return null
+    return calculateAccuracyMetrics(reviewStats, subjects)
+  }, [reviewStats, subjects])
 
-    // Filter by user's current level unless showAllLevelsInAccuracy is enabled
+  const levelData = useMemo(() => {
+    if (!metrics) return []
+    const allLevelData: LevelData[] = []
+    metrics.byLevel.forEach(({ accuracy, itemCount }, level) => {
+      allLevelData.push({ level, accuracy, itemCount })
+    })
+    allLevelData.sort((a, b) => a.level - b.level)
+
     if (!showAllLevelsInAccuracy && user?.level) {
       return allLevelData.filter((item) => item.level <= user.level)
     }
 
     return allLevelData
-  }, [reviewStats, subjects, user, showAllLevelsInAccuracy])
+  }, [metrics, user, showAllLevelsInAccuracy])
 
   const bestLevel = useMemo(() => {
     if (levelData.length === 0) return null

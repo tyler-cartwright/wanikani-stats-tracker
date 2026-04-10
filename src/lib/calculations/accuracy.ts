@@ -16,7 +16,7 @@ export interface AccuracyMetrics {
     kanji: { overall: number; reading: number; meaning: number }
     vocabulary: { overall: number; reading: number; meaning: number }
   }
-  byLevel: Map<number, number>
+  byLevel: Map<number, { accuracy: number; itemCount: number }>
 }
 
 /**
@@ -47,7 +47,7 @@ export function calculateAccuracyMetrics(
   }
 
   // By level
-  const levelStats = new Map<number, { correct: number; incorrect: number }>()
+  const levelStats = new Map<number, { correct: number; incorrect: number; itemCount: number }>()
 
   for (const stat of reviewStats) {
     // Exclude hidden items - they're not in active review rotation
@@ -104,12 +104,13 @@ export function calculateAccuracyMetrics(
     if ('level' in subject && subject.level !== undefined) {
       const level = subject.level
       if (!levelStats.has(level)) {
-        levelStats.set(level, { correct: 0, incorrect: 0 })
+        levelStats.set(level, { correct: 0, incorrect: 0, itemCount: 0 })
       }
       const levelStat = levelStats.get(level)
       if (levelStat) {
         levelStat.correct += statTotalCorrect
         levelStat.incorrect += statTotalIncorrect
+        levelStat.itemCount += 1
       }
     }
   }
@@ -152,11 +153,14 @@ export function calculateAccuracyMetrics(
   }
 
   // By level percentages
-  const byLevel = new Map<number, number>()
+  const byLevel = new Map<number, { accuracy: number; itemCount: number }>()
   levelStats.forEach((stat, level) => {
     const levelTotal = stat.correct + stat.incorrect
     if (levelTotal > 0) {
-      byLevel.set(level, parseFloat(((stat.correct / levelTotal) * 100).toFixed(2)))
+      byLevel.set(level, {
+        accuracy: parseFloat(((stat.correct / levelTotal) * 100).toFixed(2)),
+        itemCount: stat.itemCount,
+      })
     }
   })
 
