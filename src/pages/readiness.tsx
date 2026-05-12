@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useSubjects, useAssignments } from '@/lib/api/queries'
 import { enrichSubjectsWithSRS } from '@/lib/calculations/kanji-grid'
 import { calculateJLPTReadiness } from '@/lib/calculations/jlpt-readiness'
@@ -14,6 +14,7 @@ export function Readiness() {
   useDocumentTitle('Readiness')
   const { jlptThreshold } = useSettingsStore()
   const [expandedLevel, setExpandedLevel] = useState<JoyoGrade | null>(null)
+  const expandedDetailRef = useRef<HTMLDivElement>(null)
   const isSyncing = useSyncStore((state) => state.isSyncing)
 
   // Fetch data
@@ -43,6 +44,20 @@ export function Readiness() {
   const handleToggle = (grade: JoyoGrade) => {
     setExpandedLevel((current) => (current === grade ? null : grade))
   }
+
+  useEffect(() => {
+    if (!expandedLevel || !expandedDetailRef.current) return
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const frameId = window.requestAnimationFrame(() => {
+      expandedDetailRef.current?.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      })
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [expandedLevel])
 
   // Loading state - skeleton matching actual content structure
   if (isLoading) {
@@ -170,11 +185,13 @@ export function Readiness() {
 
       {/* Expanded Grade Detail */}
       {expandedLevel && (
-        <JLPTLevelDetail
-          data={readiness.grades.find((g) => g.grade === expandedLevel)!}
-          subjects={enrichedSubjects}
-          threshold={jlptThreshold}
-        />
+        <div ref={expandedDetailRef} className="scroll-mt-24">
+          <JLPTLevelDetail
+            data={readiness.grades.find((g) => g.grade === expandedLevel)!}
+            subjects={enrichedSubjects}
+            threshold={jlptThreshold}
+          />
+        </div>
       )}
 
       {/* Footer Info */}
