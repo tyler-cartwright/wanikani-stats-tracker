@@ -76,12 +76,12 @@ export function JLPTLevelDetail({ data, subjects, threshold }: JLPTLevelDetailPr
   }, [items, subjectMap])
 
   return (
-    <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-md">
+    <div className="p-6">
       {/* Header with filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         {/* Title */}
         <div>
-          <h3 className="text-xl font-bold text-ink-100 dark:text-paper-100">{data.label} Kanji</h3>
+          <h3 id="jlpt-level-detail-title" className="text-xl font-bold text-ink-100 dark:text-paper-100">{data.label} Kanji</h3>
           <p className="text-sm text-ink-400 dark:text-paper-300 mt-1">
             {data.kanji.total} total kanji ({data.kanji.inWanikani} in WaniKani)
           </p>

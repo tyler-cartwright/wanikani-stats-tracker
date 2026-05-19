@@ -7,13 +7,14 @@ import { useSyncStore } from '@/stores/sync-store'
 import { JLPTHero } from '@/components/jlpt/jlpt-hero'
 import { JLPTLevelCard } from '@/components/jlpt/jlpt-level-card'
 import { JLPTLevelDetail } from '@/components/jlpt/jlpt-level-detail'
+import { Modal, ModalClose } from '@/components/shared/modal'
 import type { JoyoGrade } from '@/data/jlpt'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 
 export function Readiness() {
   useDocumentTitle('Readiness')
   const { jlptThreshold } = useSettingsStore()
-  const [expandedLevel, setExpandedLevel] = useState<JoyoGrade | null>(null)
+  const [selectedGrade, setSelectedGrade] = useState<JoyoGrade | null>(null)
   const isSyncing = useSyncStore((state) => state.isSyncing)
 
   // Fetch data
@@ -39,9 +40,14 @@ export function Readiness() {
     return calculateJLPTReadiness(enrichedSubjects, jlptThreshold)
   }, [enrichedSubjects, jlptThreshold])
 
-  // Handle grade expansion
+  // Pre-compute selected grade data so it remains available during the modal close animation
+  const selectedGradeData = useMemo(
+    () => readiness?.grades.find((g) => g.grade === selectedGrade) ?? null,
+    [readiness, selectedGrade]
+  )
+
   const handleToggle = (grade: JoyoGrade) => {
-    setExpandedLevel((current) => (current === grade ? null : grade))
+    setSelectedGrade(grade)
   }
 
   // Loading state - skeleton matching actual content structure
@@ -162,20 +168,28 @@ export function Readiness() {
           <JLPTLevelCard
             key={gradeData.grade}
             data={gradeData}
-            isExpanded={expandedLevel === gradeData.grade}
+            isSelected={selectedGrade === gradeData.grade}
             onToggle={() => handleToggle(gradeData.grade)}
           />
         ))}
       </div>
 
-      {/* Expanded Grade Detail */}
-      {expandedLevel && (
-        <JLPTLevelDetail
-          data={readiness.grades.find((g) => g.grade === expandedLevel)!}
-          subjects={enrichedSubjects}
-          threshold={jlptThreshold}
-        />
-      )}
+      {/* Grade Detail Modal */}
+      <Modal
+        isOpen={selectedGrade !== null}
+        onClose={() => setSelectedGrade(null)}
+        size="xl"
+        labelledBy="jlpt-level-detail-title"
+      >
+        <ModalClose onClose={() => setSelectedGrade(null)} />
+        {selectedGradeData && (
+          <JLPTLevelDetail
+            data={selectedGradeData}
+            subjects={enrichedSubjects}
+            threshold={jlptThreshold}
+          />
+        )}
+      </Modal>
 
       {/* Footer Info */}
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6">
