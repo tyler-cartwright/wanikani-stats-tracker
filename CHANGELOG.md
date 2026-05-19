@@ -1463,6 +1463,13 @@ WaniTrack v2.0.0 - Complete WaniKani statistics tracker and analytics platform.
 
 ## Version History Summary
 
+- **2.20.0** (May 19, 2026) - Readiness grade detail opens in modal; useReducedMotion hook; Modal xl size, aria-labelledby, reduced-motion-aware animation
+- **2.19.3** (Apr 10, 2026) - Accuracy by Level weighted calculation fix; hidden items excluded; kana_vocabulary/radical reading handling corrected
+- **2.19.2** (Mar 3, 2026) - Level 60 Projection completed-levels count correct after reset
+- **2.19.1** (Mar 1, 2026) - Level history pre-reset filtering via WaniKani resets API; accurate reset dates and level numbers
+- **2.19.0** (Mar 1, 2026) - Reset History Notice on Progress page; pre-reset progressions excluded from level calculations
+- **2.18.1** (Feb 21, 2026) - Toggle overflow fix on narrow screens; Level Timeline bar chart label crowding; projection outlier precision
+- **2.18.0** (Feb 20, 2026) - Dashboard Level Progress granular "time so far" tag
 - **2.17.0** (Feb 18, 2026) - Accuracy breakdown redesign, 2dp accuracy everywhere, reading count correctness fix, dark mode fix
 - **2.16.0** (Jan 17, 2026) - Forecast page streamlined: removed Peak Day/Stabilization/Breakdown, deterministic seeded RNG
 - **2.15.0** (Jan 17, 2026) - Progress page auto-detect breaks toggle, UX polish, settings reorganization
