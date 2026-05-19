@@ -5,6 +5,25 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.0] - 2026-05-19
+
+### Changed
+- **Readiness: Grade Detail Opens in Modal**: Clicking a grade tile on the Readiness page now opens the kanji detail in a modal rather than expanding a panel below the card grid
+  - The detail is immediately visible regardless of which tile was clicked -- lower tiles (Grade 4, Grade 5, Grade 6, Secondary School) no longer render content far below the fold
+  - Secondary School (~1,130 kanji) handled naturally via the modal's internal scroll
+  - Active grade card highlighted with a vermillion border while the modal is open
+  - Tile affordance updated from a collapsible chevron to a drill-in arrow to reflect the new interaction model
+
+### Fixed
+- **Modal: Animation Ignores prefers-reduced-motion**: Modal open/close animation now responds to the user's reduced-motion system preference; previously the 300ms fade/scale animation played regardless of the OS accessibility setting
+- **Modal: Close Button Overlaps Content**: `ModalClose` is now flow-positioned rather than absolutely positioned, preventing it from overlapping modal content in cases where the modal panel has no relative ancestor
+
+### Technical
+- Added `src/hooks/use-reduced-motion.ts`: reactive hook subscribing to `(prefers-reduced-motion: reduce)` via `matchMedia` + change listener, following the `use-mobile.ts` pattern; consumed by `Modal` so reduced-motion handling is centralised
+- Extended `Modal` with `xl` size (`max-w-5xl`), optional `labelledBy` prop for `aria-labelledby`, and animation duration/unmount delay derived from `useReducedMotion`
+- `JLPTLevelCard`: prop renamed `isExpanded` to `isSelected`; `ChevronDown` replaced with `ArrowUpRight`
+- `JLPTLevelDetail`: outer card chrome removed; component is now content-only and relies on its container (the Modal) for the card wrapper
+
 ## [2.19.3] - 2026-04-10
 
 ### Fixed

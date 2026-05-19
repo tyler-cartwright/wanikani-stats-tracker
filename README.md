@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.19.3
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.20.0
 
 ---
 
@@ -54,7 +54,7 @@ Prepare for JLPT exams:
 - Grade-based readiness assessment (N5-N1)
 - Configurable SRS thresholds (Apprentice, Guru, Master, Enlightened)
 - Track mastery progress for each JLPT level
-- Detailed breakdown by kanji, vocabulary, and overall readiness
+- Detailed kanji breakdown per grade, opened in a focused modal with filter controls (All / Known / Unknown)
 
 ### Accuracy Insights
 Understand your performance patterns:
