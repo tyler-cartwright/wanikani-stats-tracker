@@ -3,6 +3,10 @@
 > Drafted 2026-06-09 against v2.20.1. This is a living document: strategy research
 > snapshot + tiered recommendations + release sequencing. Revisit assumptions
 > (especially competitor capabilities) every few months.
+>
+> **Updated 2026-06-09**: added §6 (PWA/offline audit) after discovering the
+> offline story is broken in ways that block the activity-history plan; roadmap
+> re-sequenced — "Solid ground" now precedes "The flight recorder".
 
 ---
 
@@ -69,7 +73,7 @@ Reference threads:
 
 ## 3. Tier 1 — Quick wins (≈ a weekend each, data already synced)
 
-### 3.1 Review activity capture engine ← ship first
+### 3.1 Review activity capture engine ← first *feature* (after §6 durability work)
 - **What**: On every sync, diff each subject's review-statistics answer totals
   (`meaning_correct + meaning_incorrect + reading_correct + reading_incorrect`)
   against previous values; bucket deltas into the current date. Detect lessons
@@ -194,18 +198,93 @@ Reference threads:
 
 ---
 
-## 6. Release roadmap
+## 6. PWA / offline audit (June 2026) — prerequisite work
 
-| Release | Theme | Contents | Rationale |
-|---|---|---|---|
-| **2.21** | "The flight recorder" | Activity capture engine + SRS-distribution snapshots + streaks/records display + history export-import; start #47 test suite on this code | Irreplaceable data starts compounding the day it ships — everything visible can wait, capture cannot |
-| **2.22** | "Show your work" | Activity heatmap page + share cards | Visible payoff of 2.21's data + first organic-growth feature; matches Wanilog's two flashiest capabilities in one release |
-| **2.23** | "Daily driver" | Level-up blockers on Dashboard + frequency coverage on Readiness | Shifts usage from "check weekly for stats" to "check daily to plan study" — that's what retention looks like |
-| 2.24 (tentative) | "Treatment, not just diagnosis" | Leech trainer (+ study materials sync) | Natural headline once the engagement loop is established |
+The roadmap's heatmap/streak features assume the PWA is trustworthy as a
+daily-open app, including offline. Audited 2026-06-09 at v2.20.1: the service
+worker layer mostly works; **the app's own cache-clearing code sabotages it**,
+and the data layer has offline correctness bugs.
+
+### What works today
+
+- Production build registers the service worker (`registerSW.js` injected by
+  vite-plugin-pwa, correct scope under the custom domain via
+  `VITE_CUSTOM_DOMAIN` in `deploy.yml`), precaches all assets including every
+  lazy route chunk, and has a `NavigationRoute` fallback to `index.html` —
+  the shell and all pages load with no network.
+- All four synced collections read from IndexedDB, so Progress / Accuracy /
+  Leeches / Kanji / Readiness render real data offline.
+- `InitialSync` shows the app immediately when cached data exists (sync runs in
+  background); an `OfflineIndicator` banner already exists.
+
+### What breaks it
+
+1. **Version manager destroys the PWA on every release (critical).**
+   `checkAndUpdateVersion()` (`src/lib/cache/version-manager.ts`) runs before
+   first render; on any version change it calls `clearDatabase()` — wiping all
+   synced IndexedDB data and forcing a full re-sync every release — and
+   `clearServiceWorkerCaches()`, which deletes **every** Cache Storage cache
+   including Workbox's precache out from under the live service worker.
+   Offline loads then hard-fail until the SW reinstalls. Likely the true root
+   cause of the "stale chunk errors" that `lazyWithRetry` papers over. The
+   same nuke runs on Force Full Sync (`use-sync.ts`) and logout
+   (`user-store.ts`). **Roadmap blocker**: the future activity-history store
+   would be erased on every version bump, killing the moat before it starts.
+2. **Network-only queries with no offline fallback** (`src/lib/api/queries.ts`):
+   - `/user` is never persisted (user store deliberately holds only the
+     token) → offline, the dashboard hero renders `user?.level ?? 1` =
+     **"Level 1"** for everyone; every calculation needing current level
+     degrades.
+   - `/resets` defaults to `[]` on failure → offline, reset users **silently
+     see pre-reset data again** — the exact bug fixed in 2.19.1 resurfaces.
+   - `/summary` just fails → no lessons count / next-review time (reviews
+     count already has an assignment-based fallback; lessons doesn't).
+3. **Smaller**: Google Fonts from CDN with no runtime caching (cosmetic
+   fallback offline); first-ever launch offline shows a generic "Sync Failed"
+   instead of "connect once to set up"; offline sync failures are
+   indistinguishable from API outages in the UI.
+
+### Work items ("Solid ground")
+
+- Replace the version-change nuke with real IndexedDB migrations — the
+  `DB_VERSION` / `onupgradeneeded` machinery in `src/lib/db/database.ts`
+  already exists and is unused for this. Version bumps must preserve synced
+  data (delta sync handles freshness) and must never touch durable
+  history stores.
+- Never delete the Workbox precache from app code (version change, force
+  sync, or logout) — `autoUpdate` already handles asset freshness. Once
+  fixed, `lazyWithRetry` is likely removable.
+- Persist last-known `/user` and `/resets` snapshots (IndexedDB or
+  localStorage) as offline fallbacks → real level + correct post-reset data
+  offline.
+- Derive lessons-available / next-review from assignments when `/summary` is
+  unreachable.
+- Offline-aware sync UX: suppress "Sync Failed" when `navigator.onLine` is
+  false; retry on the `online` event; friendly first-launch-offline message.
+- (Polish) Runtime-cache or self-host fonts.
+- Migration code is exactly what #47's test suite should cover first — a bad
+  migration destroys data users can't regenerate.
+
+**Estimated effort**: 2–3 weekends. **Hard prerequisite** for the activity
+capture engine: the moat argument collapses if a routine release wipes
+history, and the heatmap's daily-PWA-user story depends on offline being
+trustworthy.
 
 ---
 
-## 7. Maintenance principles
+## 7. Release roadmap
+
+| Release | Theme | Contents | Rationale |
+|---|---|---|---|
+| **2.21** | "Solid ground" | Offline & data durability (§6 work items): IDB migrations replace version-nuke, precache preserved, user/resets offline fallbacks, summary fallback, offline-aware sync UX; #47 test suite started here | Capture must not ship until the data layer stops eating itself; every later feature assumes durable local data |
+| **2.22** | "The flight recorder" | Activity capture engine + SRS-distribution snapshots + streaks/records display + history export-import | Irreplaceable data starts compounding the day it ships — everything visible can wait, capture cannot |
+| **2.23** | "Show your work" | Activity heatmap page + share cards | Visible payoff of captured data + first organic-growth feature; matches Wanilog's two flashiest capabilities in one release |
+| **2.24** | "Daily driver" | Level-up blockers on Dashboard + frequency coverage on Readiness | Shifts usage from "check weekly for stats" to "check daily to plan study" — that's what retention looks like |
+| 2.25 (tentative) | "Treatment, not just diagnosis" | Leech trainer (+ study materials sync) | Natural headline once the engagement loop is established |
+
+---
+
+## 8. Maintenance principles
 
 - Every new calculation ships with tests (#47); the activity-diff engine is the
   one place tests-first is genuinely the cheap option (stateful, corrupts
