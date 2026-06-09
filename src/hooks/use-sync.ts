@@ -40,8 +40,10 @@ export function useSync() {
 
         setLastSync(result)
 
-        // If sync failed, set the error
-        if (!result.success && result.error) {
+        // If sync failed, set the error — unless the browser is offline, in
+        // which case a failed sync is expected state (the offline indicator
+        // already communicates it) and resolves itself on reconnect.
+        if (!result.success && result.error && navigator.onLine) {
           setError(result.error)
         }
 
@@ -65,8 +67,10 @@ export function useSync() {
 
         return result
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Sync failed'
-        setError(errorMessage)
+        if (navigator.onLine) {
+          const errorMessage = err instanceof Error ? err.message : 'Sync failed'
+          setError(errorMessage)
+        }
         throw err
       } finally {
         setSyncing(false)
