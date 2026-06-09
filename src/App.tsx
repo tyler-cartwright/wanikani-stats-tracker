@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './lib/query-client'
 import { useUserStore } from './stores/user-store'
 import { AppShell } from './components/layout/app-shell'
 import { ErrorBoundary } from './components/shared/error-boundary'
@@ -18,21 +19,6 @@ const Kanji = lazyWithRetry(() => import('./pages/kanji').then(m => ({ default: 
 const Readiness = lazyWithRetry(() => import('./pages/readiness').then(m => ({ default: m.Readiness })))
 const Settings = lazyWithRetry(() => import('./pages/settings').then(m => ({ default: m.Settings })))
 const Setup = lazyWithRetry(() => import('./pages/setup').then(m => ({ default: m.Setup })))
-
-// Configure TanStack Query
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60000, // 1 minute default
-      gcTime: 300000, // 5 minutes (formerly cacheTime)
-      retry: 1,
-      refetchOnWindowFocus: false,
-      // Disable structural sharing to ensure fresh object references
-      // This fixes component memoization issues where useMemo doesn't recompute
-      structuralSharing: false,
-    },
-  },
-})
 
 function AppContent() {
   const token = useUserStore((state) => state.token)

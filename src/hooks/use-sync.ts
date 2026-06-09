@@ -5,7 +5,6 @@ import { useSyncStore } from '@/stores/sync-store'
 import { useUserStore } from '@/stores/user-store'
 import { performSync, forceFullSync, getLastSyncInfo } from '@/lib/sync/sync-manager'
 import { queryKeys } from '@/lib/api/queries'
-import { clearAllBrowserCaches } from '@/lib/cache/cache-manager'
 
 export function useSync() {
   const queryClient = useQueryClient()
@@ -81,80 +80,9 @@ export function useSync() {
     return getLastSyncInfo()
   }, [])
 
-  /**
-   * Nuclear option: Clear ALL caches and force full resync
-   * This clears:
-   * - Service Worker caches
-   * - LocalStorage (except auth)
-   * - React Query cache
-   * - IndexedDB
-   */
-  const forceClearAndSync = useCallback(
-    async () => {
-      console.log('[USE-SYNC] forceClearAndSync() called - nuclear cache clear')
-
-      if (!token) {
-        const errorMessage = 'No API token available'
-        console.error('[USE-SYNC] No token available')
-        setError(errorMessage)
-        throw new Error(errorMessage)
-      }
-
-      if (isSyncing) {
-        console.log('[USE-SYNC] Already syncing, returning early')
-        return
-      }
-
-      console.log('[USE-SYNC] Starting nuclear cache clear...')
-      setSyncing(true)
-      setError(null)
-      setProgress({ phase: 'idle', message: 'Clearing all caches...', isFullSync: true })
-
-      try {
-        // Clear all browser caches (Service Worker + LocalStorage)
-        await clearAllBrowserCaches()
-        console.log('[USE-SYNC] Browser caches cleared')
-
-        // Clear React Query cache completely
-        queryClient.clear()
-        console.log('[USE-SYNC] React Query cache cleared')
-
-        // Now perform force full sync (which clears IndexedDB)
-        console.log('[USE-SYNC] Starting force full sync...')
-        const result = await forceFullSync(token, setProgress)
-        console.log('[USE-SYNC] Force full sync result:', result)
-
-        setLastSync(result)
-
-        if (!result.success && result.error) {
-          setError(result.error)
-        }
-
-        // Refetch active queries after sync
-        if (result.success) {
-          console.log('[USE-SYNC] Refetching active queries...')
-          await queryClient.refetchQueries({ type: 'active' })
-          console.log('[USE-SYNC] All active queries refetched')
-        }
-
-        return result
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Nuclear sync failed'
-        console.error('[USE-SYNC] Nuclear sync error:', err)
-        setError(errorMessage)
-        throw err
-      } finally {
-        setSyncing(false)
-        setProgress(null)
-      }
-    },
-    [token, isSyncing, queryClient, setSyncing, setProgress, setLastSync, setError]
-  )
-
   return {
     sync,
     forceSync: () => sync(true),
-    forceClearAndSync,
     checkSyncStatus,
     isSyncing,
     lastSyncAt,
