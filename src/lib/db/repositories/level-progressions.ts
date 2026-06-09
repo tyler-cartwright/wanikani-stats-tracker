@@ -35,7 +35,10 @@ export async function syncLevelProgressions(
     isFullSync ? 'Fetching level progressions...' : 'Checking for level progression updates...'
   )
 
-  const progressions = await fetchLevelProgressions(token, updatedAfter ?? undefined)
+  // Fallback delta cursor if the API response carries no data_updated_at;
+  // captured before the fetch so updates landing mid-sync aren't skipped
+  const fetchStartedAt = new Date().toISOString()
+  const { data: progressions, dataUpdatedAt } = await fetchLevelProgressions(token, updatedAfter ?? undefined)
 
   if (progressions.length === 0) {
     onProgress?.('Level progressions up to date')
@@ -44,7 +47,7 @@ export async function syncLevelProgressions(
 
   onProgress?.(`Saving ${progressions.length} level progressions...`)
 
-  const cachedProgressions: CachedLevelProgression[] = progressions.map((prog: any) => ({
+  const cachedProgressions: CachedLevelProgression[] = progressions.map((prog) => ({
     id: prog.id,
     level: prog.level,
     data: prog,
@@ -53,8 +56,9 @@ export async function syncLevelProgressions(
 
   await putMany(STORES.LEVEL_PROGRESSIONS, cachedProgressions)
 
+  // Update sync metadata using the server-side collection timestamp
   await updateSyncMetadata({
-    levelProgressionsUpdatedAt: new Date().toISOString(),
+    levelProgressionsUpdatedAt: dataUpdatedAt ?? fetchStartedAt,
   })
 
   onProgress?.(`Updated ${progressions.length} level progressions`)
