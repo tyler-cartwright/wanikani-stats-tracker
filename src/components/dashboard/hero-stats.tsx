@@ -1,6 +1,11 @@
 import { formatDistanceToNow } from 'date-fns'
 import { JapaneseLabel } from '@/components/shared/japanese-label'
 import { useUser, useSummary, useAssignments } from '@/lib/api/queries'
+import {
+  countLessonsAvailable,
+  countReviewsAvailable,
+  getNextReviewAt,
+} from '@/lib/calculations/summary-fallback'
 import { useSyncStore } from '@/stores/sync-store'
 
 export function HeroStats() {
@@ -12,23 +17,20 @@ export function HeroStats() {
   const isLoading = userLoading || summaryLoading || assignmentsLoading || isSyncing
 
   // Calculate current reviews from assignments (accurate)
-  const reviewsAvailable = assignments
-    ? assignments.filter((a) => {
-        if (a.hidden) return false // Hidden items don't appear in reviews
-        if (!a.available_at) return false
-        if (a.srs_stage === 0) return false // Not unlocked
-        if (a.srs_stage === 9) return false // Burned
-        return new Date(a.available_at) <= new Date()
-      }).length
-    : 0
+  const reviewsAvailable = countReviewsAvailable(assignments ?? [], new Date())
 
-  const lessonsAvailable = summary?.lessons
+  // Lessons and next review come from /summary when reachable (it owns the
+  // gating rules); offline they're derived from local assignments.
+  const lessonsAvailable = summary
     ? summary.lessons.reduce((sum, l) => sum + l.subject_ids.length, 0)
-    : 0
+    : countLessonsAvailable(assignments ?? [])
 
-  // Next review time
-  const nextReviewTime = summary?.next_reviews_at
-    ? formatDistanceToNow(new Date(summary.next_reviews_at), { addSuffix: true })
+  const nextReviewsAt = summary
+    ? summary.next_reviews_at
+    : getNextReviewAt(assignments ?? [], new Date())
+
+  const nextReviewTime = nextReviewsAt
+    ? formatDistanceToNow(new Date(nextReviewsAt), { addSuffix: true })
     : null
 
   if (isLoading) {
