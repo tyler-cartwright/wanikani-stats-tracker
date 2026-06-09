@@ -3,6 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useUserStore } from '@/stores/user-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { fetchUser, fetchSummary, fetchResets } from './endpoints'
+import {
+  getResetsSnapshot,
+  getUserSnapshot,
+  saveResetsSnapshot,
+  saveUserSnapshot,
+} from '@/lib/db/repositories/api-snapshots'
 import { getCachedSubjects } from '@/lib/db/repositories/subjects'
 import { getCachedAssignments } from '@/lib/db/repositories/assignments'
 import { getCachedReviewStatistics } from '@/lib/db/repositories/review-statistics'
@@ -20,46 +26,83 @@ export const queryKeys = {
   resets: ['resets'] as const,
 }
 
+// Network-reliant queries use networkMode: 'always' so their queryFns still
+// run while the browser reports offline (React Query v5 pauses them under the
+// default 'online' mode) — letting the snapshot fallbacks below decide what
+// to serve. The IndexedDB-backed queries use it too: they're pure local reads
+// and should never be paused by network state.
+//
+// Trade-off: snapshot-served data counts as a successful fetch, so a
+// reconnect refetch can lag by up to the query's staleTime. The background
+// delta sync on launch/reconnect dominates actual freshness.
+
 /**
- * User - always fetched fresh (small payload, important to be current)
+ * User - fetched fresh (small payload, important to be current), falling
+ * back to the last-known snapshot when the network is unavailable.
  */
 export function useUser() {
   const token = useUserStore((state) => state.token)
 
   return useQuery({
     queryKey: queryKeys.user,
-    queryFn: () => {
+    queryFn: async () => {
       if (!token) throw new Error('No API token available')
-      return fetchUser(token)
+      try {
+        const user = await fetchUser(token)
+        saveUserSnapshot(user).catch((err) =>
+          console.warn('[QUERY] Failed to save user snapshot:', err)
+        )
+        return user
+      } catch (error) {
+        const snapshot = await getUserSnapshot()
+        if (snapshot !== undefined) return snapshot
+        throw error
+      }
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 1,
+    networkMode: 'always',
   })
 }
 
 /**
- * Resets - fetched fresh from API (tiny payload, rarely changes)
+ * Resets - fetched fresh (tiny payload, rarely changes), falling back to the
+ * last-known snapshot when the network is unavailable. Critical for reset
+ * users: defaulting to [] offline would resurface pre-reset data (see 2.19.1).
  */
 export function useResets() {
   const token = useUserStore((state) => state.token)
 
   return useQuery({
     queryKey: queryKeys.resets,
-    queryFn: () => {
+    queryFn: async () => {
       if (!token) throw new Error('No API token available')
-      return fetchResets(token)
+      try {
+        const resets = await fetchResets(token)
+        saveResetsSnapshot(resets).catch((err) =>
+          console.warn('[QUERY] Failed to save resets snapshot:', err)
+        )
+        return resets
+      } catch (error) {
+        const snapshot = await getResetsSnapshot()
+        if (snapshot !== undefined) return snapshot
+        throw error
+      }
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 1,
+    networkMode: 'always',
   })
 }
 
 /**
- * Summary - always fetched fresh (changes hourly, small payload)
+ * Summary - always fetched fresh (changes hourly, small payload). No
+ * snapshot: it goes stale within the hour, so consumers derive offline
+ * fallbacks from local assignments instead (summary-fallback.ts).
  */
 export function useSummary() {
   const token = useUserStore((state) => state.token)
@@ -75,6 +118,7 @@ export function useSummary() {
     gcTime: 60 * 1000,
     refetchInterval: 30 * 1000,
     retry: 1,
+    networkMode: 'always',
   })
 }
 
@@ -95,6 +139,7 @@ export function useSubjects() {
     gcTime: 30 * 60 * 1000, // 30 min
     refetchOnMount: false, // post-sync invalidation handles freshness
     retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
   })
 }
 
@@ -115,6 +160,7 @@ export function useAssignments() {
     gcTime: 30 * 60 * 1000, // 30 min
     refetchOnMount: false, // post-sync invalidation handles freshness
     retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
   })
 }
 
@@ -135,6 +181,7 @@ export function useReviewStatistics() {
     gcTime: 30 * 60 * 1000, // 30 min
     refetchOnMount: false, // post-sync invalidation handles freshness
     retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
   })
 }
 
@@ -155,6 +202,7 @@ export function useLevelProgressions() {
     gcTime: 30 * 60 * 1000, // 30 min
     refetchOnMount: false, // post-sync invalidation handles freshness
     retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
   })
 }
 

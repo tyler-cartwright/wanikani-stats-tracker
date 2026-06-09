@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { clearDatabase } from '@/lib/db/database'
-import { clearAllBrowserCaches } from '@/lib/cache/cache-manager'
+import { queryClient } from '@/lib/query-client'
 
 interface UserState {
   // State
@@ -30,13 +30,15 @@ export const useUserStore = create<UserState>()(
         }),
 
       clearAuth: async () => {
-        // Clear all caches when logging out
+        // Clear account data on logout: IndexedDB and the in-memory query
+        // cache (so a different account's token can't see stale data).
+        // Never touch Cache Storage — the service worker owns app assets.
         try {
           await clearDatabase()
-          await clearAllBrowserCaches()
         } catch (err) {
-          console.error('Failed to clear caches:', err)
+          console.error('Failed to clear database:', err)
         }
+        queryClient.clear()
         set({ token: null })
       },
 

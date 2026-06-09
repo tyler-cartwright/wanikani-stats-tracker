@@ -5,6 +5,35 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.21.0] - 2026-06-09
+
+### Fixed
+- **App Updates No Longer Wipe Synced Data or Break Offline Loading**: Updating to a new WaniTrack version previously cleared the entire local database and all service worker caches — including the precached app shell — forcing a full re-download of WaniKani data on every release and breaking offline loading until the new version finished installing
+  - Database schema changes are now handled by proper IndexedDB migrations that preserve existing data; delta sync keeps it fresh
+  - Nothing in the app deletes the service worker's precache anymore — the auto-update flow owns app assets, so the app shell keeps loading offline across releases
+  - A transient storage error during the version check also no longer triggers a defensive wipe
+- **Offline: Dashboard No Longer Shows "Level 1"**: Your real level now displays offline, served from the last-known `/user` response instead of a hardcoded fallback
+- **Offline: Reset Users No Longer See Pre-Reset Data**: The last-known `/resets` response is now stored locally and used offline, so post-reset filtering (introduced in 2.19.1) keeps working without a connection
+- **Offline: No More Spurious "Sync Failed" Errors**: A sync that fails because you're offline is expected, is already communicated by the offline indicator, and no longer surfaces as an error; genuine sync failures while online are unchanged
+
+### Added
+- **Offline: Lessons and Next-Review Now Available**: When the `/summary` endpoint is unreachable, lessons available and the next review time are derived from locally synced assignments (the same way reviews available already worked)
+- **Friendly First-Launch-Offline Experience**: Opening WaniTrack for the very first time without a connection now shows a "connect once to set up" explanation instead of a generic sync error, and setup starts automatically when the connection returns
+- **Auto-Refresh on Reconnect**: When connectivity returns, a delta sync runs immediately instead of waiting for the next app launch
+- **Test Suite**: The project now has automated tests (Vitest), run in CI on every pull request — covering the reset progression filter, accuracy calculations, the new IndexedDB migration path, and the offline summary fallbacks (closes #47)
+
+### Technical
+- New `src/lib/db/migrations.ts`: numbered migration map applied sequentially inside the `onupgradeneeded` transaction from `oldVersion + 1` to `DB_VERSION`; a missing migration throws rather than silently skipping. Migration 1 is the previous schema verbatim; migration 2 (DB version 2) adds the `api_snapshots` store
+- `database.ts` now closes its connection on `versionchange` (and logs `onblocked`), so a stale tab can't block a future DB version upgrade indefinitely
+- `version-manager.ts` only records the running app version and logs upgrades; `main.tsx` no longer gates rendering on the version check
+- Deleted `src/lib/cache/cache-manager.ts`; removed the unused `forceClearAndSync` from `use-sync.ts`. Logout (`clearAuth`) clears IndexedDB, the React Query cache (fixing a latent stale-data bug when switching tokens), and the stored token — never Cache Storage
+- `queryClient` moved from `App.tsx` to `src/lib/query-client.ts` so non-component code can clear it without importing the app tree
+- New `api_snapshots` repository: `/user` and `/resets` responses write through to IndexedDB on success; the query functions fall back to the snapshot on fetch failure and only rethrow when no snapshot exists. All queries now use `networkMode: 'always'` — React Query v5's default `'online'` mode pauses query functions while the browser reports offline, which would have prevented both the snapshot fallbacks and pure IndexedDB reads from running
+- New `src/lib/calculations/summary-fallback.ts` (pure, tested): `countLessonsAvailable`, `countReviewsAvailable` (extracted from hero-stats), `getNextReviewAt`
+- New `useOnlineStatus` hook (extracted from `OfflineIndicator`); `InitialSync` uses it for the offline setup state, online-event retry, and reconnect resync
+- Test stack: `vitest` + `fake-indexeddb` (dev dependencies only), separate `vitest.config.ts`, `npm test` wired into CI between typecheck and build; shared fixture builders in `src/lib/test/fixtures.ts`
+- `lazyWithRetry` is retained but is now a removal candidate: the precache deletion it papered over is gone, leaving only the theoretical deploy-moment chunk race
+
 ## [2.20.1] - 2026-06-09
 
 ### Fixed

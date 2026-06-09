@@ -1,7 +1,8 @@
 // src/components/shared/initial-sync.tsx
 import { useEffect, useState } from 'react'
-import { Loader2, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react'
+import { Loader2, CheckCircle, AlertCircle, RefreshCw, WifiOff } from 'lucide-react'
 import { useSync } from '@/hooks/use-sync'
+import { useOnlineStatus } from '@/hooks/use-online-status'
 import { useSyncStatus } from '@/lib/api/queries'
 
 interface InitialSyncProps {
@@ -11,6 +12,7 @@ interface InitialSyncProps {
 export function InitialSync({ children }: InitialSyncProps) {
   const { sync, isSyncing, progress, error } = useSync()
   const { data: syncStatus, isLoading: checkingStatus } = useSyncStatus()
+  const isOnline = useOnlineStatus()
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -21,10 +23,20 @@ export function InitialSync({ children }: InitialSyncProps) {
       console.log('[INITIAL-SYNC] syncStatus:', syncStatus)
       // If we have cached data, show the app immediately
       if (syncStatus?.hasData) {
-        console.log('[INITIAL-SYNC] Has cached data, initializing and triggering background sync')
+        console.log('[INITIAL-SYNC] Has cached data, initializing')
         setInitialized(true)
-        // Trigger background delta sync
-        sync().catch(console.error)
+        // Trigger background delta sync; offline, the reconnect listener
+        // below handles it instead
+        if (isOnline) {
+          sync().catch(console.error)
+        }
+        return
+      }
+
+      // No cached data and offline: nothing to show yet. Wait for the
+      // 'online' transition to re-run this effect and start the first sync.
+      if (!isOnline) {
+        console.log('[INITIAL-SYNC] No cached data and offline, waiting for connection')
         return
       }
 
@@ -36,13 +48,32 @@ export function InitialSync({ children }: InitialSyncProps) {
         setInitialized(true)
       } catch (err) {
         console.error('[INITIAL-SYNC] Initial sync failed:', err)
-        // Still allow access with error state
-        setInitialized(true)
+        if (navigator.onLine) {
+          // Still allow access with error state
+          setInitialized(true)
+        }
+        // Offline (connectivity dropped mid-sync): stay uninitialized so the
+        // offline card shows and the effect retries on reconnect.
       }
     }
 
     initialize()
-  }, [checkingStatus, syncStatus, initialized, sync])
+  }, [checkingStatus, syncStatus, initialized, isOnline, sync])
+
+  // Once running, refresh data as soon as connectivity returns rather than
+  // waiting for the next launch. sync() already no-ops while a sync is
+  // in flight.
+  useEffect(() => {
+    if (!initialized) return
+
+    const handleOnline = () => {
+      console.log('[INITIAL-SYNC] Back online, refreshing data')
+      sync().catch(console.error)
+    }
+
+    window.addEventListener('online', handleOnline)
+    return () => window.removeEventListener('online', handleOnline)
+  }, [initialized, sync])
 
   // Show loading during initial check
   if (checkingStatus) {
@@ -109,6 +140,26 @@ export function InitialSync({ children }: InitialSyncProps) {
               This only happens once. Future loads will be instant.
             </p>
           )}
+        </div>
+      </div>
+    )
+  }
+
+  // First-ever launch while offline (no cached data yet): explain rather
+  // than error. The initialize effect resumes automatically on reconnect.
+  if (!initialized && !isOnline) {
+    return (
+      <div className="min-h-screen bg-paper-100 dark:bg-ink-100 flex items-center justify-center p-8">
+        <div className="max-w-md w-full bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md text-center">
+          <WifiOff className="w-12 h-12 text-ink-400 dark:text-paper-300 mx-auto mb-4" />
+          <h2 className="text-xl font-display font-semibold text-ink-100 dark:text-paper-100 mb-2">
+            You're offline
+          </h2>
+          <p className="text-sm text-ink-400 dark:text-paper-300">
+            WaniTrack needs to connect once to download your WaniKani data.
+            After that, everything works offline. Setup will start
+            automatically when you're back online.
+          </p>
         </div>
       </div>
     )

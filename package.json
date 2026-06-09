@@ -1,13 +1,15 @@
 {
   "name": "wanitrack",
   "private": true,
-  "version": "2.20.1",
+  "version": "2.21.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint .",
     "deploy": "npm run build && gh-pages -d dist"
   },
@@ -28,11 +30,13 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "fake-indexeddb": "^6.2.5",
     "gh-pages": "^6.3.0",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.6.2",
     "vite": "^6.0.5",
     "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.8",
     "workbox-window": "^7.4.0"
   }
 }

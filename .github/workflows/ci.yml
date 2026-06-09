@@ -22,9 +22,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Test
+        run: npm test
+
       # No lint step: `npm run lint` is currently broken (eslint is not a
       # dependency and there is no eslint config). Add it here once that's
-      # fixed. Tests are tracked in #47.
+      # fixed.
 
       - name: Build
         run: npm run build
