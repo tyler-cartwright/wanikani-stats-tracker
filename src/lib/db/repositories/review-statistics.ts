@@ -35,7 +35,10 @@ export async function syncReviewStatistics(
     isFullSync ? 'Fetching all review statistics...' : 'Checking for review statistic updates...'
   )
 
-  const stats = await fetchReviewStatistics(token, updatedAfter ?? undefined)
+  // Fallback delta cursor if the API response carries no data_updated_at;
+  // captured before the fetch so updates landing mid-sync aren't skipped
+  const fetchStartedAt = new Date().toISOString()
+  const { data: stats, dataUpdatedAt } = await fetchReviewStatistics(token, updatedAfter ?? undefined)
 
   if (stats.length === 0) {
     onProgress?.('Review statistics up to date')
@@ -44,7 +47,7 @@ export async function syncReviewStatistics(
 
   onProgress?.(`Saving ${stats.length} review statistics...`)
 
-  const cachedStats: CachedReviewStatistic[] = stats.map((stat: any) => ({
+  const cachedStats: CachedReviewStatistic[] = stats.map((stat) => ({
     id: stat.id,
     subjectId: stat.subject_id,
     data: stat,
@@ -53,8 +56,9 @@ export async function syncReviewStatistics(
 
   await putMany(STORES.REVIEW_STATISTICS, cachedStats)
 
+  // Update sync metadata using the server-side collection timestamp
   await updateSyncMetadata({
-    reviewStatisticsUpdatedAt: new Date().toISOString(),
+    reviewStatisticsUpdatedAt: dataUpdatedAt ?? fetchStartedAt,
   })
 
   onProgress?.(`Updated ${stats.length} review statistics`)

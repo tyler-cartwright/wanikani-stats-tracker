@@ -5,6 +5,7 @@ import { syncReviewStatistics } from '@/lib/db/repositories/review-statistics'
 import { syncLevelProgressions } from '@/lib/db/repositories/level-progressions'
 import { updateSyncMetadata, getSyncMetadata } from '@/lib/db/sync-metadata'
 import { clearDatabase } from '@/lib/db/database'
+import { debugLog } from '@/lib/utils/debug-log'
 
 export interface SyncProgress {
   phase: 'idle' | 'subjects' | 'assignments' | 'reviewStats' | 'levelProgressions' | 'complete' | 'error'
@@ -31,7 +32,7 @@ export async function performSync(
   token: string,
   onProgress?: SyncProgressCallback
 ): Promise<SyncResult> {
-  console.log('[SYNC] performSync started with token:', token ? 'present' : 'missing')
+  debugLog('[SYNC] performSync started with token:', token ? 'present' : 'missing')
 
   const result: SyncResult = {
     success: false,
@@ -44,7 +45,7 @@ export async function performSync(
 
   try {
     // Sync subjects first (they're the foundation)
-    console.log('[SYNC] Starting subjects sync...')
+    debugLog('[SYNC] Starting subjects sync...')
     onProgress?.({ phase: 'subjects', message: 'Syncing subjects...', isFullSync: false })
     const subjectsResult = await syncSubjects(token, (msg) =>
       onProgress?.({ phase: 'subjects', message: msg, isFullSync: false })

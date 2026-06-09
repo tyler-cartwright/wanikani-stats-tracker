@@ -33,7 +33,10 @@ export async function syncAssignments(
 
   onProgress?.(isFullSync ? 'Fetching all assignments...' : 'Checking for assignment updates...')
 
-  const assignments = await fetchAssignments(token, updatedAfter ?? undefined)
+  // Fallback delta cursor if the API response carries no data_updated_at;
+  // captured before the fetch so updates landing mid-sync aren't skipped
+  const fetchStartedAt = new Date().toISOString()
+  const { data: assignments, dataUpdatedAt } = await fetchAssignments(token, updatedAfter ?? undefined)
 
   if (assignments.length === 0) {
     onProgress?.('Assignments up to date')
@@ -42,10 +45,7 @@ export async function syncAssignments(
 
   onProgress?.(`Saving ${assignments.length} assignments...`)
 
-  // Need to extract ID from the fetched data
-  // Note: fetchAssignments returns Assignment[], but we need IDs
-  // See Phase 4 for API modifications
-  const cachedAssignments: CachedAssignment[] = assignments.map((assignment: any) => ({
+  const cachedAssignments: CachedAssignment[] = assignments.map((assignment) => ({
     id: assignment.id,
     subjectId: assignment.subject_id,
     data: assignment,
@@ -54,8 +54,9 @@ export async function syncAssignments(
 
   await putMany(STORES.ASSIGNMENTS, cachedAssignments)
 
+  // Update sync metadata using the server-side collection timestamp
   await updateSyncMetadata({
-    assignmentsUpdatedAt: new Date().toISOString(),
+    assignmentsUpdatedAt: dataUpdatedAt ?? fetchStartedAt,
   })
 
   onProgress?.(`Updated ${assignments.length} assignments`)

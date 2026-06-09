@@ -5,6 +5,27 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.20.1] - 2026-06-09
+
+### Fixed
+- **Sync: Delta Sync Could Miss Updates That Landed Mid-Sync**: The delta sync cursor now uses the WaniKani collection's own `data_updated_at` timestamp instead of a client-clock timestamp recorded after the fetch finished
+  - Previously, anything updated server-side *while* a long sync was running fell into a gap between the data actually fetched and the recorded sync time, and was silently skipped by every subsequent delta sync; client clock skew widened the gap
+  - If the API response carries no `data_updated_at`, the client falls back to a timestamp captured *before* the fetch started — over-fetching on the next delta is harmless since writes are idempotent
+- **Sync: Rate Limiter Could Burst Past WaniKani's Limit During Parallel Sync**: Since 2.19.2, assignments, review statistics, and level progressions sync concurrently, and simultaneous requests could each read the same "last request time" and fire at once; requests now reserve serialized 1-second slots, so concurrent callers queue correctly
+  - The client also now retries on HTTP 429 responses, honouring the `Retry-After` header (up to 3 attempts) instead of failing the sync outright
+
+### Changed
+- **Debug Logging No Longer Ships to Production**: `[SYNC]`/`[REPO]` console logs in the sync path now emit only in dev builds; warnings and errors for real failures are unchanged
+
+### Technical
+- Replaced `RateLimiter` in `src/lib/api/client.ts` with a slot-reservation queue: the next available slot is claimed synchronously (no `await` between read and write), so concurrent callers cannot race; a `backOff()` hook pushes pending slots past a server-requested `Retry-After` window
+- `apiRequest()` now retries 429 responses (parsing `Retry-After` as delay-seconds or HTTP-date, 2s default, max 3 retries) before surfacing a `WaniKaniAPIError`
+- Added `fetchAllPagesWithMeta()` to `src/lib/api/client.ts`, returning `{ data, dataUpdatedAt }` where `dataUpdatedAt` is the latest collection `data_updated_at` seen across pages; `fetchSubjects()`, `fetchAssignments()`, `fetchReviewStatistics()`, and `fetchLevelProgressions()` now return this shape, and the four repositories store `dataUpdatedAt ?? fetchStartedAt` as their delta cursor (also removed the `: any` casts in the repository `map()` callbacks, since ids are now typed on the result)
+- Removed the stale `fetchSubjectsWithFilter()` wrapper (and its leftover "Phase 4" planning comment) from `src/lib/db/repositories/subjects.ts`; `fetchSubjects()` is called directly
+- Added `src/lib/utils/debug-log.ts`: `debugLog()` gates `console.log` behind `import.meta.env.DEV`
+- Added MIT `LICENSE` file (the README already declared MIT, but without the file the code was technically all-rights-reserved)
+- Added `.github/workflows/ci.yml`: pull requests now run `npm ci`, `npm run typecheck`, and `npm run build`. The `lint` script is **not** included because it is currently broken — `eslint` is not a dependency and no eslint config exists in the repo; tests are tracked separately in #47
+
 ## [2.20.0] - 2026-05-19
 
 ### Changed
@@ -1463,6 +1484,7 @@ WaniTrack v2.0.0 - Complete WaniKani statistics tracker and analytics platform.
 
 ## Version History Summary
 
+- **2.20.1** (Jun 9, 2026) - Delta sync cursor from server data_updated_at; concurrency-safe rate limiter with 429 retry; dev-only sync logging; MIT LICENSE file; PR CI workflow
 - **2.20.0** (May 19, 2026) - Readiness grade detail opens in modal; useReducedMotion hook; Modal xl size, aria-labelledby, reduced-motion-aware animation
 - **2.19.3** (Apr 10, 2026) - Accuracy by Level weighted calculation fix; hidden items excluded; kana_vocabulary/radical reading handling corrected
 - **2.19.2** (Mar 3, 2026) - Level 60 Projection completed-levels count correct after reset

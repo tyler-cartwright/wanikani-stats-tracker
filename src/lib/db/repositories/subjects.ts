@@ -3,6 +3,7 @@ import { getAll, putMany, count } from '../database'
 import { STORES } from '../schema'
 import { getSyncMetadata, updateSyncMetadata } from '../sync-metadata'
 import { fetchSubjects } from '@/lib/api/endpoints'
+import { debugLog } from '@/lib/utils/debug-log'
 import type { Subject } from '@/lib/api/types'
 
 export interface CachedSubject {
@@ -24,22 +25,23 @@ export async function syncSubjects(
   token: string,
   onProgress?: (message: string) => void
 ): Promise<{ updated: number; isFullSync: boolean }> {
-  console.log('[REPO] syncSubjects started')
+  debugLog('[REPO] syncSubjects started')
   const metadata = await getSyncMetadata()
   const cachedCount = await getSubjectCount()
-  console.log('[REPO] Subjects - cached count:', cachedCount, 'metadata:', metadata.subjectsUpdatedAt)
+  debugLog('[REPO] Subjects - cached count:', cachedCount, 'metadata:', metadata.subjectsUpdatedAt)
 
   // Determine if we need a full sync or delta sync
   const isFullSync = cachedCount === 0 || !metadata.subjectsUpdatedAt
   const updatedAfter = isFullSync ? undefined : metadata.subjectsUpdatedAt
-  console.log('[REPO] Subjects - isFullSync:', isFullSync, 'updatedAfter:', updatedAfter)
+  debugLog('[REPO] Subjects - isFullSync:', isFullSync, 'updatedAfter:', updatedAfter)
 
   onProgress?.(isFullSync ? 'Fetching all subjects...' : 'Checking for subject updates...')
 
-  // Build endpoint with updated_after if doing delta sync
-  console.log('[REPO] Calling fetchSubjectsWithFilter...')
-  const subjects = await fetchSubjectsWithFilter(token, updatedAfter)
-  console.log('[REPO] Fetched subjects count:', subjects.length)
+  // Fallback delta cursor if the API response carries no data_updated_at;
+  // captured before the fetch so updates landing mid-sync aren't skipped
+  const fetchStartedAt = new Date().toISOString()
+  const { data: subjects, dataUpdatedAt } = await fetchSubjects(token, updatedAfter ?? undefined)
+  debugLog('[REPO] Fetched subjects count:', subjects.length)
 
   if (subjects.length === 0) {
     onProgress?.('Subjects up to date')
@@ -57,21 +59,11 @@ export async function syncSubjects(
 
   await putMany(STORES.SUBJECTS, cachedSubjects)
 
-  // Update sync metadata
+  // Update sync metadata using the server-side collection timestamp
   await updateSyncMetadata({
-    subjectsUpdatedAt: new Date().toISOString(),
+    subjectsUpdatedAt: dataUpdatedAt ?? fetchStartedAt,
   })
 
   onProgress?.(`Updated ${subjects.length} subjects`)
   return { updated: subjects.length, isFullSync }
-}
-
-// Helper to fetch with updated_after filter
-async function fetchSubjectsWithFilter(
-  token: string,
-  updatedAfter?: string | null
-): Promise<(Subject & { id: number })[]> {
-  // Note: This requires modifying fetchSubjects to accept updated_after
-  // See Phase 4 for API layer updates
-  return fetchSubjects(token, updatedAfter ?? undefined)
 }

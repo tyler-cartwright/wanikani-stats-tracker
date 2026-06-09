@@ -1,7 +1,8 @@
 // WaniKani API v2 Endpoints
 // Typed functions for each API resource
 
-import { fetchResource, fetchAllPages } from './client'
+import { fetchResource, fetchAllPages, fetchAllPagesWithMeta } from './client'
+import type { PaginatedFetchResult } from './client'
 import type {
   User,
   Assignment,
@@ -29,7 +30,7 @@ export async function fetchUser(token: string): Promise<User> {
 // ============================================================================
 
 /**
- * Fetch all assignments for the user
+ * Fetch all assignments for the user, plus the collection's data_updated_at
  * Handles pagination automatically
  * https://docs.api.wanikani.com/20170710/#get-all-assignments
  */
@@ -37,13 +38,13 @@ export async function fetchAssignments(
   token: string,
   updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
-): Promise<(Assignment & { id: number })[]> {
+): Promise<PaginatedFetchResult<Assignment>> {
   const params = new URLSearchParams()
   if (updatedAfter) {
     params.append('updated_after', updatedAfter)
   }
   const endpoint = params.toString() ? `/assignments?${params}` : '/assignments'
-  return fetchAllPages<Assignment>(endpoint, token, onProgress)
+  return fetchAllPagesWithMeta<Assignment>(endpoint, token, onProgress)
 }
 
 /**
@@ -90,7 +91,8 @@ export async function fetchAssignmentsFiltered(
 // ============================================================================
 
 /**
- * Fetch all subjects (radicals, kanji, vocabulary)
+ * Fetch all subjects (radicals, kanji, vocabulary), plus the collection's
+ * data_updated_at
  * Handles pagination automatically
  * https://docs.api.wanikani.com/20170710/#get-all-subjects
  */
@@ -98,13 +100,13 @@ export async function fetchSubjects(
   token: string,
   updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
-): Promise<(Subject & { id: number })[]> {
+): Promise<PaginatedFetchResult<Subject>> {
   const params = new URLSearchParams()
   if (updatedAfter) {
     params.append('updated_after', updatedAfter)
   }
   const endpoint = params.toString() ? `/subjects?${params}` : '/subjects'
-  return fetchAllPages<Subject>(endpoint, token, onProgress)
+  return fetchAllPagesWithMeta<Subject>(endpoint, token, onProgress)
 }
 
 /**
@@ -146,20 +148,20 @@ export async function fetchSubjectsFiltered(
 // ============================================================================
 
 /**
- * Fetch all level progressions
+ * Fetch all level progressions, plus the collection's data_updated_at
  * https://docs.api.wanikani.com/20170710/#get-all-level-progressions
  */
 export async function fetchLevelProgressions(
   token: string,
   updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
-): Promise<(LevelProgression & { id: number })[]> {
+): Promise<PaginatedFetchResult<LevelProgression>> {
   const params = new URLSearchParams()
   if (updatedAfter) {
     params.append('updated_after', updatedAfter)
   }
   const endpoint = params.toString() ? `/level_progressions?${params}` : '/level_progressions'
-  return fetchAllPages<LevelProgression>(endpoint, token, onProgress)
+  return fetchAllPagesWithMeta<LevelProgression>(endpoint, token, onProgress)
 }
 
 // ============================================================================
@@ -181,20 +183,20 @@ export async function fetchResets(
 // ============================================================================
 
 /**
- * Fetch all review statistics
+ * Fetch all review statistics, plus the collection's data_updated_at
  * https://docs.api.wanikani.com/20170710/#get-all-review-statistics
  */
 export async function fetchReviewStatistics(
   token: string,
   updatedAfter?: string,
   onProgress?: (current: number, total: number) => void
-): Promise<(ReviewStatistic & { id: number })[]> {
+): Promise<PaginatedFetchResult<ReviewStatistic>> {
   const params = new URLSearchParams()
   if (updatedAfter) {
     params.append('updated_after', updatedAfter)
   }
   const endpoint = params.toString() ? `/review_statistics?${params}` : '/review_statistics'
-  return fetchAllPages<ReviewStatistic>(endpoint, token, onProgress)
+  return fetchAllPagesWithMeta<ReviewStatistic>(endpoint, token, onProgress)
 }
 
 /**
