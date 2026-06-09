@@ -1,0 +1,131 @@
+import { IDBFactory } from 'fake-indexeddb'
+import { describe, expect, it } from 'vitest'
+import { runMigrations } from './migrations'
+import { DB_NAME, STORES } from './schema'
+
+/**
+ * Opens a database at the given version against an isolated IDBFactory,
+ * running the production migration path on upgrade. Each test uses its own
+ * factory so state never leaks between tests.
+ */
+function openAt(factory: IDBFactory, version: number): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = factory.open(DB_NAME, version)
+    request.onerror = () => reject(request.error)
+    request.onsuccess = () => resolve(request.result)
+    request.onupgradeneeded = (event) => {
+      try {
+        runMigrations(request.result, event.oldVersion, version, request.transaction!)
+      } catch (error) {
+        request.transaction!.abort()
+        reject(error)
+      }
+    }
+  })
+}
+
+function put<T>(db: IDBDatabase, storeName: string, item: T): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite')
+    tx.objectStore(storeName).put(item)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+function getAll<T>(db: IDBDatabase, storeName: string): Promise<T[]> {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(storeName, 'readonly').objectStore(storeName).getAll()
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+const ALL_STORES = [
+  STORES.SYNC_METADATA,
+  STORES.SUBJECTS,
+  STORES.ASSIGNMENTS,
+  STORES.REVIEW_STATISTICS,
+  STORES.LEVEL_PROGRESSIONS,
+  STORES.API_SNAPSHOTS,
+]
+
+describe('runMigrations', () => {
+  it('creates all stores and indexes on a fresh install (0 -> 2)', async () => {
+    const factory = new IDBFactory()
+    const db = await openAt(factory, 2)
+
+    expect(Array.from(db.objectStoreNames).sort()).toEqual([...ALL_STORES].sort())
+
+    const tx = db.transaction(ALL_STORES, 'readonly')
+    expect(Array.from(tx.objectStore(STORES.SUBJECTS).indexNames)).toEqual(['updatedAt'])
+    expect(Array.from(tx.objectStore(STORES.ASSIGNMENTS).indexNames).sort()).toEqual([
+      'subjectId',
+      'updatedAt',
+    ])
+    expect(
+      Array.from(tx.objectStore(STORES.REVIEW_STATISTICS).indexNames).sort()
+    ).toEqual(['subjectId', 'updatedAt'])
+    expect(
+      Array.from(tx.objectStore(STORES.LEVEL_PROGRESSIONS).indexNames).sort()
+    ).toEqual(['level', 'updatedAt'])
+    expect(tx.objectStore(STORES.API_SNAPSHOTS).keyPath).toBe('endpoint')
+
+    db.close()
+  })
+
+  it('preserves all existing data when upgrading 1 -> 2', async () => {
+    const factory = new IDBFactory()
+
+    // Open at v1: migration 1 is the production 2.20.x schema verbatim.
+    const v1 = await openAt(factory, 1)
+    expect(Array.from(v1.objectStoreNames)).not.toContain(STORES.API_SNAPSHOTS)
+
+    const subject = { id: 440, data: { slug: 'fish', level: 2 }, updatedAt: '2026-01-01T00:00:00Z' }
+    const assignment = { id: 80463006, subjectId: 440, data: { srs_stage: 8 }, updatedAt: '2026-01-02T00:00:00Z' }
+    const appVersion = { id: 'app_version', version: '2.20.1', lastChecked: '2026-01-03T00:00:00Z' }
+    const syncMeta = { id: 'sync_metadata', subjectsUpdatedAt: '2026-01-01T00:00:00Z' }
+
+    await put(v1, STORES.SUBJECTS, subject)
+    await put(v1, STORES.ASSIGNMENTS, assignment)
+    await put(v1, STORES.SYNC_METADATA, appVersion)
+    await put(v1, STORES.SYNC_METADATA, syncMeta)
+    v1.close()
+
+    const v2 = await openAt(factory, 2)
+
+    expect(await getAll(v2, STORES.SUBJECTS)).toEqual([subject])
+    expect(await getAll(v2, STORES.ASSIGNMENTS)).toEqual([assignment])
+    expect(await getAll(v2, STORES.SYNC_METADATA)).toEqual(
+      expect.arrayContaining([appVersion, syncMeta])
+    )
+    expect(Array.from(v2.objectStoreNames)).toContain(STORES.API_SNAPSHOTS)
+    expect(await getAll(v2, STORES.API_SNAPSHOTS)).toEqual([])
+
+    v2.close()
+  })
+
+  it('runs only the migrations in the requested range', () => {
+    const created: string[] = []
+    const fakeDb = {
+      createObjectStore: (name: string) => {
+        created.push(name)
+        return { createIndex: () => undefined }
+      },
+    } as unknown as IDBDatabase
+
+    runMigrations(fakeDb, 1, 2, {} as IDBTransaction)
+
+    expect(created).toEqual([STORES.API_SNAPSHOTS])
+  })
+
+  it('throws loudly when a migration is missing for a version', () => {
+    const fakeDb = {
+      createObjectStore: () => ({ createIndex: () => undefined }),
+    } as unknown as IDBDatabase
+
+    expect(() => runMigrations(fakeDb, 0, 999, {} as IDBTransaction)).toThrow(
+      /No migration defined for DB version 3/
+    )
+  })
+})

@@ -1,4 +1,5 @@
 // src/lib/db/database.ts
+import { runMigrations } from './migrations'
 import { DB_NAME, DB_VERSION, STORES } from './schema'
 
 export { STORES } from './schema'
@@ -15,48 +16,29 @@ export async function getDatabase(): Promise<IDBDatabase> {
 
     request.onerror = () => {
       console.error('Failed to open database:', request.error)
+      dbPromise = null
       reject(request.error)
+    }
+
+    request.onblocked = () => {
+      console.warn('[DB] Open blocked: another tab holds an older version of the database')
     }
 
     request.onsuccess = () => {
       dbInstance = request.result
+      // If another tab upgrades to a newer DB version, release our connection
+      // so its upgrade isn't blocked; the next access here reopens at the new
+      // version.
+      dbInstance.onversionchange = () => {
+        dbInstance?.close()
+        dbInstance = null
+        dbPromise = null
+      }
       resolve(dbInstance)
     }
 
     request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result
-
-      // Sync metadata store (singleton pattern)
-      if (!db.objectStoreNames.contains(STORES.SYNC_METADATA)) {
-        db.createObjectStore(STORES.SYNC_METADATA, { keyPath: 'id' })
-      }
-
-      // Subjects store
-      if (!db.objectStoreNames.contains(STORES.SUBJECTS)) {
-        const subjectsStore = db.createObjectStore(STORES.SUBJECTS, { keyPath: 'id' })
-        subjectsStore.createIndex('updatedAt', 'updatedAt', { unique: false })
-      }
-
-      // Assignments store
-      if (!db.objectStoreNames.contains(STORES.ASSIGNMENTS)) {
-        const assignmentsStore = db.createObjectStore(STORES.ASSIGNMENTS, { keyPath: 'id' })
-        assignmentsStore.createIndex('subjectId', 'subjectId', { unique: false })
-        assignmentsStore.createIndex('updatedAt', 'updatedAt', { unique: false })
-      }
-
-      // Review statistics store
-      if (!db.objectStoreNames.contains(STORES.REVIEW_STATISTICS)) {
-        const statsStore = db.createObjectStore(STORES.REVIEW_STATISTICS, { keyPath: 'id' })
-        statsStore.createIndex('subjectId', 'subjectId', { unique: false })
-        statsStore.createIndex('updatedAt', 'updatedAt', { unique: false })
-      }
-
-      // Level progressions store
-      if (!db.objectStoreNames.contains(STORES.LEVEL_PROGRESSIONS)) {
-        const progressionsStore = db.createObjectStore(STORES.LEVEL_PROGRESSIONS, { keyPath: 'id' })
-        progressionsStore.createIndex('level', 'level', { unique: false })
-        progressionsStore.createIndex('updatedAt', 'updatedAt', { unique: false })
-      }
+      runMigrations(request.result, event.oldVersion, DB_VERSION, request.transaction!)
     }
   })
 
