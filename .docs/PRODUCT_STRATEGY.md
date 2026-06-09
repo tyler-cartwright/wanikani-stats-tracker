@@ -262,8 +262,12 @@ and the data layer has offline correctness bugs.
 - Offline-aware sync UX: suppress "Sync Failed" when `navigator.onLine` is
   false; retry on the `online` event; friendly first-launch-offline message.
 - (Polish) Runtime-cache or self-host fonts.
-- Migration code is exactly what #47's test suite should cover first — a bad
-  migration destroys data users can't regenerate.
+- **Issue #47 (test suite) is in-scope for this release, not a separate
+  chore.** The migration code replacing the version-nuke is the
+  highest-stakes code in the app — a bad migration destroys data users can't
+  regenerate — so it gets written test-first. That means the harness decision
+  (likely Vitest + fake-indexeddb, given Vite) and the CI wiring in
+  `ci.yml` land here, and every later release inherits a working test setup.
 
 **Estimated effort**: 2–3 weekends. **Hard prerequisite** for the activity
 capture engine: the moat argument collapses if a routine release wipes
@@ -276,7 +280,7 @@ trustworthy.
 
 | Release | Theme | Contents | Rationale |
 |---|---|---|---|
-| **2.21** | "Solid ground" | Offline & data durability (§6 work items): IDB migrations replace version-nuke, precache preserved, user/resets offline fallbacks, summary fallback, offline-aware sync UX; #47 test suite started here | Capture must not ship until the data layer stops eating itself; every later feature assumes durable local data |
+| **2.21** | "Solid ground" | Offline & data durability (§6 work items): IDB migrations replace version-nuke, precache preserved, user/resets offline fallbacks, summary fallback, offline-aware sync UX. **Closes #47**: test harness (runner + IDB fakes + CI step) ships here, migrations written test-first | Capture must not ship until the data layer stops eating itself; every later feature assumes durable local data and a working test setup |
 | **2.22** | "The flight recorder" | Activity capture engine + SRS-distribution snapshots + streaks/records display + history export-import | Irreplaceable data starts compounding the day it ships — everything visible can wait, capture cannot |
 | **2.23** | "Show your work" | Activity heatmap page + share cards | Visible payoff of captured data + first organic-growth feature; matches Wanilog's two flashiest capabilities in one release |
 | **2.24** | "Daily driver" | Level-up blockers on Dashboard + frequency coverage on Readiness | Shifts usage from "check weekly for stats" to "check daily to plan study" — that's what retention looks like |
