@@ -5,6 +5,8 @@
  */
 
 import { fetchUser } from '@/lib/api/endpoints'
+import { getUserSnapshot } from '@/lib/db/repositories/api-snapshots'
+import { getActivityHistory } from '@/lib/db/repositories/activity-history'
 import {
   collectIndexedDBData,
   collectSettings,
@@ -38,11 +40,12 @@ export async function exportUserData(
   onProgress?: (message: string) => void
 ): Promise<ExportResult> {
   try {
-    // Step 1: Fetch fresh user data for metadata
+    // Step 1: Fetch fresh user data for metadata (cached snapshot offline —
+    // the export itself reads only local data and must work without network)
     onProgress?.('Gathering user information...')
     console.log('[EXPORT] Fetching user data...')
 
-    const user = await fetchUser(token)
+    const user = await fetchUserWithSnapshotFallback(token)
     console.log('[EXPORT] User data fetched:', user.username, 'Level', user.level)
 
     // Step 2: Collect data from IndexedDB
@@ -70,7 +73,7 @@ export async function exportUserData(
     // Step 5: Build complete export structure
     const exportData: ExportData = {
       metadata: {
-        version: '1.0',
+        version: '1.1',
         exportedAt: new Date().toISOString(),
         appVersion: import.meta.env.VITE_APP_VERSION || '2.3.0',
         username: user.username,
@@ -119,6 +122,23 @@ export async function exportUserData(
 }
 
 /**
+ * Fetch /user for export metadata, falling back to the cached snapshot so
+ * exports (and the pre-logout backup) work offline.
+ */
+async function fetchUserWithSnapshotFallback(token: string) {
+  try {
+    return await fetchUser(token)
+  } catch (error) {
+    const snapshot = await getUserSnapshot()
+    if (snapshot) {
+      console.warn('[EXPORT] /user fetch failed; using cached snapshot:', error)
+      return snapshot
+    }
+    throw error
+  }
+}
+
+/**
  * Determine the export type based on options
  *
  * @param options - Export options
@@ -131,11 +151,82 @@ function determineExportType(
     options.includeSubjects ||
     options.includeAssignments ||
     options.includeReviewStats ||
-    options.includeLevelProgressions
+    options.includeLevelProgressions ||
+    (options.includeActivityHistory ?? true)
 
   if (hasData && options.includeSettings) return 'full'
   if (hasData) return 'progress'
   return 'settings'
+}
+
+/**
+ * Export only the captured activity history as a backup file.
+ *
+ * Needs no token and no network: this is the safety hatch offered before
+ * logout (which wipes the irreplaceable history), so it must work offline.
+ * The file uses the standard ExportData envelope, so the regular importer
+ * accepts it.
+ */
+export async function exportActivityHistoryBackup(): Promise<ExportResult> {
+  try {
+    const activityHistory = await getActivityHistory()
+
+    if (activityHistory.length === 0) {
+      return {
+        success: false,
+        filename: '',
+        size: '',
+        error: 'No activity history to export',
+      }
+    }
+
+    const user = await getUserSnapshot()
+    const username = user?.username ?? 'backup'
+
+    const options: ExportOptions = {
+      includeSubjects: false,
+      includeAssignments: false,
+      includeReviewStats: false,
+      includeLevelProgressions: false,
+      includeActivityHistory: true,
+      includeSyncMetadata: false,
+      includeSettings: false,
+      includeApiToken: false,
+    }
+
+    const exportData: ExportData = {
+      metadata: {
+        version: '1.1',
+        exportedAt: new Date().toISOString(),
+        appVersion: import.meta.env.VITE_APP_VERSION || '2.3.0',
+        username,
+        level: user?.level ?? 0,
+        exportType: 'history',
+        options,
+      },
+      data: { activityHistory },
+    }
+
+    const { formatted: sizeFormatted } = calculateDataSize(exportData)
+    const filename = generateExportFilename(username, 'history')
+
+    downloadJsonFile(exportData, filename)
+    console.log('[EXPORT] Activity history backup complete:', filename)
+
+    return {
+      success: true,
+      filename,
+      size: sizeFormatted,
+    }
+  } catch (error) {
+    console.error('[EXPORT] Activity history backup failed:', error)
+    return {
+      success: false,
+      filename: '',
+      size: '',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
 }
 
 /**
@@ -168,6 +259,7 @@ export async function exportLeeches(
       includeAssignments: true,
       includeReviewStats: true,
       includeLevelProgressions: false,
+      includeActivityHistory: false,
       includeSyncMetadata: false,
       includeSettings: false,
       includeApiToken: false,

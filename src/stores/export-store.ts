@@ -35,6 +35,7 @@ export const useExportStore = create<ExportState>()(
         includeAssignments: true,
         includeReviewStats: true,
         includeLevelProgressions: true,
+        includeActivityHistory: true, // IRREPLACEABLE captured history — always back up
         includeSyncMetadata: true,
         includeSettings: true,
         includeApiToken: false, // SENSITIVE - default false for security
@@ -80,6 +81,20 @@ export const useExportStore = create<ExportState>()(
         lastExportAt: state.lastExportAt,
         defaultOptions: state.defaultOptions,
       }),
+      // Deep-merge defaultOptions so option keys added in later releases
+      // (e.g. includeActivityHistory) get their defaults instead of being
+      // dropped by a stale persisted object
+      merge: (persisted, current) => {
+        const stored = persisted as Partial<ExportState> | undefined
+        return {
+          ...current,
+          ...stored,
+          defaultOptions: {
+            ...current.defaultOptions,
+            ...stored?.defaultOptions,
+          },
+        }
+      },
     }
   )
 )

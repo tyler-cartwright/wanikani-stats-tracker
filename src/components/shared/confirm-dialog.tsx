@@ -9,6 +9,10 @@ interface ConfirmDialogProps {
   message: string
   confirmText?: string
   cancelText?: string
+  // Optional third action (e.g. "Export history first") rendered between
+  // confirm and cancel; the caller decides what happens next
+  secondaryText?: string
+  onSecondary?: () => void
   variant?: 'danger' | 'warning' | 'info'
 }
 
@@ -20,10 +24,17 @@ export function ConfirmDialog({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
+  secondaryText,
+  onSecondary,
   variant = 'warning',
 }: ConfirmDialogProps) {
   const handleConfirm = () => {
     onConfirm()
+    onClose()
+  }
+
+  const handleSecondary = () => {
+    onSecondary?.()
     onClose()
   }
 
@@ -54,6 +65,24 @@ export function ConfirmDialog({
   const config = variants[variant]
   const Icon = config.icon
 
+  const cancelButton = (
+    <button
+      onClick={onClose}
+      className="flex-1 px-4 py-2 text-sm font-medium rounded-md border border-paper-300 dark:border-ink-300 text-ink-100 dark:text-paper-100 hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth focus-ring"
+    >
+      {cancelText}
+    </button>
+  )
+
+  const confirmButton = (
+    <button
+      onClick={handleConfirm}
+      className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-smooth focus-ring ${config.buttonColor}`}
+    >
+      {confirmText}
+    </button>
+  )
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <div className="p-6">
@@ -73,20 +102,25 @@ export function ConfirmDialog({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-md border border-paper-300 dark:border-ink-300 text-ink-100 dark:text-paper-100 hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth focus-ring"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={handleConfirm}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-smooth focus-ring ${config.buttonColor}`}
-          >
-            {confirmText}
-          </button>
-        </div>
+        {secondaryText ? (
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleSecondary}
+              className="px-4 py-2 text-sm font-medium rounded-md bg-patina-500 hover:bg-patina-600 text-paper-100 transition-smooth focus-ring"
+            >
+              {secondaryText}
+            </button>
+            <div className="flex gap-3">
+              {cancelButton}
+              {confirmButton}
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            {cancelButton}
+            {confirmButton}
+          </div>
+        )}
       </div>
     </Modal>
   )

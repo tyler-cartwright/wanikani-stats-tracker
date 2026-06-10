@@ -2,6 +2,7 @@ import { LevelTimeline } from '@/components/progress/level-timeline'
 import { Level60Projection } from '@/components/progress/level-60-projection'
 import { BurnVelocity } from '@/components/progress/burn-velocity'
 import { KnowledgeStability } from '@/components/progress/knowledge-stability'
+import { StreakRecords } from '@/components/progress/streak-records'
 import { MilestoneTimeline } from '@/components/progress/milestone-timeline'
 import { ResetHistoryNotice } from '@/components/progress/reset-history-notice'
 import { useDocumentTitle } from '@/hooks/use-document-title'
@@ -15,6 +16,9 @@ export function Progress() {
 
       {/* Knowledge Stability */}
       <KnowledgeStability />
+
+      {/* Streaks & Records */}
+      <StreakRecords />
 
       {/* Burn Velocity */}
       <BurnVelocity />

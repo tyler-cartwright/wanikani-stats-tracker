@@ -45,9 +45,15 @@ export async function getDatabase(): Promise<IDBDatabase> {
   return dbPromise
 }
 
+// Clears every store, including irreplaceable activity history — only valid
+// for full logout. Anything else (force sync, version change) must use
+// clearStores with an explicit list that spares the durable stores.
 export async function clearDatabase(): Promise<void> {
+  return clearStores(Object.values(STORES))
+}
+
+export async function clearStores(storeNames: string[]): Promise<void> {
   const db = await getDatabase()
-  const storeNames = Object.values(STORES)
 
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeNames, 'readwrite')
@@ -57,10 +63,35 @@ export async function clearDatabase(): Promise<void> {
     tx.onerror = () => reject(tx.error)
     tx.onabort = () => reject(new Error('Transaction aborted'))
 
-    // Clear all stores
+    // Clear the requested stores
     storeNames.forEach((storeName) => {
       tx.objectStore(storeName).clear()
     })
+  })
+}
+
+export async function getMany<T>(
+  storeName: string,
+  ids: (number | string)[]
+): Promise<(T | undefined)[]> {
+  if (ids.length === 0) return []
+
+  const db = await getDatabase()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly')
+    const store = tx.objectStore(storeName)
+    const results = new Array<T | undefined>(ids.length)
+
+    ids.forEach((id, index) => {
+      const request = store.get(id)
+      request.onsuccess = () => {
+        results[index] = request.result
+      }
+    })
+
+    tx.oncomplete = () => resolve(results)
+    tx.onerror = () => reject(tx.error)
+    tx.onabort = () => reject(new Error('Transaction aborted'))
   })
 }
 

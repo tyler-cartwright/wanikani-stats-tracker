@@ -87,7 +87,7 @@ export function calculateDataSize(data: any): {
  */
 export function generateExportFilename(
   username: string,
-  exportType: 'full' | 'progress' | 'settings'
+  exportType: 'full' | 'progress' | 'settings' | 'history'
 ): string {
   // Sanitize username (remove special characters, lowercase)
   const sanitizedUsername = username

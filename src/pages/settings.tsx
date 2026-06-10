@@ -5,6 +5,8 @@ import { useSync } from '@/hooks/use-sync'
 import { useUserStore } from '@/stores/user-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useConfirm } from '@/hooks/use-confirm'
+import { getActivityDayCount } from '@/lib/db/repositories/activity-history'
+import { exportActivityHistoryBackup } from '@/lib/export/export-manager'
 import { InfoTooltip } from '@/components/shared/info-tooltip'
 import { useUser } from '@/lib/api/queries'
 import { DataExportSection } from '@/components/settings/data-export-section'
@@ -32,7 +34,7 @@ export function Settings() {
     autoExcludeBreaks,
     setAutoExcludeBreaks
   } = useSettingsStore()
-  const { confirm, ConfirmDialog } = useConfirm()
+  const { confirm, confirmWithSecondary, ConfirmDialog } = useConfirm()
 
   const handleForceSync = async () => {
     const confirmed = await confirm({
@@ -50,17 +52,58 @@ export function Settings() {
   }
 
   const handleLogout = async () => {
-    const confirmed = await confirm({
+    // Activity history is the one thing logout destroys that can never be
+    // re-downloaded — warn about it and offer a one-click backup first
+    const historyDays = await getActivityDayCount().catch(() => 0)
+
+    if (historyDays === 0) {
+      const confirmed = await confirm({
+        title: 'Disconnect & Clear Data?',
+        message:
+          'This will clear your API token and all locally cached data. This action cannot be undone.',
+        confirmText: 'Disconnect',
+        cancelText: 'Cancel',
+        variant: 'danger',
+      })
+
+      if (confirmed) {
+        await clearAuth()
+      }
+      return
+    }
+
+    const dayLabel = `${historyDays} day${historyDays === 1 ? '' : 's'}`
+    const choice = await confirmWithSecondary({
       title: 'Disconnect & Clear Data?',
       message:
-        'This will clear your API token and all locally cached data. This action cannot be undone.',
+        `This will clear your API token and all locally cached data, including your ${dayLabel} of captured activity history. ` +
+        'Synced data can be re-downloaded, but activity history cannot — once deleted it is gone forever.',
       confirmText: 'Disconnect',
       cancelText: 'Cancel',
+      secondaryText: 'Export history first',
       variant: 'danger',
     })
 
-    if (confirmed) {
+    if (choice === 'confirm') {
       await clearAuth()
+      return
+    }
+
+    if (choice === 'secondary') {
+      const result = await exportActivityHistoryBackup()
+      const confirmed = await confirm({
+        title: 'Disconnect & Clear Data?',
+        message: result.success
+          ? `Backup saved as ${result.filename}. Disconnecting will now clear your API token and all locally cached data, including the activity history you just backed up.`
+          : `Backup failed: ${result.error || 'Unknown error'}. Disconnecting now will permanently delete your ${dayLabel} of activity history.`,
+        confirmText: 'Disconnect',
+        cancelText: 'Cancel',
+        variant: 'danger',
+      })
+
+      if (confirmed) {
+        await clearAuth()
+      }
     }
   }
 

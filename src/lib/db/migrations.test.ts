@@ -48,12 +48,13 @@ const ALL_STORES = [
   STORES.REVIEW_STATISTICS,
   STORES.LEVEL_PROGRESSIONS,
   STORES.API_SNAPSHOTS,
+  STORES.ACTIVITY_HISTORY,
 ]
 
 describe('runMigrations', () => {
-  it('creates all stores and indexes on a fresh install (0 -> 2)', async () => {
+  it('creates all stores and indexes on a fresh install (0 -> 3)', async () => {
     const factory = new IDBFactory()
-    const db = await openAt(factory, 2)
+    const db = await openAt(factory, 3)
 
     expect(Array.from(db.objectStoreNames).sort()).toEqual([...ALL_STORES].sort())
 
@@ -70,6 +71,7 @@ describe('runMigrations', () => {
       Array.from(tx.objectStore(STORES.LEVEL_PROGRESSIONS).indexNames).sort()
     ).toEqual(['level', 'updatedAt'])
     expect(tx.objectStore(STORES.API_SNAPSHOTS).keyPath).toBe('endpoint')
+    expect(tx.objectStore(STORES.ACTIVITY_HISTORY).keyPath).toBe('date')
 
     db.close()
   })
@@ -105,6 +107,32 @@ describe('runMigrations', () => {
     v2.close()
   })
 
+  it('preserves all existing data when upgrading 2 -> 3', async () => {
+    const factory = new IDBFactory()
+
+    const v2 = await openAt(factory, 2)
+    expect(Array.from(v2.objectStoreNames)).not.toContain(STORES.ACTIVITY_HISTORY)
+
+    const subject = { id: 440, data: { slug: 'fish', level: 2 }, updatedAt: '2026-01-01T00:00:00Z' }
+    const stat = { id: 7, subjectId: 440, data: { meaning_correct: 12 }, updatedAt: '2026-01-02T00:00:00Z' }
+    const snapshot = { endpoint: 'user', data: { level: 23 }, updatedAt: '2026-01-03T00:00:00Z' }
+
+    await put(v2, STORES.SUBJECTS, subject)
+    await put(v2, STORES.REVIEW_STATISTICS, stat)
+    await put(v2, STORES.API_SNAPSHOTS, snapshot)
+    v2.close()
+
+    const v3 = await openAt(factory, 3)
+
+    expect(await getAll(v3, STORES.SUBJECTS)).toEqual([subject])
+    expect(await getAll(v3, STORES.REVIEW_STATISTICS)).toEqual([stat])
+    expect(await getAll(v3, STORES.API_SNAPSHOTS)).toEqual([snapshot])
+    expect(Array.from(v3.objectStoreNames)).toContain(STORES.ACTIVITY_HISTORY)
+    expect(await getAll(v3, STORES.ACTIVITY_HISTORY)).toEqual([])
+
+    v3.close()
+  })
+
   it('runs only the migrations in the requested range', () => {
     const created: string[] = []
     const fakeDb = {
@@ -114,9 +142,9 @@ describe('runMigrations', () => {
       },
     } as unknown as IDBDatabase
 
-    runMigrations(fakeDb, 1, 2, {} as IDBTransaction)
+    runMigrations(fakeDb, 2, 3, {} as IDBTransaction)
 
-    expect(created).toEqual([STORES.API_SNAPSHOTS])
+    expect(created).toEqual([STORES.ACTIVITY_HISTORY])
   })
 
   it('throws loudly when a migration is missing for a version', () => {
@@ -125,7 +153,7 @@ describe('runMigrations', () => {
     } as unknown as IDBDatabase
 
     expect(() => runMigrations(fakeDb, 0, 999, {} as IDBTransaction)).toThrow(
-      /No migration defined for DB version 3/
+      /No migration defined for DB version 4/
     )
   })
 })
