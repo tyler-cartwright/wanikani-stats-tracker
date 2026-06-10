@@ -1,9 +1,10 @@
 // src/lib/db/repositories/review-statistics.ts
-import { getAll, putMany, count } from '../database'
+import { getAll, getMany, putMany, count } from '../database'
 import { STORES } from '../schema'
 import { getSyncMetadata, updateSyncMetadata } from '../sync-metadata'
 import { fetchReviewStatistics } from '@/lib/api/endpoints'
 import type { ReviewStatistic } from '@/lib/api/types'
+import type { ReviewStatChange } from '@/lib/calculations/activity-capture'
 
 export interface CachedReviewStatistic {
   id: number
@@ -24,7 +25,7 @@ export async function getReviewStatisticCount(): Promise<number> {
 export async function syncReviewStatistics(
   token: string,
   onProgress?: (message: string) => void
-): Promise<{ updated: number; isFullSync: boolean }> {
+): Promise<{ updated: number; isFullSync: boolean; changes?: ReviewStatChange[] }> {
   const metadata = await getSyncMetadata()
   const cachedCount = await getReviewStatisticCount()
 
@@ -42,7 +43,20 @@ export async function syncReviewStatistics(
 
   if (stats.length === 0) {
     onProgress?.('Review statistics up to date')
-    return { updated: 0, isFullSync }
+    return { updated: 0, isFullSync, changes: [] }
+  }
+
+  // Capture old totals before putMany overwrites them so activity capture can
+  // diff. Deliberately skipped on full syncs: there is no baseline to diff
+  // against (diffing lifetime totals would bucket years of history into
+  // "today"), and collecting thousands of previous rows wastes memory.
+  let changes: ReviewStatChange[] | undefined
+  if (!isFullSync) {
+    const previous = await getMany<CachedReviewStatistic>(
+      STORES.REVIEW_STATISTICS,
+      stats.map((s) => s.id)
+    )
+    changes = stats.map((stat, i) => ({ previous: previous[i]?.data, current: stat }))
   }
 
   onProgress?.(`Saving ${stats.length} review statistics...`)
@@ -62,5 +76,5 @@ export async function syncReviewStatistics(
   })
 
   onProgress?.(`Updated ${stats.length} review statistics`)
-  return { updated: stats.length, isFullSync }
+  return { updated: stats.length, isFullSync, changes }
 }

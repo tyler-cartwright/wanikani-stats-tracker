@@ -3,8 +3,10 @@ import { syncSubjects } from '@/lib/db/repositories/subjects'
 import { syncAssignments } from '@/lib/db/repositories/assignments'
 import { syncReviewStatistics } from '@/lib/db/repositories/review-statistics'
 import { syncLevelProgressions } from '@/lib/db/repositories/level-progressions'
+import { recordSyncActivity } from '@/lib/db/repositories/activity-history'
 import { updateSyncMetadata, getSyncMetadata } from '@/lib/db/sync-metadata'
-import { clearDatabase } from '@/lib/db/database'
+import { clearStores } from '@/lib/db/database'
+import { STORES } from '@/lib/db/schema'
 import { debugLog } from '@/lib/utils/debug-log'
 
 export interface SyncProgress {
@@ -93,6 +95,23 @@ export async function performSync(
       console.warn('[SYNC] Some parallel syncs failed (partial sync):', errors)
     }
 
+    // Record activity history (review/lesson deltas + SRS snapshot). A failed
+    // collection contributes undefined changes — its facet is left untouched
+    // and its un-overwritten cache stays a valid baseline for the next sync.
+    // Capture failures must never fail the sync itself.
+    try {
+      await recordSyncActivity({
+        statChanges: statsOutcome.status === 'fulfilled' ? statsOutcome.value.changes : undefined,
+        statsFullSync: statsOutcome.status === 'fulfilled' && statsOutcome.value.isFullSync,
+        assignmentChanges:
+          assignmentsOutcome.status === 'fulfilled' ? assignmentsOutcome.value.changes : undefined,
+        assignmentsFullSync:
+          assignmentsOutcome.status === 'fulfilled' && assignmentsOutcome.value.isFullSync,
+      })
+    } catch (captureError) {
+      console.warn('[SYNC] Activity capture failed (history not recorded for this sync):', captureError)
+    }
+
     // Update last full sync time
     await updateSyncMetadata({
       lastFullSync: new Date().toISOString(),
@@ -111,15 +130,25 @@ export async function performSync(
   }
 }
 
+// Force sync means "re-download the API collections", so it must spare:
+// - activity_history: forward-only captured data that can never be
+//   re-downloaded (GET /reviews is gone) — only logout may clear it
+// - api_snapshots: offline /user and /resets fallbacks; wiping them would
+//   reopen the 2.19.1 offline reset-data bug for no benefit (they're
+//   rewritten on the next successful fetch anyway)
+const PRESERVED_ON_FORCE_SYNC: string[] = [STORES.ACTIVITY_HISTORY, STORES.API_SNAPSHOTS]
+
 /**
- * Forces a complete resync by clearing the database first
+ * Forces a complete resync by clearing the synced collections first
  */
 export async function forceFullSync(
   token: string,
   onProgress?: SyncProgressCallback
 ): Promise<SyncResult> {
   onProgress?.({ phase: 'idle', message: 'Clearing local data...', isFullSync: true })
-  await clearDatabase()
+  await clearStores(
+    Object.values(STORES).filter((store) => !PRESERVED_ON_FORCE_SYNC.includes(store))
+  )
   return performSync(token, onProgress)
 }
 
