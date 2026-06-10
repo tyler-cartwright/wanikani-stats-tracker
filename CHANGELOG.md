@@ -5,6 +5,33 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.0] - 2026-06-10
+
+### Added
+- **Activity Capture Engine**: WaniTrack now records your daily study activity locally on every sync — reviews answered (correct/incorrect, meaning/reading) and lessons completed, one compact row per day
+  - WaniKani removed the `/reviews` API in 2023, so this history cannot be downloaded from anywhere: it accumulates forward-only from the day you install this version, and every day it runs is history you keep forever
+  - A daily snapshot of your SRS-stage distribution (all 10 stages) is captured alongside, enabling future "SRS over time" charts
+  - Capture starts from a baseline established on the first sync after updating; days where a full re-sync happened are flagged so future displays can label partial days honestly
+- **Streaks & Personal Records** (Progress page): your longest correct-answer streak ever, items currently on 20+ answer streaks, and long streaks that just broke (prime refresher candidates) — meaning and reading tracked separately, with drill-down to full item details. This data was always synced; it was just never shown
+- **Activity History Backup & Restore**: exports now include captured activity history (on by default), and a new Import Activity History option in Settings restores it from a backup file
+  - Import merges by date and keeps whichever side of a conflict has more recorded activity, so re-importing a backup is always safe
+  - Exports now work offline (user info falls back to the cached snapshot)
+- **Logout Protects Your History**: disconnecting now warns how many days of irreplaceable activity history would be deleted and offers a one-click "Export history first" backup before proceeding
+
+### Changed
+- **Force Full Sync No Longer Touches Durable Data**: Settings → Force Full Sync still re-downloads all WaniKani collections, but now preserves captured activity history and the offline `/user`/`/resets` snapshots instead of clearing every store
+
+### Technical
+- New `activity_history` IndexedDB store (DB version 3, migration 3), keyed by local `YYYY-MM-DD` date — lexicographic key order doubles as chronological order, so no indexes are needed
+- New pure module `src/lib/calculations/activity-capture.ts` (written test-first): `computeReviewDeltas` (per-facet diffs, negative deltas clamped and warned — never written), `countNewLessons` (`started_at` unset→set transitions), `buildSrsStageSnapshot` (stages 0–9, matching `calculateSRSDistribution`'s hidden/unstarted filter), `mergeIntoDayRow` (reviews/lessons accumulate, snapshot replaced latest-wins, baseline flag carried forward)
+- `syncReviewStatistics` and `syncAssignments` capture previous cached rows (new `getMany` in `database.ts`) before `putMany` overwrites them and return per-item changes; full syncs skip collection entirely — there is no baseline to diff against, and diffing lifetime totals would bucket years of history into "today"
+- `performSync` calls `recordSyncActivity` once after the parallel collection syncs settle (single sequential day-row write; capture failure logs a warning but never fails the sync). A failed collection contributes nothing that sync, and its un-overwritten cache remains a valid baseline for the next one
+- `clearDatabase` is now `clearStores(allStores)`; `forceFullSync` clears via an explicit list that spares `activity_history` and `api_snapshots`
+- New `src/lib/export/import-manager.ts` (pure parse/merge, tested): accepts the standard export envelope or a bare day-row array, drops malformed rows, merges union-by-date with larger-review-total-wins (ties keep existing — idempotent), backfills SRS snapshots from the losing row
+- `ExportOptions` gains `includeActivityHistory`; the export store's persist config now deep-merges `defaultOptions` so option keys added in future releases keep their defaults for existing users (plus `?? true` fallbacks at the read sites)
+- `ConfirmDialog`/`useConfirm` support an optional secondary action (`confirmWithSecondary` resolving `'confirm' | 'secondary' | false`); the boolean `confirm()` API is unchanged
+- New calculation module `src/lib/calculations/streaks.ts` (tested): per-facet streak records with configurable hot (≥20) and recently-broken (max ≥10, current ≤1) thresholds
+
 ## [2.21.0] - 2026-06-09
 
 ### Fixed
