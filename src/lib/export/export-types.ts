@@ -8,6 +8,7 @@ import type { CachedSubject } from '@/lib/db/repositories/subjects'
 import type { CachedAssignment } from '@/lib/db/repositories/assignments'
 import type { CachedReviewStatistic } from '@/lib/db/repositories/review-statistics'
 import type { CachedLevelProgression } from '@/lib/db/repositories/level-progressions'
+import type { ActivityDayRow } from '@/lib/db/schema'
 
 /**
  * User-configurable export options
@@ -17,6 +18,7 @@ export interface ExportOptions {
   includeAssignments: boolean // User's progress on each item (~400KB)
   includeReviewStats: boolean // Accuracy and performance data (~200KB)
   includeLevelProgressions: boolean // Historical level completion data (~10KB)
+  includeActivityHistory: boolean // Captured daily activity (~2KB) — IRREPLACEABLE
   includeSyncMetadata: boolean // Sync timestamps (~1KB)
   includeSettings: boolean // User preferences (~1KB)
   includeApiToken: boolean // WaniKani API token (SENSITIVE - default false)
@@ -31,7 +33,7 @@ export interface ExportMetadata {
   appVersion: string // WaniTrack version (from package.json)
   username: string // WaniKani username
   level: number // Current WaniKani level
-  exportType: 'full' | 'progress' | 'settings' // Type of export based on options
+  exportType: 'full' | 'progress' | 'settings' | 'history' // Type of export based on options
   options: ExportOptions // Options used for this export
 }
 
@@ -66,6 +68,7 @@ export type {
   CachedAssignment,
   CachedReviewStatistic,
   CachedLevelProgression,
+  ActivityDayRow,
 }
 
 /**
@@ -79,8 +82,21 @@ export interface ExportData {
     assignments?: CachedAssignment[]
     reviewStatistics?: CachedReviewStatistic[]
     levelProgressions?: CachedLevelProgression[]
+    activityHistory?: ActivityDayRow[]
     syncMetadata?: SyncMetadata
   }
+}
+
+/**
+ * Result of an activity-history import
+ */
+export interface ImportSummary {
+  success: boolean
+  daysInFile: number
+  newDays: number
+  conflictsKeptExisting: number
+  conflictsTookImported: number
+  error?: string
 }
 
 /**

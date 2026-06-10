@@ -14,6 +14,7 @@ import type {
   CachedAssignment,
   CachedReviewStatistic,
   CachedLevelProgression,
+  ActivityDayRow,
   SyncMetadata,
 } from './export-types'
 
@@ -28,6 +29,7 @@ export async function collectIndexedDBData(options: ExportOptions): Promise<{
   assignments?: CachedAssignment[]
   reviewStatistics?: CachedReviewStatistic[]
   levelProgressions?: CachedLevelProgression[]
+  activityHistory?: ActivityDayRow[]
   syncMetadata?: SyncMetadata
 }> {
   const data: {
@@ -35,6 +37,7 @@ export async function collectIndexedDBData(options: ExportOptions): Promise<{
     assignments?: CachedAssignment[]
     reviewStatistics?: CachedReviewStatistic[]
     levelProgressions?: CachedLevelProgression[]
+    activityHistory?: ActivityDayRow[]
     syncMetadata?: SyncMetadata
   } = {}
 
@@ -88,6 +91,17 @@ export async function collectIndexedDBData(options: ExportOptions): Promise<{
       } catch (error) {
         console.error('Failed to collect level progressions:', error)
         throw new Error('Failed to read level progressions data')
+      }
+    }
+
+    // Collect captured activity history (irreplaceable — cannot be re-synced).
+    // `?? true` guards persisted options objects from before this key existed.
+    if (options.includeActivityHistory ?? true) {
+      try {
+        data.activityHistory = await getAll<ActivityDayRow>(STORES.ACTIVITY_HISTORY)
+      } catch (error) {
+        console.error('Failed to collect activity history:', error)
+        throw new Error('Failed to read activity history data')
       }
     }
 
@@ -172,6 +186,9 @@ export async function estimateExportSize(
     }
     if (options.includeLevelProgressions) {
       estimatedBytes += 10 * 1024 // ~10KB
+    }
+    if (options.includeActivityHistory ?? true) {
+      estimatedBytes += 2 * 1024 // ~2KB (one small row per day)
     }
     if (options.includeSyncMetadata) {
       estimatedBytes += 1024 // ~1KB

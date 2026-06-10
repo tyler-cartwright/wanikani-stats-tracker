@@ -4,8 +4,8 @@
  * UI component for the Settings page that allows users to export their data
  */
 
-import { useState, useEffect } from 'react'
-import { Download, AlertCircle, FileSpreadsheet } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Download, AlertCircle, FileSpreadsheet, Upload } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useExportStore } from '@/stores/export-store'
 import { useUserStore } from '@/stores/user-store'
@@ -15,6 +15,7 @@ import {
   exportLeeches,
   estimateExportSize,
 } from '@/lib/export/export-manager'
+import { importActivityHistory } from '@/lib/export/import-manager'
 import { InfoTooltip } from '@/components/shared/info-tooltip'
 import { useToast } from '@/hooks/use-toast'
 
@@ -36,6 +37,8 @@ export function DataExportSection() {
   const { showToast, ToastContainer } = useToast()
   const [estimatedSize, setEstimatedSize] = useState<string>('Calculating...')
   const [isExportingLeeches, setIsExportingLeeches] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   // Update size estimate when options change
   useEffect(() => {
@@ -52,6 +55,7 @@ export function DataExportSection() {
     defaultOptions.includeAssignments ||
     defaultOptions.includeReviewStats ||
     defaultOptions.includeLevelProgressions ||
+    (defaultOptions.includeActivityHistory ?? true) ||
     defaultOptions.includeSettings
 
   const handleJsonExport = async () => {
@@ -157,6 +161,36 @@ export function DataExportSection() {
     setDefaultOptions({ [key]: value })
   }
 
+  const handleImportFile = async (file: File | undefined) => {
+    if (!file) return
+
+    try {
+      setIsImporting(true)
+      const text = await file.text()
+      const result = await importActivityHistory(text)
+
+      if (result.success) {
+        showToast({
+          message: `Imported ${result.daysInFile} days: ${result.newDays} new, ${result.conflictsKeptExisting} kept existing, ${result.conflictsTookImported} updated.`,
+          type: 'success',
+          duration: 5000,
+        })
+      } else {
+        showToast({
+          message: `Import failed: ${result.error || 'Unknown error'}`,
+          type: 'error',
+        })
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Import failed'
+      showToast({ message: `Import failed: ${message}`, type: 'error' })
+    } finally {
+      setIsImporting(false)
+      // Allow re-selecting the same file
+      if (importInputRef.current) importInputRef.current.value = ''
+    }
+  }
+
   return (
     <>
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
@@ -257,6 +291,25 @@ export function DataExportSection() {
                       Level Progressions (history)
                     </span>
                     <InfoTooltip content="Your level completion timestamps" />
+                  </div>
+                </label>
+
+                {/* Activity History */}
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={defaultOptions.includeActivityHistory ?? true}
+                    onChange={(e) =>
+                      handleOptionChange('includeActivityHistory', e.target.checked)
+                    }
+                    className="w-4 h-4 rounded border-paper-300 dark:border-ink-300 mt-0.5"
+                    disabled={isExporting}
+                  />
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <span className="text-sm text-ink-100 dark:text-paper-100">
+                      Activity History (daily reviews)
+                    </span>
+                    <InfoTooltip content="Your captured daily review/lesson activity. Irreplaceable — it cannot be re-downloaded from WaniKani, so keep backups." />
                   </div>
                 </label>
 
@@ -388,6 +441,45 @@ export function DataExportSection() {
               CSV format with columns: Character, Meaning, Type, Level, Accuracy,
               Total Reviews, Incorrect Count, Severity, and more.
             </p>
+          </div>
+
+          {/* Activity History Import Section */}
+          <div className="space-y-4 pt-4 border-t border-paper-300 dark:border-ink-300">
+            <h3 className="text-sm font-medium text-ink-100 dark:text-paper-100">
+              Import Activity History
+            </h3>
+
+            <p className="text-sm text-ink-400 dark:text-paper-300">
+              Restore captured daily activity from a previous WaniTrack export.
+              Only activity history is imported — everything else is restored
+              automatically by syncing. Existing days are kept when they already
+              contain more activity than the file.
+            </p>
+
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={(e) => handleImportFile(e.target.files?.[0])}
+            />
+            <button
+              onClick={() => importInputRef.current?.click()}
+              disabled={isImporting}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-paper-300 dark:border-ink-300 text-ink-100 dark:text-paper-100 rounded-md font-medium hover:bg-paper-300 dark:hover:bg-ink-300 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isImporting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-ink-100 dark:border-paper-100 border-t-transparent rounded-full animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  Import Activity History
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
