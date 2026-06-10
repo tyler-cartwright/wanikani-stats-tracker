@@ -43,6 +43,13 @@ const migrations: Record<number, Migration> = {
   2: (db) => {
     db.createObjectStore(STORES.API_SNAPSHOTS, { keyPath: 'endpoint' })
   },
+
+  // v3: per-day activity history (review/lesson deltas + SRS snapshots).
+  // 'YYYY-MM-DD' keys sort lexicographically = chronologically, so range
+  // queries need no extra index.
+  3: (db) => {
+    db.createObjectStore(STORES.ACTIVITY_HISTORY, { keyPath: 'date' })
+  },
 }
 
 export function runMigrations(
