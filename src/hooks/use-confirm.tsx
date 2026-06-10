@@ -6,22 +6,38 @@ interface ConfirmOptions {
   message: string
   confirmText?: string
   cancelText?: string
+  // When set, the dialog shows a third action button and confirmWithSecondary
+  // resolves 'secondary' when it is clicked
+  secondaryText?: string
   variant?: 'danger' | 'warning' | 'info'
 }
+
+export type ConfirmResolution = 'confirm' | 'secondary' | false
 
 export function useConfirm() {
   const [isOpen, setIsOpen] = useState(false)
   const [options, setOptions] = useState<ConfirmOptions | null>(null)
-  const [resolvePromise, setResolvePromise] = useState<((value: boolean) => void) | null>(null)
+  const [resolvePromise, setResolvePromise] = useState<
+    ((value: ConfirmResolution) => void) | null
+  >(null)
 
-  const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
-    setOptions(opts)
-    setIsOpen(true)
+  const confirmWithSecondary = useCallback(
+    (opts: ConfirmOptions): Promise<ConfirmResolution> => {
+      setOptions(opts)
+      setIsOpen(true)
 
-    return new Promise((resolve) => {
-      setResolvePromise(() => resolve)
-    })
-  }, [])
+      return new Promise((resolve) => {
+        setResolvePromise(() => resolve)
+      })
+    },
+    []
+  )
+
+  const confirm = useCallback(
+    (opts: ConfirmOptions): Promise<boolean> =>
+      confirmWithSecondary(opts).then((resolution) => resolution === 'confirm'),
+    [confirmWithSecondary]
+  )
 
   const handleClose = useCallback(() => {
     setIsOpen(false)
@@ -33,7 +49,15 @@ export function useConfirm() {
 
   const handleConfirm = useCallback(() => {
     if (resolvePromise) {
-      resolvePromise(true)
+      resolvePromise('confirm')
+      setResolvePromise(null)
+    }
+    setIsOpen(false)
+  }, [resolvePromise])
+
+  const handleSecondary = useCallback(() => {
+    if (resolvePromise) {
+      resolvePromise('secondary')
       setResolvePromise(null)
     }
     setIsOpen(false)
@@ -44,9 +68,10 @@ export function useConfirm() {
       isOpen={isOpen}
       onClose={handleClose}
       onConfirm={handleConfirm}
+      onSecondary={handleSecondary}
       {...options}
     />
   ) : null
 
-  return { confirm, ConfirmDialog: ConfirmDialogComponent }
+  return { confirm, confirmWithSecondary, ConfirmDialog: ConfirmDialogComponent }
 }
