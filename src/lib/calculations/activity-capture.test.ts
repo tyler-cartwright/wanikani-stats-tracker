@@ -7,6 +7,7 @@ import {
   countNewLessons,
   formatLocalDate,
   mergeIntoDayRow,
+  parseLocalDate,
 } from './activity-capture'
 
 const NOW = new Date(2026, 5, 10, 14, 30) // 2026-06-10 local
@@ -22,6 +23,23 @@ describe('formatLocalDate', () => {
     // and Jan 5 UTC for east — either way the local date must win.
     const lateEvening = new Date(2026, 0, 5, 23, 30)
     expect(formatLocalDate(lateEvening)).toBe('2026-01-05')
+  })
+})
+
+describe('parseLocalDate', () => {
+  it('parses to local midnight, not UTC', () => {
+    const d = parseLocalDate('2026-01-05')
+    expect(d.getFullYear()).toBe(2026)
+    expect(d.getMonth()).toBe(0)
+    expect(d.getDate()).toBe(5)
+    expect(d.getHours()).toBe(0)
+  })
+
+  it('round-trips with formatLocalDate', () => {
+    // Includes DST-transition and year-boundary dates
+    for (const date of ['2026-01-01', '2026-03-08', '2026-11-01', '2026-12-31']) {
+      expect(formatLocalDate(parseLocalDate(date))).toBe(date)
+    }
   })
 })
 
