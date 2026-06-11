@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Navigation gains an eighth entry: Activity (活動), between Progress and Accuracy
+- **Desktop Header Fits on Laptop Screens**: the header previously overflowed the right edge of the viewport at common laptop widths (1280–1440px) — pre-existing, but the eighth tab tipped it over. Tabs are slimmer below very wide screens, the routine "Synced X ago" label collapses to its icon (errors stay visible; hover the icon for the time), long usernames truncate, and the nav scrolls invisibly as a last resort instead of ever pushing off-screen
 
 ### Technical
 - New tested calculation modules: `daily-streaks.ts` (active-day detection, today-grace current streak, longest-run bounds), `activity-summary.ts` (totals, busiest day, tracked-vs-active days, year filtering), `heatmap-grid.ts` (Sunday-first 53/54-week grid, local-date stepping, quartile intensity thresholds compared from the top so degenerate distributions still reach the strongest shade)

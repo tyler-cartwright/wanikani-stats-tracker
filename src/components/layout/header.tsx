@@ -47,15 +47,17 @@ export function Header() {
       <div className="container mx-auto px-8">
         <div className="flex h-20 items-center justify-between">
           {/* Logo - Crimson Pro */}
-          <Link to="/" className="flex items-center gap-3 focus-ring rounded-md px-2 py-1">
+          <Link to="/" className="flex items-center gap-3 focus-ring rounded-md px-2 py-1 flex-shrink-0">
             <Flame className="w-6 h-6 text-vermillion-500" />
             <span className="text-xl font-display font-semibold text-ink-100 dark:text-paper-100">
               WaniTrack
             </span>
           </Link>
 
-          {/* Navigation Tabs - generous spacing */}
-          <nav className="flex items-center gap-2">
+          {/* Navigation Tabs - tighter at xl so eight fit on laptop widths,
+              generous again at 2xl; the invisible scroll is a safety valve so
+              future tabs can never push the header off-screen */}
+          <nav className="flex items-center gap-1 2xl:gap-2 min-w-0 overflow-x-auto scrollbar-none">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path
               return (
@@ -63,7 +65,7 @@ export function Header() {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    'relative px-5 py-3 text-sm font-medium transition-smooth rounded-md focus-ring',
+                    'relative px-3 2xl:px-5 py-3 text-sm font-medium whitespace-nowrap transition-smooth rounded-md focus-ring',
                     'hover:bg-paper-200 dark:hover:bg-ink-200',
                     isActive ? 'text-ink-100 dark:text-paper-100' : 'text-ink-400 dark:text-paper-300'
                   )}
@@ -78,8 +80,8 @@ export function Header() {
           </nav>
 
           {/* Actions - subtle hover states */}
-          <div className="flex items-center gap-3">
-            <SyncStatus className="hidden md:flex" showButton />
+          <div className="flex items-center gap-2 2xl:gap-3 flex-shrink-0">
+            <SyncStatus className="hidden md:flex" showButton collapseLabel />
 
             <button
               onClick={toggleTheme}
@@ -100,7 +102,7 @@ export function Header() {
                 className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-paper-200 dark:hover:bg-ink-200 transition-smooth focus-ring"
                 aria-label="User menu"
               >
-                <span className="text-sm text-ink-400 dark:text-paper-300">
+                <span className="text-sm text-ink-400 dark:text-paper-300 max-w-[14ch] truncate">
                   {user?.username || 'User'}
                 </span>
                 <ChevronDown className="w-4 h-4 text-ink-400 dark:text-paper-300" />

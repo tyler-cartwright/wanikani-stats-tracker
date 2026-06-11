@@ -117,6 +117,16 @@
     transition: all var(--transition-duration-normal) var(--transition-timing-function-ease-out);
   }
 
+  /* Scrollable without a visible scrollbar - overflow safety valves like the
+     header nav, where scrolling is a graceful fallback, not the primary UX */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Focus ring - vermillion accent */
   .focus-ring:focus-visible {
     outline: none;
