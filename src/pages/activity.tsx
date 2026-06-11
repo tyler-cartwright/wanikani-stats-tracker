@@ -7,6 +7,7 @@ import { summarizeActivity } from '@/lib/calculations/activity-summary'
 import { ActivityStats } from '@/components/activity/activity-stats'
 import { ActivityHeatmap } from '@/components/activity/activity-heatmap'
 import { ActivityEmptyState } from '@/components/activity/activity-empty-state'
+import { YearInReviewCard } from '@/components/activity/year-in-review-card'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 
 function LoadingSkeleton() {
@@ -53,6 +54,7 @@ export function Activity() {
     <div className="space-y-8">
       <ActivityStats streaks={stats.streaks} summary={stats.summary} />
       <ActivityHeatmap history={history} />
+      <YearInReviewCard history={history} />
     </div>
   )
 }
