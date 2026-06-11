@@ -11,6 +11,7 @@ import { useUser } from '@/lib/api/queries'
 const navItems = [
   { path: '/', label: 'Dashboard' },
   { path: '/progress', label: 'Progress' },
+  { path: '/activity', label: 'Activity' },
   { path: '/accuracy', label: 'Accuracy' },
   { path: '/forecast', label: 'Forecast' },
   { path: '/leeches', label: 'Leeches' },

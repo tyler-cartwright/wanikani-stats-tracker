@@ -12,6 +12,7 @@ import { lazyWithRetry } from './lib/utils/lazy-with-retry'
 // Lazy load pages with automatic chunk error retry
 const Dashboard = lazyWithRetry(() => import('./pages/dashboard').then(m => ({ default: m.Dashboard })))
 const Progress = lazyWithRetry(() => import('./pages/progress').then(m => ({ default: m.Progress })))
+const Activity = lazyWithRetry(() => import('./pages/activity').then(m => ({ default: m.Activity })))
 const Forecast = lazyWithRetry(() => import('./pages/forecast').then(m => ({ default: m.Forecast })))
 const Accuracy = lazyWithRetry(() => import('./pages/accuracy').then(m => ({ default: m.Accuracy })))
 const Leeches = lazyWithRetry(() => import('./pages/leeches').then(m => ({ default: m.Leeches })))
@@ -64,6 +65,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/progress" element={<Progress />} />
+            <Route path="/activity" element={<Activity />} />
             <Route path="/forecast" element={<Forecast />} />
             <Route path="/accuracy" element={<Accuracy />} />
             <Route path="/leeches" element={<Leeches />} />
