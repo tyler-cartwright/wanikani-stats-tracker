@@ -5,6 +5,34 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.0] - 2026-06-11
+
+### Added
+- **Activity Heatmap** (new Activity page): a GitHub-style year calendar of your daily reviews and lessons, built from the activity history captured since 2.22 — the only place mobile and PWA users can get a WaniKani review heatmap at all
+  - Cell shading uses quartiles of your own year, so a few monster days don't wash out every normal day; hover any day for its exact counts
+  - Partial days (where capture started or restarted) are marked with a ring and labelled honestly instead of pretending to be zero, and days before tracking began read "not yet tracked"
+  - A year selector appears once your history spans multiple years
+- **Daily Study Streaks**: current streak (with a grace period — yesterday's streak isn't "broken" before you've done today's reviews, just waiting), longest streak ever with its dates, busiest day, lifetime totals, and active-day count
+  - Only real activity counts: a day where the app merely synced is not a study day
+- **Share Cards**: generate square PNG stat cards styled like the app and share or download them — every card a WaniKani forum post is a little flag planted for WaniTrack
+  - **Level card** (Dashboard): your current level, items passed/burned, and how long the previous level took
+  - **Milestone cards** (Progress → Achievements timeline): any achieved milestone with its date
+  - **Year in Review** (Activity page): reviews, lessons, active days, longest streak, busiest day, and your top milestones of the year — with an honest "tracked from" caveat when capture began mid-year
+  - The Share button appears where the Web Share API supports files (mobile/PWA); Download works everywhere
+
+### Changed
+- Navigation gains an eighth entry: Activity (活動), between Progress and Accuracy
+- **Desktop Header Fits on Laptop Screens**: the header previously overflowed the right edge of the viewport at common laptop widths (1280–1440px) — pre-existing, but the eighth tab tipped it over. Tabs are slimmer below very wide screens, the routine "Synced X ago" label collapses to its icon (errors stay visible; hover the icon for the time), long usernames truncate, and the nav scrolls invisibly as a last resort instead of ever pushing off-screen
+
+### Technical
+- New tested calculation modules: `daily-streaks.ts` (active-day detection, today-grace current streak, longest-run bounds), `activity-summary.ts` (totals, busiest day, tracked-vs-active days, year filtering), `heatmap-grid.ts` (Sunday-first 53/54-week grid, local-date stepping, quartile intensity thresholds compared from the top so degenerate distributions still reach the strongest shade)
+- `parseLocalDate` added to `activity-capture.ts` as the safe inverse of `formatLocalDate` — `'YYYY-MM-DD'` strings are never parsed with `new Date(str)`, which would read them as UTC and shift the calendar day
+- Share cards are pure data until the last step: `share-cards/data-prep.ts` resolves app data into card payloads and `layout.ts` produces a flat draw-list (both tested in node); `renderer.ts` is a thin browser-only interpreter onto a fixed 1080×1080 canvas. Card fonts are loaded explicitly before drawing (`document.fonts.load` + `fonts.ready`); offline without cached fonts degrades to the system serif/sans stacks rather than blocking
+- Web Share wrapper maps the user closing the share sheet (`AbortError`) to a result, not an error; share runs inside the click handler on the already-rendered blob to keep Safari's user-gesture chain
+- New `useActivityHistory` query hook (same IDB caching profile as the other collections); post-sync invalidation in `use-sync.ts` covers it since every sync writes today's row
+- Everything in this release is strictly read-only against the `activity_history` store
+- New fixture builder `makeActivityDayRow` with per-facet review overrides; the unused `StatCard` component was left untouched (it predates dark mode) — the Activity page uses its own stat tiles
+
 ## [2.22.0] - 2026-06-10
 
 ### Added

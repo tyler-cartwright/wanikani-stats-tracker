@@ -5,6 +5,9 @@ import { cn } from '@/lib/utils/cn'
 import { useAssignments, useLevelProgressions, useSubjects, useUser } from '@/lib/api/queries'
 import { useSyncStore } from '@/stores/sync-store'
 import { calculateMilestones, type Milestone } from '@/lib/calculations/milestones'
+import { buildMilestoneCardData } from '@/lib/share-cards/data-prep'
+import { ShareButton } from '@/components/share/share-button'
+import { ShareCardModal } from '@/components/share/share-card-modal'
 
 interface MilestoneBadgeProps {
   milestone: Milestone
@@ -84,7 +87,13 @@ function MilestoneBadge({ milestone, isAchieved }: MilestoneBadgeProps) {
   )
 }
 
-function MilestoneTimelineItem({ milestone }: { milestone: Milestone }) {
+function MilestoneTimelineItem({
+  milestone,
+  onShare,
+}: {
+  milestone: Milestone
+  onShare: (milestone: Milestone) => void
+}) {
   const Icon = getIcon(milestone.icon)
 
   return (
@@ -98,11 +107,14 @@ function MilestoneTimelineItem({ milestone }: { milestone: Milestone }) {
           {milestone.description}
         </div>
       </div>
-      {milestone.achievedAt && (
-        <div className="text-xs text-ink-400 dark:text-paper-300 flex-shrink-0">
-          {format(milestone.achievedAt, 'MMM d, yyyy')}
-        </div>
-      )}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {milestone.achievedAt && (
+          <div className="text-xs text-ink-400 dark:text-paper-300">
+            {format(milestone.achievedAt, 'MMM d, yyyy')}
+          </div>
+        )}
+        <ShareButton onClick={() => onShare(milestone)} label="Share this milestone" />
+      </div>
     </div>
   )
 }
@@ -154,6 +166,7 @@ export function MilestoneTimeline() {
   const { data: user, isLoading: userLoading } = useUser()
   const isSyncing = useSyncStore((state) => state.isSyncing)
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid')
+  const [sharedMilestone, setSharedMilestone] = useState<Milestone | null>(null)
 
   const isLoading = assignmentsLoading || progressionsLoading || subjectsLoading || userLoading || isSyncing
 
@@ -265,7 +278,11 @@ export function MilestoneTimeline() {
         <div className="space-y-3">
           {milestones.achieved.length > 0 ? (
             milestones.achieved.map((milestone) => (
-              <MilestoneTimelineItem key={milestone.id} milestone={milestone} />
+              <MilestoneTimelineItem
+                key={milestone.id}
+                milestone={milestone}
+                onShare={setSharedMilestone}
+              />
             ))
           ) : (
             <div className="text-center py-8 text-sm text-ink-400 dark:text-paper-300">
@@ -282,6 +299,17 @@ export function MilestoneTimeline() {
           <NextMilestonePreview milestone={milestones.stats.nextMilestone} />
         </div>
       )}
+
+      <ShareCardModal
+        isOpen={sharedMilestone !== null}
+        onClose={() => setSharedMilestone(null)}
+        data={
+          sharedMilestone && user
+            ? buildMilestoneCardData(user.username, sharedMilestone)
+            : null
+        }
+        title={sharedMilestone ? sharedMilestone.label : 'Milestone'}
+      />
     </div>
   )
 }

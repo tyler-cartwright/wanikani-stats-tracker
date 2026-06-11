@@ -7,6 +7,10 @@ import { calculateLevelProgress } from '@/lib/calculations/level-progress'
 import { filterPostResetProgressions } from '@/lib/calculations/progression-filter'
 import { useSyncStore } from '@/stores/sync-store'
 import { cn } from '@/lib/utils/cn'
+import { buildLevelUpCardData } from '@/lib/share-cards/data-prep'
+import type { ShareCardData } from '@/lib/share-cards/types'
+import { ShareButton } from '@/components/share/share-button'
+import { ShareCardModal } from '@/components/share/share-card-modal'
 
 export function LevelProgress() {
   const { data: user } = useUser()
@@ -17,6 +21,7 @@ export function LevelProgress() {
   const isSyncing = useSyncStore((state) => state.isSyncing)
 
   const [selectedLevel, setSelectedLevel] = useState(1)
+  const [shareCard, setShareCard] = useState<ShareCardData | null>(null)
 
   // Update selected level when user data loads
   useEffect(() => {
@@ -109,14 +114,26 @@ export function LevelProgress() {
             <ChevronRight className="w-5 h-5 text-ink-400 dark:text-paper-300" />
           </button>
         </div>
-        <span className="text-sm text-ink-400 dark:text-paper-300 font-medium">
-          {progress.durationCompact
-            ? <>
-                {progress.durationCompact}
-                {progress.isCurrentLevel && <span className="hidden sm:inline"> so far</span>}
-              </>
-            : `Day ${progress.daysOnLevel}`}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-ink-400 dark:text-paper-300 font-medium">
+            {progress.durationCompact
+              ? <>
+                  {progress.durationCompact}
+                  {progress.isCurrentLevel && <span className="hidden sm:inline"> so far</span>}
+                </>
+              : `Day ${progress.daysOnLevel}`}
+          </span>
+          {user && levelProgressions && assignments && (
+            <ShareButton
+              onClick={() =>
+                setShareCard(
+                  buildLevelUpCardData(user.username, user.level, levelProgressions, assignments)
+                )
+              }
+              label="Share your level"
+            />
+          )}
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -164,6 +181,13 @@ export function LevelProgress() {
           )}
         </div>
       </div>
+
+      <ShareCardModal
+        isOpen={shareCard !== null}
+        onClose={() => setShareCard(null)}
+        data={shareCard}
+        title={user ? `Level ${user.level}` : 'Level'}
+      />
     </div>
   )
 }

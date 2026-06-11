@@ -7,17 +7,32 @@ import { cn } from '@/lib/utils/cn'
 interface SyncStatusProps {
   className?: string
   showButton?: boolean
+  // Hide the routine status text below 2xl (the icon and button stay) — the
+  // relative-time label is wide and variable ("Synced less than a minute
+  // ago") and squeezes the header nav on laptop widths. "Sync failed" is
+  // never collapsed: errors must stay visible.
+  collapseLabel?: boolean
 }
 
-export function SyncStatus({ className, showButton = true }: SyncStatusProps) {
+export function SyncStatus({ className, showButton = true, collapseLabel = false }: SyncStatusProps) {
   const { sync, isSyncing, lastSyncAt, error } = useSync()
+  const labelClass = cn(
+    'text-ink-400 dark:text-paper-300',
+    collapseLabel && 'hidden 2xl:inline'
+  )
+
+  // With the label collapsed, hovering the icon still reveals the status
+  const hoverTitle =
+    collapseLabel && lastSyncAt && !isSyncing && !error
+      ? `Synced ${formatDistanceToNow(lastSyncAt, { addSuffix: true })}`
+      : undefined
 
   return (
-    <div className={cn('flex items-center gap-3 text-sm', className)}>
+    <div className={cn('flex items-center gap-3 text-sm', className)} title={hoverTitle}>
       {isSyncing ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin text-vermillion-500" />
-          <span className="text-ink-400 dark:text-paper-300">Syncing...</span>
+          <span className={labelClass}>Syncing...</span>
         </>
       ) : error ? (
         <>
@@ -27,12 +42,12 @@ export function SyncStatus({ className, showButton = true }: SyncStatusProps) {
       ) : lastSyncAt ? (
         <>
           <CheckCircle className="w-4 h-4 text-patina-500" />
-          <span className="text-ink-400 dark:text-paper-300">
+          <span className={labelClass}>
             Synced {formatDistanceToNow(lastSyncAt, { addSuffix: true })}
           </span>
         </>
       ) : (
-        <span className="text-ink-400 dark:text-paper-300">Not synced</span>
+        <span className={labelClass}>Not synced</span>
       )}
 
       {showButton && !isSyncing && (

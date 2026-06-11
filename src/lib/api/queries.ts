@@ -13,6 +13,7 @@ import { getCachedSubjects } from '@/lib/db/repositories/subjects'
 import { getCachedAssignments } from '@/lib/db/repositories/assignments'
 import { getCachedReviewStatistics } from '@/lib/db/repositories/review-statistics'
 import { getCachedLevelProgressions } from '@/lib/db/repositories/level-progressions'
+import { getActivityHistory } from '@/lib/db/repositories/activity-history'
 import { getLastSyncInfo } from '@/lib/sync/sync-manager'
 
 export const queryKeys = {
@@ -24,6 +25,7 @@ export const queryKeys = {
   summary: ['summary'] as const,
   syncStatus: ['syncStatus'] as const,
   resets: ['resets'] as const,
+  activityHistory: ['activityHistory'] as const,
 }
 
 // Network-reliant queries use networkMode: 'always' so their queryFns still
@@ -197,6 +199,28 @@ export function useLevelProgressions() {
   return useQuery({
     queryKey: queryKeys.levelProgressions,
     queryFn: getCachedLevelProgressions,
+    enabled: !!token && !isSyncing,
+    staleTime: 5 * 60 * 1000, // 5 min — data only changes on sync
+    gcTime: 30 * 60 * 1000, // 30 min
+    refetchOnMount: false, // post-sync invalidation handles freshness
+    retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
+  })
+}
+
+/**
+ * Activity History - loaded from IndexedDB (read-only; rows are written
+ * exclusively by the sync-time capture engine).
+ * Kept fresh for 5 min; post-sync invalidation (removeQueries + refetchQueries in use-sync.ts)
+ * handles freshness after a sync, so redundant per-navigation reads are unnecessary.
+ */
+export function useActivityHistory() {
+  const token = useUserStore((state) => state.token)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
+
+  return useQuery({
+    queryKey: queryKeys.activityHistory,
+    queryFn: getActivityHistory,
     enabled: !!token && !isSyncing,
     staleTime: 5 * 60 * 1000, // 5 min — data only changes on sync
     gcTime: 30 * 60 * 1000, // 30 min

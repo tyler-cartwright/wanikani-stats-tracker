@@ -45,6 +45,42 @@ export function downloadJsonFile(data: any, filename: string): void {
 }
 
 /**
+ * Download an existing blob as a file (e.g. a share-card PNG)
+ *
+ * Same anchor/objectURL mechanism as the JSON/CSV helpers, for callers
+ * that already have a Blob in hand.
+ */
+export function downloadBlobFile(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+
+  // Append to document (required for Firefox)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Generate a filename for a share-card PNG
+ *
+ * Format: wanitrack-{kind}-{username}-{date}.png
+ */
+export function generateShareCardFilename(username: string, kind: string): string {
+  const sanitizedUsername = username
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+
+  const date = new Date().toISOString().split('T')[0]
+
+  return `wanitrack-${kind}-${sanitizedUsername}-${date}.png`
+}
+
+/**
  * Calculate the size of data when serialized to JSON
  *
  * @param data - The data to calculate size for

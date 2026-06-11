@@ -9,6 +9,7 @@ import type {
   ReviewStatistic,
   Subject,
 } from '@/lib/api/types'
+import type { ActivityDayRow } from '@/lib/db/schema'
 
 export function makeReset(overrides: Partial<Reset> = {}): Reset {
   return {
@@ -82,6 +83,31 @@ export function makeSubject(
     ],
     visually_similar_subject_ids: [],
     ...overrides,
+  }
+}
+
+// reviews may be overridden facet-by-facet; unspecified facets keep defaults
+type ActivityDayRowOverrides = Partial<Omit<ActivityDayRow, 'reviews'>> & {
+  reviews?: Partial<ActivityDayRow['reviews']>
+}
+
+export function makeActivityDayRow(
+  overrides: ActivityDayRowOverrides = {}
+): ActivityDayRow {
+  const { reviews, ...rest } = overrides
+  return {
+    date: '2026-06-01',
+    lessons: 5,
+    srsSnapshot: null,
+    updatedAt: '2026-06-01T12:00:00.000Z',
+    ...rest,
+    reviews: {
+      meaningCorrect: 10,
+      meaningIncorrect: 2,
+      readingCorrect: 9,
+      readingIncorrect: 3,
+      ...reviews,
+    },
   }
 }
 

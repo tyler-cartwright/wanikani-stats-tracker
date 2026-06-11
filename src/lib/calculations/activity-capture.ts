@@ -51,6 +51,14 @@ export function formatLocalDate(d: Date): string {
   return `${d.getFullYear()}-${month}-${day}`
 }
 
+// Inverse of formatLocalDate: 'YYYY-MM-DD' to local midnight. Never parse
+// these strings with new Date(str) — that reads them as UTC and shifts the
+// calendar day for anyone west of Greenwich.
+export function parseLocalDate(date: string): Date {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 // WaniKani answer totals are monotonic; a negative delta means we diffed
 // against a corrupt or mismatched baseline. Clamp to zero per facet (never
 // write negative history) and warn so it is visible in the field.

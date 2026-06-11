@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.22.0
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.23.0
 
 ---
 
@@ -22,6 +22,12 @@ Long-term analysis and projections:
 - **Level 60 Projections**: Multiple scenarios based on your actual pace (expected, active, fast track, conservative)
 - **Intelligent Break Detection**: Automatically identifies inactive periods for more accurate projections
 - **Assignments Table**: Comprehensive searchable list with filtering by type and SRS stage
+
+### Activity Heatmap
+Your study history, captured locally and visualized:
+- GitHub-style year calendar of daily reviews and lessons (recorded on every sync — WaniKani's API no longer provides review history, so it accumulates forward from your first sync)
+- Daily study streaks: current (with a same-day grace period), longest ever, busiest day, lifetime totals
+- **Share Cards**: square PNG stat cards for your current level, achieved milestones, and a year in review — share via the system share sheet or download
 
 ### Workload Forecasting
 Plan your lesson pace and predict future review workload:
