@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Reading Coverage is now measured, not estimated**: the Readiness hero number previously came from a count-based heuristic (500 kanji ≈ 80%, 1000 ≈ 90%) that assumed you always learn the most frequent kanji first. It now reflects the specific kanji you know, weighted by real occurrence counts — expect the number to shift, often downward; the old number was optimistic, this one is yours
 - Item detail modals no longer show an Accuracy section for items that have never been reviewed (it always read a meaningless 0.00%)
+- On small screens the activity heatmap now opens scrolled to the present — the right edge anchors at today's week (or a past year's final week), so your recent activity is visible immediately instead of January's empty cells; earlier months remain a scroll away
 
 ### Technical
 - New tested calculation modules: `level-up-blockers.ts` (earliest-Guru interval walk with memoized radical-chain recursion for locked kanji, vacation-mode handling, Nth-earliest level-up selection; takes `kanjiNeededToLevelUp` verbatim from `calculateLevelProgress` so the two can never disagree) and `frequency-coverage.ts` (occurrence-weighted join of corpus data against kanji SRS stages, dataset-parameterized for testing, cumulative rank buckets)
