@@ -16,6 +16,7 @@ interface SettingsState {
   forecastIncludeVocabulary: boolean // default: true - include vocabulary in level progression forecast
   showAllLevelsInAccuracy: boolean // default: false - show levels beyond user's current level in accuracy by level
   autoExcludeBreaks: boolean // default: true - automatically exclude outlier levels as breaks from averages
+  trainerAutoplayAudio: boolean // default: false - play vocabulary audio automatically on card reveal
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
@@ -29,6 +30,7 @@ interface SettingsState {
   setForecastIncludeVocabulary: (value: boolean) => void
   setShowAllLevelsInAccuracy: (value: boolean) => void
   setAutoExcludeBreaks: (value: boolean) => void
+  setTrainerAutoplayAudio: (value: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -46,6 +48,7 @@ export const useSettingsStore = create<SettingsState>()(
       forecastIncludeVocabulary: true, // default to including vocabulary
       showAllLevelsInAccuracy: false, // default to hiding levels beyond current level
       autoExcludeBreaks: true, // default to auto-excluding outlier levels as breaks
+      trainerAutoplayAudio: false, // default to manual audio playback in the trainer
 
       // Actions
       setTheme: (theme: 'light' | 'dark') => {
@@ -100,6 +103,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setAutoExcludeBreaks: (value: boolean) => {
         set({ autoExcludeBreaks: value })
+      },
+
+      setTrainerAutoplayAudio: (value: boolean) => {
+        set({ trainerAutoplayAudio: value })
       },
     }),
     {

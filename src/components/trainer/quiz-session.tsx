@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react'
+import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { X } from 'lucide-react'
 import type { TrainerCard } from '@/lib/calculations/trainer-pools'
 import {
@@ -9,7 +9,9 @@ import {
   type QuizSummary,
 } from '@/lib/calculations/trainer-quiz'
 import { QuizCard } from './quiz-card'
+import { useAudioPlayer } from './audio-button'
 import { useConfirm } from '@/hooks/use-confirm'
+import { useSettingsStore } from '@/stores/settings-store'
 
 interface QuizSessionProps {
   cards: TrainerCard[]
@@ -22,6 +24,17 @@ export function QuizSession({ cards, onComplete, onQuit }: QuizSessionProps) {
   const [state, dispatch] = useReducer(quizReducer, cards, createQuiz)
   const { confirm, ConfirmDialog } = useConfirm()
   const card = currentCard(state)
+  const trainerAutoplayAudio = useSettingsStore((s) => s.trainerAutoplayAudio)
+  const { play: playAudio, failedUrl: failedAudioUrl } = useAudioPlayer()
+
+  // Autoplay must fire synchronously inside the reveal's click/keydown so
+  // browser autoplay policies see a user gesture
+  const handleReveal = useCallback(() => {
+    if (state.phase !== 'front') return
+    dispatch({ type: 'reveal' })
+    const revealing = currentCard(state)
+    if (trainerAutoplayAudio && revealing?.audioUrl) playAudio(revealing.audioUrl)
+  }, [state, trainerAutoplayAudio, playAudio])
 
   // Completion is a state, not an event, so report it from an effect; the
   // ref guards StrictMode's double-invoke
@@ -42,7 +55,7 @@ export function QuizSession({ cards, onComplete, onQuit }: QuizSessionProps) {
 
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
-        dispatch({ type: 'reveal' })
+        handleReveal()
       } else if (e.key === '1') {
         dispatch({ type: 'grade', grade: 'got-it' })
       } else if (e.key === '2') {
@@ -51,7 +64,7 @@ export function QuizSession({ cards, onComplete, onQuit }: QuizSessionProps) {
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [])
+  }, [handleReveal])
 
   const handleQuit = async () => {
     const graded = Object.keys(state.results).length
@@ -96,7 +109,13 @@ export function QuizSession({ cards, onComplete, onQuit }: QuizSessionProps) {
         </button>
       </div>
 
-      <QuizCard card={card} phase={state.phase as 'front' | 'revealed'} onReveal={() => dispatch({ type: 'reveal' })} />
+      <QuizCard
+        card={card}
+        phase={state.phase as 'front' | 'revealed'}
+        onReveal={handleReveal}
+        onPlayAudio={playAudio}
+        failedAudioUrl={failedAudioUrl}
+      />
 
       {/* Grade buttons */}
       {state.phase === 'revealed' && (

@@ -1,4 +1,5 @@
 import type { TrainerCard, TrainerPoolId } from '@/lib/calculations/trainer-pools'
+import { useSettingsStore } from '@/stores/settings-store'
 
 export interface PoolOption {
   id: TrainerPoolId
@@ -25,6 +26,8 @@ export function SessionSetup({
   isLoading,
   completedSessions,
 }: SessionSetupProps) {
+  const { trainerAutoplayAudio, setTrainerAutoplayAudio } = useSettingsStore()
+
   if (isLoading) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
@@ -90,6 +93,33 @@ export function SessionSetup({
             </button>
           )
         })}
+      </div>
+
+      {/* Autoplay audio */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <div className="text-sm font-medium text-ink-100 dark:text-paper-100">
+            Play audio on reveal
+          </div>
+          <div className="text-sm text-ink-400 dark:text-paper-300">
+            Vocabulary pronunciation plays automatically when a card flips
+          </div>
+        </div>
+        <button
+          onClick={() => setTrainerAutoplayAudio(!trainerAutoplayAudio)}
+          role="switch"
+          aria-checked={trainerAutoplayAudio}
+          aria-label="Play audio on reveal"
+          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+            trainerAutoplayAudio ? 'bg-vermillion-500' : 'bg-paper-300 dark:bg-ink-300'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-paper-100 dark:bg-ink-100 transition-transform ${
+              trainerAutoplayAudio ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
       </div>
 
       <div className="flex items-center justify-between gap-4">

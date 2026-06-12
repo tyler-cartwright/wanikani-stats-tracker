@@ -1,12 +1,15 @@
 import type { TrainerCard } from '@/lib/calculations/trainer-pools'
+import { AudioButton } from './audio-button'
 
 interface QuizCardProps {
   card: TrainerCard
   phase: 'front' | 'revealed'
   onReveal: () => void
+  onPlayAudio: (url: string) => void
+  failedAudioUrl: string | null
 }
 
-export function QuizCard({ card, phase, onReveal }: QuizCardProps) {
+export function QuizCard({ card, phase, onReveal, onPlayAudio, failedAudioUrl }: QuizCardProps) {
   if (phase === 'front') {
     return (
       <button
@@ -32,6 +35,13 @@ export function QuizCard({ card, phase, onReveal }: QuizCardProps) {
         <span className="px-2 py-1 rounded-md bg-paper-300 dark:bg-ink-300 text-xs font-medium text-ink-400 dark:text-paper-300 capitalize">
           {card.type}
         </span>
+        {card.audioUrl && (
+          <AudioButton
+            url={card.audioUrl}
+            onPlay={onPlayAudio}
+            failed={failedAudioUrl === card.audioUrl}
+          />
+        )}
       </div>
 
       {/* Readings */}
