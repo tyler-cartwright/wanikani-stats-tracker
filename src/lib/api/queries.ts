@@ -11,7 +11,10 @@ import {
 } from '@/lib/db/repositories/api-snapshots'
 import { getCachedSubjects } from '@/lib/db/repositories/subjects'
 import { getCachedAssignments } from '@/lib/db/repositories/assignments'
-import { getCachedReviewStatistics } from '@/lib/db/repositories/review-statistics'
+import {
+  getCachedReviewStatisticRows,
+  getCachedReviewStatistics,
+} from '@/lib/db/repositories/review-statistics'
 import { getCachedLevelProgressions } from '@/lib/db/repositories/level-progressions'
 import { getActivityHistory } from '@/lib/db/repositories/activity-history'
 import { getTrainerSessions } from '@/lib/db/repositories/trainer-sessions'
@@ -28,6 +31,7 @@ export const queryKeys = {
   resets: ['resets'] as const,
   activityHistory: ['activityHistory'] as const,
   trainerSessions: ['trainerSessions'] as const,
+  reviewStatisticRows: ['reviewStatisticRows'] as const,
 }
 
 // Network-reliant queries use networkMode: 'always' so their queryFns still
@@ -180,6 +184,27 @@ export function useReviewStatistics() {
   return useQuery({
     queryKey: queryKeys.reviewStatistics,
     queryFn: getCachedReviewStatistics,
+    enabled: !!token && !isSyncing,
+    staleTime: 5 * 60 * 1000, // 5 min — data only changes on sync
+    gcTime: 30 * 60 * 1000, // 30 min
+    refetchOnMount: false, // post-sync invalidation handles freshness
+    retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
+  })
+}
+
+/**
+ * Review Statistics with cache-write times - loaded from IndexedDB cache.
+ * The trainer's recently-failed pool needs the row write time as a recency
+ * proxy; everything else should keep using useReviewStatistics.
+ */
+export function useReviewStatisticRows() {
+  const token = useUserStore((state) => state.token)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
+
+  return useQuery({
+    queryKey: queryKeys.reviewStatisticRows,
+    queryFn: getCachedReviewStatisticRows,
     enabled: !!token && !isSyncing,
     staleTime: 5 * 60 * 1000, // 5 min — data only changes on sync
     gcTime: 30 * 60 * 1000, // 30 min

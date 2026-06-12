@@ -18,6 +18,15 @@ export async function getCachedReviewStatistics(): Promise<ReviewStatistic[]> {
   return cached.map((item) => item.data)
 }
 
+// Stats with their local cache-write times — the trainer's recently-failed
+// pool needs the write time as a recency proxy (see trainer-pools.ts).
+export async function getCachedReviewStatisticRows(): Promise<
+  Array<{ stat: ReviewStatistic; updatedAt: string }>
+> {
+  const cached = await getAll<CachedReviewStatistic>(STORES.REVIEW_STATISTICS)
+  return cached.map((item) => ({ stat: item.data, updatedAt: item.updatedAt }))
+}
+
 export async function getReviewStatisticCount(): Promise<number> {
   return count(STORES.REVIEW_STATISTICS)
 }
