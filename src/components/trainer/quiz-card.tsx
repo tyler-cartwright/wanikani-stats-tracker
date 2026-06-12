@@ -94,6 +94,26 @@ export function QuizCard({ card, phase, onReveal, onPlayAudio, failedAudioUrl }:
           </span>
         ))}
       </div>
+
+      {/* Confusion mode: the visually-similar sibling, for contrast */}
+      {card.contrast && (
+        <div className="w-full max-w-md mt-2 p-4 rounded-lg border border-vermillion-500/30 bg-vermillion-500/5">
+          <div className="text-xs font-medium text-vermillion-500 dark:text-vermillion-400 mb-2">
+            Don't confuse with
+          </div>
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <span className="text-2xl font-japanese text-ink-100 dark:text-paper-100">
+              {card.contrast.character}
+            </span>
+            <span className="text-sm text-ink-300 dark:text-paper-300">{card.contrast.meaning}</span>
+            {card.contrast.reading && (
+              <span className="text-sm font-japanese text-ink-400 dark:text-paper-300">
+                {card.contrast.reading}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

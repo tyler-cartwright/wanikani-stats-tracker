@@ -29,8 +29,15 @@ export interface TrainerCard {
   readingAccuracy: number
   totalReviews: number
   incorrectCount: number
-  // Confusion mode: the visually-similar sibling shown on reveal
-  contrastSubjectId?: number
+  // Confusion mode: the visually-similar sibling shown on reveal. Carries
+  // display data (not just an id) so retry decks stay self-contained even
+  // when the sibling card isn't in them.
+  contrast?: {
+    subjectId: number
+    character: string
+    meaning: string
+    reading: string | null
+  }
 }
 
 export const RECENTLY_FAILED_WINDOW_DAYS = 7
@@ -276,7 +283,12 @@ export function buildConfusionPairPool(
       if (cards.has(item.subjectId)) continue
       cards.set(item.subjectId, {
         ...leechToCard(item, subjectMap),
-        contrastSubjectId: sibling.subjectId,
+        contrast: {
+          subjectId: sibling.subjectId,
+          character: sibling.character,
+          meaning: sibling.meaning,
+          reading: sibling.readings.primary,
+        },
       })
     }
   }

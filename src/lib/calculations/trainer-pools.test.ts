@@ -364,8 +364,11 @@ describe('buildConfusionPairPool — visually-similar deck', () => {
     expect(pool.map((c) => c.subjectId).sort()).toEqual([1, 2])
     const card1 = pool.find((c) => c.subjectId === 1)!
     const card2 = pool.find((c) => c.subjectId === 2)!
-    expect(card1.contrastSubjectId).toBe(2)
-    expect(card2.contrastSubjectId).toBe(1)
+    expect(card1.contrast?.subjectId).toBe(2)
+    expect(card1.contrast?.character).toBe('人工林')
+    expect(card1.contrast?.meaning).toBe('Fish')
+    expect(card1.contrast?.reading).toBe('さかな')
+    expect(card2.contrast?.subjectId).toBe(1)
   })
 
   it('returns an empty pool when no leeches are confusable', () => {
@@ -394,7 +397,7 @@ describe('buildConfusionPairPool — visually-similar deck', () => {
 
     // 11/12 share 人工 (similarity 2/3); 11/13 share 的 (1/3, below threshold)
     const card11 = pool.find((c) => c.subjectId === 11)!
-    expect(card11.contrastSubjectId).toBe(12)
+    expect(card11.contrast?.subjectId).toBe(12)
     expect(pool.filter((c) => c.subjectId === 11)).toHaveLength(1)
   })
 })

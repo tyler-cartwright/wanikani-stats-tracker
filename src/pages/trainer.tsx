@@ -11,10 +11,12 @@ import {
   useUser,
 } from '@/lib/api/queries'
 import {
+  buildConfusionPairPool,
   buildCurrentLevelPool,
   buildLeechPool,
   buildRecentlyFailedPool,
   type TrainerCard,
+  type TrainerMode,
   type TrainerPoolId,
 } from '@/lib/calculations/trainer-pools'
 import type { QuizSummary } from '@/lib/calculations/trainer-quiz'
@@ -56,6 +58,9 @@ export function Trainer() {
   const [phase, setPhase] = useState<TrainerPhase>('setup')
   const [selectedPool, setSelectedPool] = useState<TrainerPoolId>(() =>
     parsePoolParam(searchParams.get('pool'))
+  )
+  const [mode, setMode] = useState<TrainerMode>(() =>
+    searchParams.get('mode') === 'confusion' ? 'confusion' : 'flashcards'
   )
   const [deck, setDeck] = useState<TrainerCard[]>([])
   const [summary, setSummary] = useState<QuizSummary | null>(null)
@@ -100,6 +105,13 @@ export function Trainer() {
     ]
   }, [reviewStats, statRows, subjects, assignments, user, includeBurnedLeeches])
 
+  const confusionCards: TrainerCard[] = useMemo(() => {
+    if (!reviewStats || !subjects || !assignments) return []
+    return buildConfusionPairPool(reviewStats, subjects, assignments, {
+      includeBurned: includeBurnedLeeches,
+    })
+  }, [reviewStats, subjects, assignments, includeBurnedLeeches])
+
   const persistSession = useCallback(
     async (sessionSummary: QuizSummary, completed: boolean) => {
       const now = new Date()
@@ -108,8 +120,8 @@ export function Trainer() {
         date: formatLocalDate(startedAtRef.current),
         startedAt: startedAtRef.current.toISOString(),
         completedAt: completed ? now.toISOString() : null,
-        mode: 'flashcards',
-        pool: selectedPool,
+        mode,
+        pool: mode === 'confusion' ? null : selectedPool,
         totalCards: sessionSummary.totalCards,
         firstTryCorrect: sessionSummary.firstTryCorrect,
         cards: sessionSummary.cards,
@@ -123,7 +135,7 @@ export function Trainer() {
         console.error('[TRAINER] Failed to save session:', error)
       }
     },
-    [queryClient, selectedPool]
+    [queryClient, mode, selectedPool]
   )
 
   const startSession = useCallback((cards: TrainerCard[]) => {
@@ -135,6 +147,10 @@ export function Trainer() {
   }, [])
 
   const handleStart = () => {
+    if (mode === 'confusion') {
+      if (confusionCards.length > 0) startSession(confusionCards)
+      return
+    }
     const pool = pools.find((p) => p.id === selectedPool)
     if (pool && pool.cards.length > 0) startSession(pool.cards)
   }
@@ -173,6 +189,9 @@ export function Trainer() {
           pools={pools}
           selectedPool={selectedPool}
           onSelectPool={setSelectedPool}
+          mode={mode}
+          onSelectMode={setMode}
+          confusionCards={confusionCards}
           onStart={handleStart}
           isLoading={isLoading}
           completedSessions={completedSessions}

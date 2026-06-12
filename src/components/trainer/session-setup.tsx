@@ -1,4 +1,4 @@
-import type { TrainerCard, TrainerPoolId } from '@/lib/calculations/trainer-pools'
+import type { TrainerCard, TrainerMode, TrainerPoolId } from '@/lib/calculations/trainer-pools'
 import { useSettingsStore } from '@/stores/settings-store'
 
 export interface PoolOption {
@@ -13,6 +13,9 @@ interface SessionSetupProps {
   pools: PoolOption[]
   selectedPool: TrainerPoolId
   onSelectPool: (id: TrainerPoolId) => void
+  mode: TrainerMode
+  onSelectMode: (mode: TrainerMode) => void
+  confusionCards: TrainerCard[]
   onStart: () => void
   isLoading: boolean
   completedSessions: number
@@ -22,6 +25,9 @@ export function SessionSetup({
   pools,
   selectedPool,
   onSelectPool,
+  mode,
+  onSelectMode,
+  confusionCards,
   onStart,
   isLoading,
   completedSessions,
@@ -42,7 +48,8 @@ export function SessionSetup({
   }
 
   const selected = pools.find((p) => p.id === selectedPool)
-  const canStart = !!selected && selected.cards.length > 0
+  const canStart =
+    mode === 'confusion' ? confusionCards.length > 0 : !!selected && selected.cards.length > 0
 
   return (
     <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm space-y-6">
@@ -55,7 +62,68 @@ export function SessionSetup({
         </p>
       </div>
 
+      {/* Mode picker */}
+      <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Training mode">
+        {(
+          [
+            {
+              id: 'flashcards' as const,
+              label: 'Flashcards',
+              description: 'Quiz a pool of items',
+            },
+            {
+              id: 'confusion' as const,
+              label: 'Confusion pairs',
+              description: 'Drill lookalike leeches against each other',
+            },
+          ] satisfies Array<{ id: TrainerMode; label: string; description: string }>
+        ).map((option) => {
+          const isSelected = mode === option.id
+          return (
+            <button
+              key={option.id}
+              role="radio"
+              aria-checked={isSelected}
+              onClick={() => onSelectMode(option.id)}
+              className={`text-left p-4 rounded-lg border transition-smooth focus-ring cursor-pointer ${
+                isSelected
+                  ? 'border-vermillion-500 dark:border-vermillion-400 bg-paper-300/50 dark:bg-ink-300/50'
+                  : 'border-paper-300 dark:border-ink-300 hover:bg-paper-300/50 dark:hover:bg-ink-300/50'
+              }`}
+            >
+              <div className="font-medium text-ink-100 dark:text-paper-100">{option.label}</div>
+              <div className="text-sm text-ink-400 dark:text-paper-300 mt-0.5">
+                {option.description}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Confusion deck summary */}
+      {mode === 'confusion' && (
+        <div className="p-4 rounded-lg border border-paper-300 dark:border-ink-300">
+          {confusionCards.length > 0 ? (
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-sm text-ink-400 dark:text-paper-300">
+                Visually-similar leeches drawn from your confusion pairs — each card shows its
+                lookalike on reveal
+              </div>
+              <span className="flex-shrink-0 px-3 py-1 rounded-full text-sm font-semibold bg-vermillion-500 text-paper-100 dark:text-ink-100">
+                {confusionCards.length}
+              </span>
+            </div>
+          ) : (
+            <div className="text-sm text-ink-400 dark:text-paper-300">
+              No confusable leech pairs found — this mode needs at least two leeches that look
+              alike
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Pool picker */}
+      {mode === 'flashcards' && (
       <div className="space-y-3" role="radiogroup" aria-label="Item pool">
         {pools.map((pool) => {
           const isEmpty = pool.cards.length === 0
@@ -94,6 +162,7 @@ export function SessionSetup({
           )
         })}
       </div>
+      )}
 
       {/* Autoplay audio */}
       <div className="flex items-center justify-between gap-4">
