@@ -1,5 +1,20 @@
 // Level Progress Calculations
-import type { Assignment, Subject } from '@/lib/api/types'
+import type { Assignment, KanjiSubject, RadicalSubject, Subject } from '@/lib/api/types'
+
+export function isRadicalSubject(subject: Subject): subject is RadicalSubject {
+  return 'character_images' in subject
+}
+
+// Kanji are the only subjects whose readings carry a type (onyomi/kunyomi/nanori).
+// Level-up rules key off this exact predicate; reuse it anywhere a calculation
+// must agree with level progression.
+export function isKanjiSubject(subject: Subject): subject is KanjiSubject {
+  return (
+    'component_subject_ids' in subject &&
+    'readings' in subject &&
+    subject.readings.some((r) => 'type' in r)
+  )
+}
 
 export interface SubjectProgressData {
   started: number // Items with started_at !== null
@@ -104,8 +119,7 @@ export function calculateLevelProgress(
     const assignment = assignmentMap.get(subject.id)
 
     // Count totals based on subject type
-    if ('character_images' in subject) {
-      // Radical
+    if (isRadicalSubject(subject)) {
       radicalsTotal++
       // Count as started if assignment exists, not hidden, and has started_at
       if (assignment && !assignment.hidden && assignment.started_at !== null) {
@@ -116,30 +130,16 @@ export function calculateLevelProgress(
       if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
         radicalsGuruCount++
       }
-    } else if ('component_subject_ids' in subject && 'readings' in subject) {
-      // Check if it's kanji (has readings with type property)
-      const hasKanjiReadings = subject.readings.some((r: any) => 'type' in r)
-      if (hasKanjiReadings) {
-        // Kanji
-        kanjiTotal++
-        if (assignment && !assignment.hidden && assignment.started_at !== null) {
-          kanjiStarted++
-        }
-        if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
-          kanjiGuruCount++
-        }
-      } else {
-        // Vocabulary
-        vocabularyTotal++
-        if (assignment && !assignment.hidden && assignment.started_at !== null) {
-          vocabularyStarted++
-        }
-        if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
-          vocabularyGuruCount++
-        }
+    } else if (isKanjiSubject(subject)) {
+      kanjiTotal++
+      if (assignment && !assignment.hidden && assignment.started_at !== null) {
+        kanjiStarted++
+      }
+      if (assignment && !assignment.hidden && assignment.srs_stage >= 5) {
+        kanjiGuruCount++
       }
     } else {
-      // Kana vocabulary (no component_subject_ids)
+      // Vocabulary (incl. kana vocabulary)
       vocabularyTotal++
       if (assignment && !assignment.hidden && assignment.started_at !== null) {
         vocabularyStarted++
