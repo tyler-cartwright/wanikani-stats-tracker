@@ -1,6 +1,7 @@
 import { HeroStats } from '@/components/dashboard/hero-stats'
 import { SRSSummary } from '@/components/dashboard/srs-summary'
 import { LevelProgress } from '@/components/dashboard/level-progress'
+import { LevelUpBlockers } from '@/components/dashboard/level-up-blockers'
 import { ReviewForecast } from '@/components/dashboard/review-forecast'
 import { GuruForecast } from '@/components/dashboard/guru-forecast'
 import { useDocumentTitle } from '@/hooks/use-document-title'
@@ -17,6 +18,9 @@ export function Dashboard() {
         <LevelProgress />
         <SRSSummary />
       </div>
+
+      {/* What stands between you and the next level */}
+      <LevelUpBlockers />
 
       {/* Second Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

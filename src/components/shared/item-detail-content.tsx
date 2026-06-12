@@ -123,7 +123,8 @@ export function ItemDetailContent({ item }: ItemDetailContentProps) {
         </div>
       )}
 
-      {/* Accuracy Stats */}
+      {/* Accuracy Stats — only meaningful once the item has been reviewed */}
+      {item.totalReviews > 0 && (
       <div className="mb-6">
         <h4 className="text-sm font-semibold text-ink-100 dark:text-paper-100 mb-3">Accuracy</h4>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -147,6 +148,7 @@ export function ItemDetailContent({ item }: ItemDetailContentProps) {
           </div>
         </div>
       </div>
+      )}
 
       {/* WaniKani Link */}
       <a
