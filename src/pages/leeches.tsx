@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+import { Dumbbell } from 'lucide-react'
 import { PriorityList } from '@/components/leeches/priority-list'
 import { ConfusionPairs } from '@/components/leeches/confusion-pairs'
 import { RootCauses } from '@/components/leeches/root-causes'
@@ -43,9 +45,20 @@ export function Leeches() {
           </>
         ) : (
           <>
-            <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-              Leech Summary
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100">
+                Leech Summary
+              </h2>
+              {leeches.length > 0 && (
+                <Link
+                  to="/trainer?pool=leeches"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-vermillion-500 hover:bg-vermillion-600 text-paper-100 dark:text-ink-100 transition-smooth focus-ring"
+                >
+                  <Dumbbell className="w-4 h-4" />
+                  Train these
+                </Link>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-display font-semibold text-vermillion-500 dark:text-vermillion-400 mb-2">

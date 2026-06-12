@@ -54,6 +54,7 @@ export function useSync() {
           await queryClient.removeQueries({ queryKey: queryKeys.subjects })
           await queryClient.removeQueries({ queryKey: queryKeys.assignments })
           await queryClient.removeQueries({ queryKey: queryKeys.reviewStatistics })
+          await queryClient.removeQueries({ queryKey: queryKeys.reviewStatisticRows })
           await queryClient.removeQueries({ queryKey: queryKeys.levelProgressions })
           // Every successful sync writes today's activity row via the capture engine
           await queryClient.removeQueries({ queryKey: queryKeys.activityHistory })
@@ -62,6 +63,7 @@ export function useSync() {
           await queryClient.refetchQueries({ queryKey: queryKeys.subjects, type: 'active' })
           await queryClient.refetchQueries({ queryKey: queryKeys.assignments, type: 'active' })
           await queryClient.refetchQueries({ queryKey: queryKeys.reviewStatistics, type: 'active' })
+          await queryClient.refetchQueries({ queryKey: queryKeys.reviewStatisticRows, type: 'active' })
           await queryClient.refetchQueries({ queryKey: queryKeys.levelProgressions, type: 'active' })
           await queryClient.refetchQueries({ queryKey: queryKeys.activityHistory, type: 'active' })
 

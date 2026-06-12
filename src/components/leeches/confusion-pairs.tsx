@@ -1,4 +1,5 @@
 import { Zap } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useReviewStatistics, useSubjects, useAssignments } from '@/lib/api/queries'
 import { detectLeeches, findConfusionPairs } from '@/lib/calculations/leeches'
 import { useSyncStore } from '@/stores/sync-store'
@@ -52,9 +53,19 @@ export function ConfusionPairs() {
   }
   return (
     <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
-      <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
-        Confusion Pairs
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100">
+          Confusion Pairs
+        </h2>
+        {displayPairs.length > 0 && (
+          <Link
+            to="/trainer?mode=confusion"
+            className="text-sm font-medium text-vermillion-500 dark:text-vermillion-400 hover:underline focus-ring rounded-md"
+          >
+            Train pairs →
+          </Link>
+        )}
+      </div>
       <p className="text-sm text-ink-400 dark:text-paper-300 mb-6">
         These similar items are both giving you trouble.
       </p>

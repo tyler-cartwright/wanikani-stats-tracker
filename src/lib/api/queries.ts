@@ -11,9 +11,13 @@ import {
 } from '@/lib/db/repositories/api-snapshots'
 import { getCachedSubjects } from '@/lib/db/repositories/subjects'
 import { getCachedAssignments } from '@/lib/db/repositories/assignments'
-import { getCachedReviewStatistics } from '@/lib/db/repositories/review-statistics'
+import {
+  getCachedReviewStatisticRows,
+  getCachedReviewStatistics,
+} from '@/lib/db/repositories/review-statistics'
 import { getCachedLevelProgressions } from '@/lib/db/repositories/level-progressions'
 import { getActivityHistory } from '@/lib/db/repositories/activity-history'
+import { getTrainerSessions } from '@/lib/db/repositories/trainer-sessions'
 import { getLastSyncInfo } from '@/lib/sync/sync-manager'
 
 export const queryKeys = {
@@ -26,6 +30,8 @@ export const queryKeys = {
   syncStatus: ['syncStatus'] as const,
   resets: ['resets'] as const,
   activityHistory: ['activityHistory'] as const,
+  trainerSessions: ['trainerSessions'] as const,
+  reviewStatisticRows: ['reviewStatisticRows'] as const,
 }
 
 // Network-reliant queries use networkMode: 'always' so their queryFns still
@@ -188,6 +194,27 @@ export function useReviewStatistics() {
 }
 
 /**
+ * Review Statistics with cache-write times - loaded from IndexedDB cache.
+ * The trainer's recently-failed pool needs the row write time as a recency
+ * proxy; everything else should keep using useReviewStatistics.
+ */
+export function useReviewStatisticRows() {
+  const token = useUserStore((state) => state.token)
+  const isSyncing = useSyncStore((state) => state.isSyncing)
+
+  return useQuery({
+    queryKey: queryKeys.reviewStatisticRows,
+    queryFn: getCachedReviewStatisticRows,
+    enabled: !!token && !isSyncing,
+    staleTime: 5 * 60 * 1000, // 5 min — data only changes on sync
+    gcTime: 30 * 60 * 1000, // 30 min
+    refetchOnMount: false, // post-sync invalidation handles freshness
+    retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
+  })
+}
+
+/**
  * Level Progressions - loaded from IndexedDB cache
  * Kept fresh for 5 min; post-sync invalidation (removeQueries + refetchQueries in use-sync.ts)
  * handles freshness after a sync, so redundant per-navigation reads are unnecessary.
@@ -225,6 +252,25 @@ export function useActivityHistory() {
     staleTime: 5 * 60 * 1000, // 5 min — data only changes on sync
     gcTime: 30 * 60 * 1000, // 30 min
     refetchOnMount: false, // post-sync invalidation handles freshness
+    retry: 1,
+    networkMode: 'always', // local IndexedDB read — never pause on network state
+  })
+}
+
+/**
+ * Trainer Sessions - loaded from IndexedDB (local-only; written by the
+ * trainer page, never by sync — so no isSyncing gate). The trainer page
+ * invalidates this key after persisting a session.
+ */
+export function useTrainerSessions() {
+  const token = useUserStore((state) => state.token)
+
+  return useQuery({
+    queryKey: queryKeys.trainerSessions,
+    queryFn: getTrainerSessions,
+    enabled: !!token,
+    staleTime: 5 * 60 * 1000, // invalidation after each session handles freshness
+    gcTime: 30 * 60 * 1000,
     retry: 1,
     networkMode: 'always', // local IndexedDB read — never pause on network state
   })

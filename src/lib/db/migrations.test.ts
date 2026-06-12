@@ -49,12 +49,13 @@ const ALL_STORES = [
   STORES.LEVEL_PROGRESSIONS,
   STORES.API_SNAPSHOTS,
   STORES.ACTIVITY_HISTORY,
+  STORES.TRAINER_SESSIONS,
 ]
 
 describe('runMigrations', () => {
-  it('creates all stores and indexes on a fresh install (0 -> 3)', async () => {
+  it('creates all stores and indexes on a fresh install (0 -> 4)', async () => {
     const factory = new IDBFactory()
-    const db = await openAt(factory, 3)
+    const db = await openAt(factory, 4)
 
     expect(Array.from(db.objectStoreNames).sort()).toEqual([...ALL_STORES].sort())
 
@@ -72,6 +73,8 @@ describe('runMigrations', () => {
     ).toEqual(['level', 'updatedAt'])
     expect(tx.objectStore(STORES.API_SNAPSHOTS).keyPath).toBe('endpoint')
     expect(tx.objectStore(STORES.ACTIVITY_HISTORY).keyPath).toBe('date')
+    expect(tx.objectStore(STORES.TRAINER_SESSIONS).keyPath).toBe('id')
+    expect(Array.from(tx.objectStore(STORES.TRAINER_SESSIONS).indexNames)).toEqual(['date'])
 
     db.close()
   })
@@ -133,6 +136,39 @@ describe('runMigrations', () => {
     v3.close()
   })
 
+  it('preserves all existing data when upgrading 3 -> 4', async () => {
+    const factory = new IDBFactory()
+
+    const v3 = await openAt(factory, 3)
+    expect(Array.from(v3.objectStoreNames)).not.toContain(STORES.TRAINER_SESSIONS)
+
+    const subject = { id: 440, data: { slug: 'fish', level: 2 }, updatedAt: '2026-01-01T00:00:00Z' }
+    const stat = { id: 7, subjectId: 440, data: { meaning_correct: 12 }, updatedAt: '2026-01-02T00:00:00Z' }
+    // The irreplaceable store: a migration that loses this row loses the moat.
+    const activityDay = {
+      date: '2026-06-01',
+      reviews: { meaningCorrect: 5, meaningIncorrect: 1, readingCorrect: 4, readingIncorrect: 2 },
+      lessons: 3,
+      srsSnapshot: null,
+      updatedAt: '2026-06-01T12:00:00Z',
+    }
+
+    await put(v3, STORES.SUBJECTS, subject)
+    await put(v3, STORES.REVIEW_STATISTICS, stat)
+    await put(v3, STORES.ACTIVITY_HISTORY, activityDay)
+    v3.close()
+
+    const v4 = await openAt(factory, 4)
+
+    expect(await getAll(v4, STORES.SUBJECTS)).toEqual([subject])
+    expect(await getAll(v4, STORES.REVIEW_STATISTICS)).toEqual([stat])
+    expect(await getAll(v4, STORES.ACTIVITY_HISTORY)).toEqual([activityDay])
+    expect(Array.from(v4.objectStoreNames)).toContain(STORES.TRAINER_SESSIONS)
+    expect(await getAll(v4, STORES.TRAINER_SESSIONS)).toEqual([])
+
+    v4.close()
+  })
+
   it('runs only the migrations in the requested range', () => {
     const created: string[] = []
     const fakeDb = {
@@ -153,7 +189,7 @@ describe('runMigrations', () => {
     } as unknown as IDBDatabase
 
     expect(() => runMigrations(fakeDb, 0, 999, {} as IDBTransaction)).toThrow(
-      /No migration defined for DB version 4/
+      /No migration defined for DB version 5/
     )
   })
 })

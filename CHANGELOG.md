@@ -5,6 +5,27 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.25.0] - 2026-06-12
+
+### Added
+- **Leech Trainer** (new Trainer page, 特訓): self-graded flashcard sessions over your problem items — tap a card to reveal its readings and meanings, grade yourself "Got it" or "Needs work", and missed cards recycle to the back of the deck until every one is cleared; purely local, your WaniKani reviews and SRS are never touched
+  - Three selectable pools: **Leeches** (the Leeches page's detection, worst first), **Recently failed** (items with a recorded miss whose streak hasn't recovered, seen within the last week), and **Current level** (everything you've started at your level, including brand-new items)
+  - **Confusion-pair mode**: drills visually-similar leeches against each other — every reveal shows the lookalike sibling alongside the answer, so the contrast is the lesson; deep-linkable via `?mode=confusion`
+  - Vocabulary pronunciation audio on revealed cards, with an optional play-on-reveal toggle (off by default); audio failures never block the card flow
+  - Keyboard shortcuts: Space or Enter reveals, 1 = Got it, 2 = Needs work
+  - Results show first-try accuracy and the cards that needed work, each opening the full item detail; "Train needs-work again" starts a focused deck over just the misses
+  - Sessions are recorded locally (including early-ended ones with at least one graded card) for a future training-history view; force full sync preserves them, only disconnecting your account clears them
+- **Train these** entry points on the Leeches page: the Leech Summary card jumps to the trainer with the leech pool pre-selected, and the Confusion Pairs card links straight into confusion-pair mode
+
+### Changed
+- Navigation gains a ninth entry, Trainer, after Leeches
+
+### Technical
+- New tested calculation modules: `trainer-pools.ts` (uniform `TrainerCard` built from the leech detector, level scoping, or the recently-failed proxy — a facet with `incorrect > 0` and `current_streak <= 1` inside a 7-day window on the cached row's write time, the closest honest signal now that `GET /reviews` is gone; a force full sync stamps every row at once and temporarily widens that window until delta syncs resume) and `trainer-quiz.ts` (pure reducer with a recycle queue that can only shrink, immutable first-attempt grades, seedable Fisher–Yates shuffle, and a summary that works on partial state for the abort path)
+- DB migration 4 adds the `trainer_sessions` store (keyPath `id`, `date` index, additive-only); the store joins activity_history and api_snapshots on the force-sync preserved list since no API holds it; the 3→4 migration test seeds an activity_history row to pin that captured history survives the upgrade
+- New `getCachedReviewStatisticRows` repository accessor and `useReviewStatisticRows` hook expose review-stat cache-write times; post-sync invalidation covers the new query key
+- Confusion cards denormalize their sibling's display data so retry decks render the contrast panel without the sibling present
+
 ## [2.24.0] - 2026-06-12
 
 ### Added

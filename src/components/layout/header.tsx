@@ -15,6 +15,7 @@ const navItems = [
   { path: '/accuracy', label: 'Accuracy' },
   { path: '/forecast', label: 'Forecast' },
   { path: '/leeches', label: 'Leeches' },
+  { path: '/trainer', label: 'Trainer' },
   { path: '/kanji', label: 'Kanji' },
   { path: '/readiness', label: 'Readiness' },
 ]
