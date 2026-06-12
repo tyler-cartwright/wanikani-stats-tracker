@@ -136,7 +136,13 @@ export async function performSync(
 // - api_snapshots: offline /user and /resets fallbacks; wiping them would
 //   reopen the 2.19.1 offline reset-data bug for no benefit (they're
 //   rewritten on the next successful fetch anyway)
-const PRESERVED_ON_FORCE_SYNC: string[] = [STORES.ACTIVITY_HISTORY, STORES.API_SNAPSHOTS]
+// - trainer_sessions: local-only training history that no API holds — only
+//   logout may clear it
+const PRESERVED_ON_FORCE_SYNC: string[] = [
+  STORES.ACTIVITY_HISTORY,
+  STORES.API_SNAPSHOTS,
+  STORES.TRAINER_SESSIONS,
+]
 
 /**
  * Forces a complete resync by clearing the synced collections first

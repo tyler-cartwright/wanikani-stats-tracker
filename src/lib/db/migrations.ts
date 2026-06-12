@@ -50,6 +50,13 @@ const migrations: Record<number, Migration> = {
   3: (db) => {
     db.createObjectStore(STORES.ACTIVITY_HISTORY, { keyPath: 'date' })
   },
+
+  // v4: local-only self-study trainer sessions. Additive only — the 'date'
+  // index serves future per-day history views.
+  4: (db) => {
+    const sessions = db.createObjectStore(STORES.TRAINER_SESSIONS, { keyPath: 'id' })
+    sessions.createIndex('date', 'date', { unique: false })
+  },
 }
 
 export function runMigrations(

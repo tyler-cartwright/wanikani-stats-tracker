@@ -2,7 +2,7 @@
 export const DB_NAME = 'wanitrack'
 // Bumping DB_VERSION requires a corresponding entry in migrations.ts.
 // Migrations must preserve existing data — delta sync handles freshness.
-export const DB_VERSION = 3
+export const DB_VERSION = 4
 
 export interface SyncMetadata {
   id: string // 'sync_metadata' - singleton
@@ -72,6 +72,22 @@ export interface ActivityDayRow {
   updatedAt: string
 }
 
+// One row per self-study trainer session. Local-only: never synced from the
+// API, so force-sync must preserve this store; only a full logout clears it.
+export interface TrainerSessionRow {
+  id: string // crypto.randomUUID()
+  date: string // 'YYYY-MM-DD' (local timezone at session start)
+  startedAt: string // ISO
+  completedAt: string | null // null = aborted mid-session
+  mode: 'flashcards' | 'confusion'
+  pool: 'leeches' | 'recently-failed' | 'current-level' | null // null in confusion mode
+  totalCards: number
+  firstTryCorrect: number
+  // First-attempt grade per card; attempts counts recycles until "Got it"
+  cards: Array<{ subjectId: number; firstTryCorrect: boolean; attempts: number }>
+  updatedAt: string
+}
+
 export const STORES = {
   SYNC_METADATA: 'sync_metadata',
   SUBJECTS: 'subjects',
@@ -80,4 +96,5 @@ export const STORES = {
   LEVEL_PROGRESSIONS: 'level_progressions',
   API_SNAPSHOTS: 'api_snapshots',
   ACTIVITY_HISTORY: 'activity_history',
+  TRAINER_SESSIONS: 'trainer_sessions',
 } as const
