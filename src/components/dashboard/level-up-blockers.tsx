@@ -58,7 +58,9 @@ export function LevelUpBlockers() {
     }
   }, [assignments, subjects, user])
 
-  if (isLoading) {
+  // Skeleton both while loading and before any data exists (first sync pending),
+  // matching the other dashboard cards
+  if (isLoading || !result || !user) {
     return (
       <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md">
         <div className="h-6 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-8 w-1/3" />
@@ -71,8 +73,6 @@ export function LevelUpBlockers() {
       </div>
     )
   }
-
-  if (!result || !user) return null
 
   const atMaxLevel = user.level >= 60
   const subscriptionCapped =
