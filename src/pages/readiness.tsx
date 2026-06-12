@@ -6,6 +6,7 @@ import { calculateNewsFrequencyCoverage } from '@/lib/calculations/frequency-cov
 import { useSettingsStore } from '@/stores/settings-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { JLPTHero } from '@/components/jlpt/jlpt-hero'
+import { FrequencyCoverageSection } from '@/components/jlpt/frequency-coverage-section'
 import { JLPTLevelCard } from '@/components/jlpt/jlpt-level-card'
 import { JLPTLevelDetail } from '@/components/jlpt/jlpt-level-detail'
 import { Modal, ModalClose } from '@/components/shared/modal'
@@ -109,6 +110,17 @@ export function Readiness() {
           </div>
         </div>
 
+        {/* Text Coverage Skeleton */}
+        <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md">
+          <div className="h-6 w-40 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+          <div className="h-12 w-64 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </div>
+
         {/* Grade Cards Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
@@ -168,6 +180,13 @@ export function Readiness() {
     <div className="space-y-8">
       {/* Hero Section */}
       <JLPTHero readiness={readiness} frequencyCoverage={frequencyCoverage} />
+
+      {/* Text Coverage by Frequency */}
+      <FrequencyCoverageSection
+        coverage={frequencyCoverage}
+        subjects={enrichedSubjects}
+        threshold={jlptThreshold}
+      />
 
       {/* Grade Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
