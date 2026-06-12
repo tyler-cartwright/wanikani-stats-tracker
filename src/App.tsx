@@ -16,6 +16,7 @@ const Activity = lazyWithRetry(() => import('./pages/activity').then(m => ({ def
 const Forecast = lazyWithRetry(() => import('./pages/forecast').then(m => ({ default: m.Forecast })))
 const Accuracy = lazyWithRetry(() => import('./pages/accuracy').then(m => ({ default: m.Accuracy })))
 const Leeches = lazyWithRetry(() => import('./pages/leeches').then(m => ({ default: m.Leeches })))
+const Trainer = lazyWithRetry(() => import('./pages/trainer').then(m => ({ default: m.Trainer })))
 const Kanji = lazyWithRetry(() => import('./pages/kanji').then(m => ({ default: m.Kanji })))
 const Readiness = lazyWithRetry(() => import('./pages/readiness').then(m => ({ default: m.Readiness })))
 const Settings = lazyWithRetry(() => import('./pages/settings').then(m => ({ default: m.Settings })))
@@ -69,6 +70,7 @@ function AppContent() {
             <Route path="/forecast" element={<Forecast />} />
             <Route path="/accuracy" element={<Accuracy />} />
             <Route path="/leeches" element={<Leeches />} />
+            <Route path="/trainer" element={<Trainer />} />
             <Route path="/kanji" element={<Kanji />} />
             <Route path="/readiness" element={<Readiness />} />
             <Route path="/jlpt" element={<Navigate to="/readiness" replace />} />
