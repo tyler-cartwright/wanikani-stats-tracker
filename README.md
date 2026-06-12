@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.24.0
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.25.0
 
 ---
 
@@ -47,6 +47,15 @@ Identify and tackle your problem items:
 - **Root Cause Analysis**: Finds problematic radicals appearing across multiple leeches
 - **CSV Export**: Export leech data with readings for external analysis
 - **Burned Leeches Setting**: Control whether burned items appear in your leeches list
+
+### Leech Trainer
+Treat your leeches, don't just diagnose them:
+- Self-graded flashcard sessions — reveal, grade "Got it" / "Needs work", missed cards recycle until cleared
+- Three item pools: leeches, recently failed (misses from the last week), or your current level
+- **Confusion-Pair Mode**: drills visually similar leeches against each other, showing the lookalike on every reveal
+- Vocabulary pronunciation audio with optional play-on-reveal
+- Session results with first-try accuracy, stored locally for upcoming history features
+- Purely local: your WaniKani reviews and SRS are never touched
 
 ### Kanji Grid
 Browse and analyze your kanji collection:
