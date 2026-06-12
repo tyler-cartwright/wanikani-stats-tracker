@@ -5,6 +5,31 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.24.0] - 2026-06-12
+
+### Added
+- **Level-Up Blockers** (Dashboard): exactly what stands between you and the next level — "4 more kanji need to reach Guru", the specific kanji, and the earliest possible level-up date and time
+  - The earliest-possible date assumes every review is answered correctly the moment it becomes available, on standard SRS timings; only the N fastest kanji you actually need are counted, and they're marked "gates level-up" in the list
+  - Locked kanji are handled honestly: their date waits for the slowest component radical to reach Guru first, then walks the kanji's own lessons and reviews
+  - Drill down to every pending kanji, fastest first, with its earliest Guru date and full item details; requirement-met and level-60 states included
+  - The headline count always agrees with the Level Progress card — both read the same calculation
+- **Text Coverage** (Readiness): "87.4% of kanji occurrences in typical news text are kanji you know" — measured against a real corpus (Japanese Wikinews, 2,940 kanji with occurrence counts, via scriptin/kanji-frequency, CC BY 4.0), weighted by how often each kanji actually appears
+  - Four cumulative rank buckets (Top 100 / 500 / 1,000 / 2,500) with known counts and per-bucket coverage, each opening a frequency-ordered kanji grid with Known/Unknown filters — same modal pattern as the grade cards
+  - An honest ceiling shows the maximum reachable via WaniKani, since some frequent kanji aren't taught there
+  - Respects the page's SRS threshold selector like everything else on Readiness
+
+### Changed
+- **Reading Coverage is now measured, not estimated**: the Readiness hero number previously came from a count-based heuristic (500 kanji ≈ 80%, 1000 ≈ 90%) that assumed you always learn the most frequent kanji first. It now reflects the specific kanji you know, weighted by real occurrence counts — expect the number to shift, often downward; the old number was optimistic, this one is yours
+- Item detail modals no longer show an Accuracy section for items that have never been reviewed (it always read a meaningless 0.00%)
+- On small screens the activity heatmap now opens scrolled to the present — the right edge anchors at today's week (or a past year's final week), so your recent activity is visible immediately instead of January's empty cells; earlier months remain a scroll away
+
+### Technical
+- New tested calculation modules: `level-up-blockers.ts` (earliest-Guru interval walk with memoized radical-chain recursion for locked kanji, vacation-mode handling, Nth-earliest level-up selection; takes `kanjiNeededToLevelUp` verbatim from `calculateLevelProgress` so the two can never disagree) and `frequency-coverage.ts` (occurrence-weighted join of corpus data against kanji SRS stages, dataset-parameterized for testing, cumulative rank buckets)
+- Subject classification in `level-progress.ts` extracted into exported type guards `isRadicalSubject`/`isKanjiSubject` (behavior unchanged) so blockers select items with the exact level-up predicate
+- Vendored `src/data/frequency/news-frequency.json` (32 KB): rank-ordered `[char, count]` tuples plus corpus total, converted from scriptin/kanji-frequency's `news_characters.csv` with a checksum assertion; an integrity test pins entry count, uniqueness, rank ordering, and the total so a bad re-vendor can't silently skew coverage
+- `frequencyCoverage` removed from `JoyoReadinessResult`; the piecewise estimate in `jlpt-readiness.ts` is deleted and the hero receives the measured result explicitly
+- New `makeRadicalSubject` fixture builder; blocker tests pin the SRS walk arithmetic (stage 1 → Guru = first review + 78h, fresh lesson = +82h), the locked-radical chain, and hidden subject/assignment edge cases
+
 ## [2.23.0] - 2026-06-11
 
 ### Added

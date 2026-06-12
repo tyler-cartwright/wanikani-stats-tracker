@@ -5,6 +5,7 @@ import type {
   Assignment,
   KanjiSubject,
   LevelProgression,
+  RadicalSubject,
   Reset,
   ReviewStatistic,
   Subject,
@@ -82,6 +83,29 @@ export function makeSubject(
       { reading: 'れい', primary: true, accepted_answer: true, type: 'onyomi' },
     ],
     visually_similar_subject_ids: [],
+    ...overrides,
+  }
+}
+
+// The presence of character_images (even empty) is what marks a radical
+export function makeRadicalSubject(
+  overrides: Partial<RadicalSubject & { id: number }> = {}
+): Subject & { id: number } {
+  return {
+    id: 1,
+    auxiliary_meanings: [],
+    created_at: '2025-01-01T00:00:00.000000Z',
+    document_url: 'https://www.wanikani.com/radicals/example',
+    hidden_at: null,
+    lesson_position: 0,
+    level: 1,
+    meaning_mnemonic: '',
+    meanings: [{ meaning: 'Leader', primary: true, accepted_answer: true }],
+    slug: 'leader',
+    spaced_repetition_system_id: 1,
+    amalgamation_subject_ids: [],
+    characters: '亻',
+    character_images: [],
     ...overrides,
   }
 }

@@ -100,38 +100,6 @@ function calculateGradeReadiness(
 }
 
 /**
- * Calculate frequency coverage based on cumulative kanji known
- * This is an approximation based on kanji frequency research from newspaper corpora:
- * - 500 most frequent kanji ≈ 80% coverage
- * - 1000 kanji ≈ 90% coverage
- * - 1600 kanji ≈ 99% coverage
- * - 2136 kanji (all Jōyō) ≈ 99%+ coverage
- *
- * Note: These percentages are based on the most frequent kanji in text. Since Jōyō
- * kanji are organized by educational grade (not pure frequency), actual coverage may
- * vary slightly depending on which specific kanji have been learned.
- */
-function calculateFrequencyCoverage(totalKanjiKnown: number): number {
-  if (totalKanjiKnown === 0) return 0
-  if (totalKanjiKnown >= 2136) return 99
-
-  // Piecewise linear interpolation based on research data
-  if (totalKanjiKnown <= 500) {
-    // 0-500: Linear scale to 80%
-    return (totalKanjiKnown / 500) * 80
-  } else if (totalKanjiKnown <= 1000) {
-    // 500-1000: From 80% to 90%
-    return 80 + ((totalKanjiKnown - 500) / 500) * 10
-  } else if (totalKanjiKnown <= 1600) {
-    // 1000-1600: From 90% to 99%
-    return 90 + ((totalKanjiKnown - 1000) / 600) * 9
-  } else {
-    // 1600-2136: Stay at 99%
-    return 99
-  }
-}
-
-/**
  * Approximate JLPT level based on cumulative Jōyō grade completion
  * This is a rough estimate with the following mappings:
  * - Grade 1-2 complete (240 kanji) → N5-N4
@@ -230,16 +198,12 @@ export function calculateJLPTReadiness(
   const completeGrades = grades.filter((g) => g.isComplete)
   const currentGrade = completeGrades.length > 0 ? completeGrades[completeGrades.length - 1].grade : null
 
-  // Calculate frequency coverage
-  const frequencyCoverage = Math.round(calculateFrequencyCoverage(totalKanjiKnown))
-
   // Approximate JLPT level
   const approximateJlpt = approximateJlptLevel(grades, totalKanjiKnown)
 
   return {
     currentGrade,
     grades,
-    frequencyCoverage,
     approximateJlpt,
     threshold,
     totalKanjiKnown,

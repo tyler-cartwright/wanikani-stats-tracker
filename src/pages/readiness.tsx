@@ -2,9 +2,11 @@ import { useState, useMemo } from 'react'
 import { useSubjects, useAssignments } from '@/lib/api/queries'
 import { enrichSubjectsWithSRS } from '@/lib/calculations/kanji-grid'
 import { calculateJLPTReadiness } from '@/lib/calculations/jlpt-readiness'
+import { calculateNewsFrequencyCoverage } from '@/lib/calculations/frequency-coverage'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { JLPTHero } from '@/components/jlpt/jlpt-hero'
+import { FrequencyCoverageSection } from '@/components/jlpt/frequency-coverage-section'
 import { JLPTLevelCard } from '@/components/jlpt/jlpt-level-card'
 import { JLPTLevelDetail } from '@/components/jlpt/jlpt-level-detail'
 import { Modal, ModalClose } from '@/components/shared/modal'
@@ -39,6 +41,12 @@ export function Readiness() {
     if (enrichedSubjects.length === 0) return null
     return calculateJLPTReadiness(enrichedSubjects, jlptThreshold)
   }, [enrichedSubjects, jlptThreshold])
+
+  // Occurrence-weighted text coverage against the news corpus
+  const frequencyCoverage = useMemo(
+    () => calculateNewsFrequencyCoverage(enrichedSubjects, jlptThreshold),
+    [enrichedSubjects, jlptThreshold]
+  )
 
   // Pre-compute selected grade data so it remains available during the modal close animation
   const selectedGradeData = useMemo(
@@ -102,6 +110,17 @@ export function Readiness() {
           </div>
         </div>
 
+        {/* Text Coverage Skeleton */}
+        <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-8 shadow-md">
+          <div className="h-6 w-40 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+          <div className="h-12 w-64 bg-paper-300 dark:bg-ink-300 rounded animate-pulse mb-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-paper-300 dark:bg-ink-300 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </div>
+
         {/* Grade Cards Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
@@ -160,7 +179,14 @@ export function Readiness() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <JLPTHero readiness={readiness} />
+      <JLPTHero readiness={readiness} frequencyCoverage={frequencyCoverage} />
+
+      {/* Text Coverage by Frequency */}
+      <FrequencyCoverageSection
+        coverage={frequencyCoverage}
+        subjects={enrichedSubjects}
+        threshold={jlptThreshold}
+      />
 
       {/* Grade Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -250,10 +276,20 @@ export function Readiness() {
             when you have learned 90% or more of the available kanji at your selected SRS threshold.
           </p>
           <p>
-            <strong className="text-ink-100 dark:text-paper-100">Frequency coverage</strong> is based
-            on kanji frequency in Japanese newspapers (500 kanji ≈ 80%, 1000 ≈ 90%, 1600 ≈ 99%).
-            Since Jōyō kanji are organized by grade level rather than pure frequency, your actual
-            coverage may vary depending on which specific kanji you've learned.
+            <strong className="text-ink-100 dark:text-paper-100">Text coverage</strong> is measured,
+            not estimated: every kanji occurrence in a Japanese news corpus is checked against the
+            specific kanji you know at your selected threshold. Frequency data: Japanese Wikinews
+            corpus via{' '}
+            <a
+              href="https://github.com/scriptin/kanji-frequency"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-ink-100 dark:hover:text-paper-100 transition-smooth"
+            >
+              scriptin/kanji-frequency
+            </a>{' '}
+            (CC BY 4.0). News text skews toward politics, places, and numbers — coverage of fiction
+            or casual writing will differ.
           </p>
         </div>
       </div>

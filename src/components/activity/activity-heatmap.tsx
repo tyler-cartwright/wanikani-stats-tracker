@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils/cn'
 import type { ActivityDayRow } from '@/lib/db/schema'
@@ -8,6 +8,8 @@ import { buildHeatmapGrid, type HeatmapCell } from '@/lib/calculations/heatmap-g
 
 // One week column is a 12px cell plus a 3px gap — month labels position by it
 const WEEK_STRIDE_PX = 15
+// The w-8 weekday label column plus its 3px gap, left of the first week
+const WEEKDAY_LABEL_PX = 35
 
 const LEVEL_CLASSES = [
   'bg-paper-300 dark:bg-ink-300',
@@ -41,6 +43,23 @@ export function ActivityHeatmap({ history }: { history: ActivityDayRow[] }) {
     [history, selectedYear, today]
   )
   const summary = useMemo(() => summarizeActivity(history), [history])
+
+  // On narrow screens the grid overflows; opening at scrollLeft 0 shows
+  // January — months of empty cells for anyone who started tracking
+  // mid-year. Anchor the right edge at today's week instead (last week for
+  // past years), GitHub-style: recent activity visible, history a scroll
+  // away, future stubs off-screen. Clamps to 0 when there's no overflow.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el || grid.weeks.length === 0) return
+    const todayWeek = grid.weeks.findIndex((week) => week.some((cell) => cell.date === today))
+    const targetWeek = todayWeek >= 0 ? todayWeek : grid.weeks.length - 1
+    el.scrollLeft = Math.max(
+      0,
+      WEEKDAY_LABEL_PX + (targetWeek + 1) * WEEK_STRIDE_PX - el.clientWidth
+    )
+  }, [grid, today])
 
   // The selected year is partially tracked when capture began mid-year
   const trackingNote =
@@ -77,7 +96,7 @@ export function ActivityHeatmap({ history }: { history: ActivityDayRow[] }) {
       </div>
 
       {/* Calendar grid */}
-      <div className="overflow-x-auto pb-2">
+      <div ref={scrollRef} className="overflow-x-auto pb-2">
         <div className="min-w-max">
           {/* Month labels, positioned over their first week column */}
           <div className="relative h-4 ml-8 text-xs text-ink-400 dark:text-paper-300">

@@ -1,5 +1,6 @@
 import type { JoyoReadinessResult } from '@/data/jlpt'
 import { JOYO_GRADE_INFO, SRS_THRESHOLD_LABELS } from '@/data/jlpt'
+import type { FrequencyCoverageResult } from '@/lib/calculations/frequency-coverage'
 import { JLPTProgressRing } from './jlpt-progress-ring'
 import { JLPTThresholdSelect } from './jlpt-threshold-select'
 import { InfoTooltip } from '@/components/shared/info-tooltip'
@@ -8,14 +9,14 @@ import { useSettingsStore } from '@/stores/settings-store'
 
 interface JLPTHeroProps {
   readiness: JoyoReadinessResult
+  frequencyCoverage: FrequencyCoverageResult
 }
 
-export function JLPTHero({ readiness }: JLPTHeroProps) {
+export function JLPTHero({ readiness, frequencyCoverage }: JLPTHeroProps) {
   const {
     currentGrade,
     totalKanjiKnown,
     totalKanjiInWanikani,
-    frequencyCoverage,
     approximateJlpt,
   } = readiness
 
@@ -72,7 +73,7 @@ export function JLPTHero({ readiness }: JLPTHeroProps) {
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-ink-400 dark:text-paper-300">
             <span>{totalKanjiKnown} kanji</span>
             <span className="w-1 h-1 rounded-full bg-vermillion-500" />
-            <span>{frequencyCoverage}% coverage</span>
+            <span>{frequencyCoverage.coveragePercent.toFixed(1)}% coverage</span>
             <span className="w-1 h-1 rounded-full bg-vermillion-500" />
             <span>{approximateJlpt || '—'} level</span>
           </div>
@@ -113,14 +114,16 @@ export function JLPTHero({ readiness }: JLPTHeroProps) {
             <div className="text-sm font-semibold text-ink-100 dark:text-paper-100">
               Reading Coverage
             </div>
-            <InfoTooltip content="Based on kanji frequency in newspapers. This estimates what percentage of kanji you'll encounter in real text. Note: Jōyō kanji are organized by grade level, not strict frequency, so actual coverage may vary." />
+            <InfoTooltip content="Measured against kanji frequency in Japanese news text (Wikinews corpus via scriptin/kanji-frequency, CC BY 4.0): the share of kanji occurrences in typical news text that are kanji you know at your selected threshold." />
           </div>
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="w-6 h-6 text-ochre-500" />
-            <div className="text-3xl font-bold text-ink-100 dark:text-paper-100">{frequencyCoverage}%</div>
+            <div className="text-3xl font-bold text-ink-100 dark:text-paper-100">
+              {frequencyCoverage.coveragePercent.toFixed(1)}%
+            </div>
           </div>
           <p className="text-xs text-ink-400 dark:text-paper-300 text-center max-w-[200px]">
-            Estimated text coverage
+            Of kanji in typical news text
           </p>
         </div>
 

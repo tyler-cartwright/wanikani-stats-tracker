@@ -38,7 +38,6 @@ export interface JoyoItem {
 export interface JoyoReadinessResult {
   currentGrade: JoyoGrade | null // Highest grade at 90%+ completion
   grades: JoyoLevelData[]
-  frequencyCoverage: number // Percentage of common kanji you can read
   approximateJlpt: JLPTLevel | null // Rough JLPT equivalent (with disclaimer)
   threshold: SRSThreshold
   totalKanjiKnown: number
