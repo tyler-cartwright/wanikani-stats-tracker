@@ -1,6 +1,6 @@
 # WaniTrack usage analytics: investigation and plan
 
-Status: **implemented in 2.25.1** (branch `feat/usage-analytics`); the Worker still needs deploying (see `worker/README.md`). Investigation written 2026-11-14 against `main` @ `6c4238b` (v2.25.0).
+Status: **implemented** on branch `feat/usage-analytics`, shipping in the next release-please release; the Worker still needs deploying (see `worker/README.md`). Investigation written 2026-11-14 against `main` @ `6c4238b` (v2.25.0).
 
 Goal: within 4–6 weeks, find out whether WaniTrack has enough real, returning users to keep it,
 and do this without ever sending the API token or username anywhere.
@@ -391,15 +391,17 @@ in-memory (never stored) per-tab random ID to collapse reloads.
 | `src/components/shared/error-boundary.tsx`, `src/lib/utils/lazy-with-retry.ts` | `error{kind:"crash"\|"chunk"}` |
 | `src/components/settings/usage-stats-toggle.tsx` *(new)*, `src/pages/settings.tsx` | Settings → Privacy toggle, the landing-page opt-out link, and the shared notice text. The opt-out is stored in its own localStorage key, not the settings store |
 | `README.md` | Update "Privacy & Security", including a new "what we collect" section |
-| `CHANGELOG.md`, `package.json` | 2.26.0 (or a patch release; see note) |
+| `CHANGELOG.md`, `package.json` | Set by release-please when the release PR is merged |
 | `src/lib/analytics/*.test.ts` *(new)* | Hash is deterministic and never contains the token. Opt-out and GPC suppress sends. Page allowlist |
 
 Not changed: the deploy workflow. The Worker is deployed separately with `wrangler deploy`, or with
 an optional second workflow job using a scoped `CLOUDFLARE_API_TOKEN` secret.
 
-**Release-order note:** your memory notes say 2.26 is planned as "Real JLPT". Ship analytics either
-as a small 2.25.x patch first, so measurement starts sooner, or as part of 2.26. Patch first gives
-you the 4–6 weeks of data sooner.
+**Release-order note:** versions are now set by release-please (see the README's "Releasing"
+section). This change is a `feat`, so it bumps the minor version: if it's released on its own, it
+becomes 2.26.0 and "Real JLPT" moves to 2.27. Releasing it first starts the 4–6 weeks of data
+sooner. The hand-written changelog prose for this feature is in commit `ccf6e77`'s `CHANGELOG.md`;
+paste it into the release PR if you want fuller notes than the generated bullets.
 
 ---
 
