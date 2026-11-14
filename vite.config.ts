@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import { execSync } from 'child_process'
 import packageJson from './package.json'
 
 // Dynamically determine base path from repository
@@ -29,11 +30,26 @@ const getBasePath = () => {
 
 const base = getBasePath()
 
+// Short commit SHA of this build: GITHUB_SHA in Actions, git locally, 'dev'
+// if neither is available. Shown next to the version so bug reports and
+// exports pin the exact build.
+const getBuildSha = () => {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7)
+  try {
+    return execSync('git rev-parse --short=7 HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+  } catch {
+    return 'dev'
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   base,
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(packageJson.version),
+    'import.meta.env.VITE_BUILD_SHA': JSON.stringify(getBuildSha()),
   },
   plugins: [
     react(),

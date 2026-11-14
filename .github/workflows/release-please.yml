@@ -1,0 +1,43 @@
+name: Release
+
+# Merging to main no longer deploys. Instead, release-please keeps a
+# "chore: release X.Y.Z" PR open that collects every merged change, bumps
+# package.json and README, and writes CHANGELOG.md from conventional commit
+# titles. Merging that PR tags vX.Y.Z, creates the GitHub Release and deploys.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Releases created with GITHUB_TOKEN can't trigger other workflows, so the
+  # deploy runs here, as a called workflow, only when a release was cut.
+  deploy:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy.yml

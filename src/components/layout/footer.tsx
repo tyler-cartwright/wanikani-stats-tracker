@@ -1,5 +1,6 @@
 import { Github } from 'lucide-react'
 import packageJson from '../../../package.json'
+import { getBuildSha } from '@/lib/cache/version-manager'
 
 export function Footer() {
   return (
@@ -9,7 +10,10 @@ export function Footer() {
           <div className="flex items-center gap-2">
             <span>WaniTrack</span>
             <span className="opacity-50">·</span>
-            <span className="opacity-70">v{packageJson.version}</span>
+            <span className="opacity-70" title={`Build ${getBuildSha()}`}>
+              v{packageJson.version}
+              <span className="opacity-60"> · {getBuildSha()}</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-4">
