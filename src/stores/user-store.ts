@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { clearDatabase } from '@/lib/db/database'
 import { queryClient } from '@/lib/query-client'
+import { resetIdentity } from '@/lib/analytics/track'
 
 interface UserState {
   // State
@@ -39,6 +40,7 @@ export const useUserStore = create<UserState>()(
           console.error('Failed to clear database:', err)
         }
         queryClient.clear()
+        resetIdentity()
         set({ token: null })
       },
 

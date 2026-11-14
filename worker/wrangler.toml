@@ -1,0 +1,28 @@
+# WaniTrack usage-analytics Worker — see worker/README.md
+name = "wanitrack-events"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+# Same-origin route in front of the GitHub Pages site (zone must be proxied)
+routes = [
+  { pattern = "wanitrack.com/api/event", zone_name = "wanitrack.com" },
+]
+
+# Never write request logs (they would contain IPs)
+[observability]
+enabled = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wanitrack-analytics"
+database_id = "327b350b-620b-4ec5-a4b7-12313cb4df44"  # WEUR
+
+# 90-day retention cleanup, daily at 03:17 UTC
+[triggers]
+crons = ["17 3 * * *"]
+
+# Secrets (not in this file):
+#   npx wrangler secret put UID_SECRET     # long random string, e.g. `openssl rand -hex 32`
+# Optional vars:
+#   EXCLUDE_UIDS = "<your own uid>"        # set under [vars] once you know it

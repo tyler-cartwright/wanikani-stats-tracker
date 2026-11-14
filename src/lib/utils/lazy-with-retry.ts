@@ -7,6 +7,7 @@
  */
 
 import { ComponentType, lazy } from 'react'
+import { trackError } from '@/lib/analytics/track'
 
 const RELOAD_KEY = 'chunk-reload-attempted'
 const MAX_RETRIES = 1
@@ -36,6 +37,7 @@ function reloadForNewVersion(): void {
   } else {
     // Max retries reached - clear the flag and let error bubble up
     console.error('[Chunk Loader] Max reload attempts reached - letting error surface')
+    trackError('chunk')
     sessionStorage.removeItem(RELOAD_KEY)
   }
 }

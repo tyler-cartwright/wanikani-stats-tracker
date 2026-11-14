@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useUserStore } from '@/stores/user-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { fetchUser, fetchSummary, fetchResets } from './endpoints'
+import { WaniKaniAPIError } from './client'
+import { trackError } from '@/lib/analytics/track'
 import {
   getResetsSnapshot,
   getUserSnapshot,
@@ -62,6 +64,10 @@ export function useUser() {
         )
         return user
       } catch (error) {
+        // A 401 here means a once-valid token was revoked or expired
+        if (error instanceof WaniKaniAPIError && error.status === 401) {
+          trackError('auth', 401)
+        }
         const snapshot = await getUserSnapshot()
         if (snapshot !== undefined) return snapshot
         throw error

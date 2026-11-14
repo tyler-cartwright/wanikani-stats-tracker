@@ -14,7 +14,13 @@ import {
   Shield,
   Github,
 } from 'lucide-react'
+import { useEffect } from 'react'
 import { APITokenInput } from '@/components/settings/api-token-input'
+import {
+  USAGE_STATS_SUMMARY,
+  UsageStatsInlineOptOut,
+} from '@/components/settings/usage-stats-toggle'
+import { trackLanding } from '@/lib/analytics/track'
 import { JapaneseLabel } from '@/components/shared/japanese-label'
 
 const features = [
@@ -69,7 +75,7 @@ const steps = [
     icon: ClipboardList,
     title: 'Paste it below',
     description:
-      "Enter your token in the form below. It's stored only in your browser — nothing is sent to any server.",
+      "Enter your token in the form below. It's stored only in your browser and is only ever sent to WaniKani.",
   },
   {
     step: '3',
@@ -81,6 +87,11 @@ const steps = [
 ]
 
 export function Setup() {
+  // Identifier-free count of landing-page loads (for the landing → connect funnel)
+  useEffect(() => {
+    trackLanding()
+  }, [])
+
   return (
     <div className="min-h-screen bg-paper-100 dark:bg-ink-100">
       <div className="max-w-5xl mx-auto px-6 py-16 space-y-20">
@@ -138,7 +149,7 @@ export function Setup() {
           </h2>
           <p className="text-center text-sm text-ink-400 dark:text-paper-300 mb-10 flex items-center justify-center gap-2">
             <Shield className="w-4 h-4 text-vermillion-500 shrink-0" />
-            Runs entirely in your browser. No server, no cookies, no personal data collected.
+            Runs in your browser. No cookies, no ads, and your token and study data never leave it.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {steps.map(({ step, icon: Icon, title, description }) => (
@@ -198,6 +209,9 @@ export function Setup() {
           <p className="text-xs text-ink-400 dark:text-paper-300">
             Your API token is stored locally in your browser and never sent to any third-party
             servers. All data fetching happens directly between your browser and WaniKani's API.
+          </p>
+          <p className="text-xs text-ink-400 dark:text-paper-300 max-w-2xl mx-auto">
+            {USAGE_STATS_SUMMARY} <UsageStatsInlineOptOut />
           </p>
           <a
             href="https://github.com/tyler-cartwright/wanikani-stats-tracker"
