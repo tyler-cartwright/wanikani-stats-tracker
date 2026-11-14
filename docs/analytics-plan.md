@@ -223,9 +223,28 @@ that's done for a new purpose.
   purpose is collecting **statistical information about how the service is used, with a view to
   improving it**. The user must get clear information and a **free, simple way to object**.
   Commentary says the exception came into force on 5 Feb 2026 (Commencement No. 6, SI 2026/82).
-  **Confirm against the ICO's final "storage and access technologies" guidance before launch.**
+  **Checked 2026-11-14 against the ICO's "What are the exceptions?" guidance; see the decision
+  record below.**
 - Data that would breach the "sole purpose" condition, and so fall outside the exception: anything
   reused for marketing, profiling or advertising, or shared with a third party for its own purposes.
+
+**Decision record (2026-11-14):** the ICO's guidance on the statistical-purposes exception says:
+- the resulting information must be aggregate, and the exception is "not for identifying, tracking
+  or monitoring people";
+- individual-level data may only be held as long as needed to aggregate it (it suggests daily
+  aggregation) and must not be kept afterwards;
+- information accessed must be used solely for that purpose.
+
+This design keeps a pseudonymous per-user row per day for 90 days and derives it from the WaniKani
+ID the app already fetches. So it **probably falls outside the exception** on the ICO's reading.
+
+Alternatives considered:
+- an identifier-free design (per-device cohort week and daily/weekly summary pings, aggregate
+  counts only);
+- opt-in consent.
+
+**The maintainer chose to ship the design as-is,** with the notice and opt-out, accepting that
+risk. If it needs revisiting, the identifier-free design is the low-effort path.
 
 **What this means for the recommended design:**
 
