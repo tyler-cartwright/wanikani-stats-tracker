@@ -95,10 +95,25 @@ WaniTrack is a **Progressive Web App** that connects directly to the WaniKani AP
 
 ### Privacy & Security
 - ✅ Direct connection to WaniKani API only
-- ✅ No intermediary servers
+- ✅ No intermediary servers between you and WaniKani — your token and study data never leave your browser
 - ✅ Privacy-respecting, cookieless analytics (Cloudflare Web Analytics — no personal data)
+- ✅ Anonymous first-party usage statistics (see below), with an opt-out in Settings and on the landing page; Global Privacy Control is honoured
 - ✅ API token stored locally in your browser
 - ✅ All calculations performed client-side
+
+#### Usage statistics
+
+To find out whether WaniTrack is used enough to keep running, the app sends a handful of anonymous events to a first-party Cloudflare Worker at `wanitrack.com/api/event` (source in [`worker/`](worker/)):
+
+| Event | Sent when | Contains |
+|---|---|---|
+| `landing` | The landing page loads | App version only |
+| `connect` / `connect_fail` | A token is validated | Hashed account ID, or the failure type |
+| `open` | The app loads | Hashed account ID; whether local data was cached; whether it's the installed app |
+| `view` | A page is opened | Hashed account ID; page name |
+| `error` | A sync, crash or auth error happens | Error type and HTTP status; hashed account ID if known |
+
+The hashed account ID is `SHA-256` of your WaniKani account's internal UUID, re-hashed on the server with a secret key. **Your API token, username, level and study data are never sent.** IP addresses and user agents are not stored, nothing is shared with third parties, and records are deleted after 90 days. Turn it off under Settings → Privacy (or the link on the landing page); browsers sending Global Privacy Control are opted out automatically. The full design is in [`docs/analytics-plan.md`](docs/analytics-plan.md).
 
 **Recommendation:** Use a read-only API token (write permissions not needed).
 

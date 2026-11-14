@@ -10,6 +10,7 @@ import { exportActivityHistoryBackup } from '@/lib/export/export-manager'
 import { InfoTooltip } from '@/components/shared/info-tooltip'
 import { useUser } from '@/lib/api/queries'
 import { DataExportSection } from '@/components/settings/data-export-section'
+import { UsageStatsToggle } from '@/components/settings/usage-stats-toggle'
 import { SRS_THRESHOLD_LABELS, SRS_THRESHOLD_DESCRIPTIONS, type SRSThreshold } from '@/data/jlpt'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 
@@ -484,6 +485,14 @@ export function Settings() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Privacy */}
+      <div className="bg-paper-200 dark:bg-ink-200 rounded-lg border border-paper-300 dark:border-ink-300 p-6 shadow-sm">
+        <h2 className="text-lg font-display font-semibold text-ink-100 dark:text-paper-100 mb-4">
+          Privacy
+        </h2>
+        <UsageStatsToggle />
       </div>
 
       {/* Danger Zone */}
