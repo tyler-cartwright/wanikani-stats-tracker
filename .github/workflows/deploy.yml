@@ -1,9 +1,11 @@
 name: Deploy to GitHub Pages
 
+# Deploys happen when a release is published (called from release-please.yml),
+# not on every merge to main. Run it manually from the Actions tab to redeploy
+# the current main, e.g. after a failed deploy.
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read

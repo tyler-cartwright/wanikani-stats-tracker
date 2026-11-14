@@ -2,7 +2,7 @@
 
 A comprehensive analytics platform for WaniKani learners. Track your progress, identify problem areas, and optimize your kanji and vocabulary study with detailed insights—all processed locally in your browser.
 
-**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.25.0
+**Live App:** [wanitrack.com](https://wanitrack.com) | **Version:** 2.25.0 <!-- x-release-please-version -->
 
 ---
 
@@ -144,6 +144,7 @@ Add WaniTrack to your home screen for a native app experience:
 **Deployment:**
 - Static site on GitHub Pages
 - PWA with offline support via Workbox
+- Deployed per release, not per merge (see [Releasing](#releasing))
 
 ---
 
@@ -223,6 +224,16 @@ If you encounter issues:
 5. Open an issue on GitHub with details
 
 ---
+
+## Releasing
+
+Merging to `main` does **not** deploy. Releases are managed by [release-please](https://github.com/googleapis/release-please):
+
+1. Merge feature and fix PRs to `main` as normal (squash merge). **The PR title becomes the commit message, so it must be a [Conventional Commit](https://www.conventionalcommits.org/):** `feat: …` → minor bump, listed under *Added*; `fix: …` → patch bump, under *Fixed*; `perf:`/`revert:` → *Changed*; `refactor:` → *Technical*; `docs:`, `chore:`, `ci:`, `test:`, `build:`, `style:` → no release entry. Add `!` (e.g. `feat!:`) for a breaking change.
+2. On each merge, the **Release** workflow updates one open PR titled `chore: release X.Y.Z`. It bumps `package.json`, `package-lock.json` and the README version, and adds the release to `CHANGELOG.md`. Edit `CHANGELOG.md` on that PR's branch to turn the generated bullets into fuller notes.
+3. Merging the release PR tags `vX.Y.Z`, publishes a GitHub Release and deploys to wanitrack.com.
+
+To redeploy `main` without a new release (e.g. after a failed deploy), run **Deploy to GitHub Pages** manually from the Actions tab. The footer shows the version and the short commit SHA of the running build.
 
 ## Version History
 

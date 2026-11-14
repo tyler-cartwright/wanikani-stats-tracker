@@ -60,3 +60,8 @@ export async function checkAndUpdateVersion(): Promise<{
 export function getAppVersion(): string {
   return APP_VERSION
 }
+
+/** Short commit SHA of the running build ('dev' outside a git checkout). */
+export function getBuildSha(): string {
+  return import.meta.env.VITE_BUILD_SHA || 'dev'
+}
