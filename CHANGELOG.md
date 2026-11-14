@@ -5,6 +5,21 @@ All notable changes to WaniTrack will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.25.1] - 2026-11-14
+
+### Added
+- **Anonymous usage statistics** to decide whether WaniTrack has enough returning users to keep running: a handful of first-party events (landing page loaded, token connected or failed, app opened, page viewed, error type) sent to a Cloudflare Worker at `wanitrack.com/api/event`
+  - Your account appears only as a one-way hash of its internal WaniKani ID, re-keyed on the server with a secret; the API token, username, level and study data are never sent, IPs and user agents are not stored, and records are deleted after 90 days
+  - Opt out under **Settings → Privacy** or from the landing page; browsers sending Global Privacy Control are opted out automatically
+- `worker/`: the Worker, D1 schema and setup guide; `docs/analytics-plan.md`: the investigation, privacy analysis, queries and shutdown criteria
+
+### Changed
+- Landing-page and README privacy wording updated to describe exactly what is and isn't sent
+
+### Technical
+- `src/lib/analytics/events.ts` is the single event contract shared by the client and the Worker (closed enums, strict validation that drops unknown fields); `track.ts` is a no-op unless `VITE_ANALYTICS_ENDPOINT` is set at build time (`deploy.yml` sets `/api/event`), so dev builds and forks send nothing
+- The opt-out lives in its own localStorage key (`wanitrack-analytics-optout`); nothing else is written to the device for analytics
+
 ## [2.25.0] - 2026-06-12
 
 ### Added

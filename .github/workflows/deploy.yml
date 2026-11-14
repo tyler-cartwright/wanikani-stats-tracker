@@ -36,6 +36,8 @@ jobs:
           NODE_ENV: production
           GITHUB_REPOSITORY: ${{ github.repository }}
           VITE_CUSTOM_DOMAIN: 'true'
+          # First-party usage analytics (worker/). Remove to disable.
+          VITE_ANALYTICS_ENDPOINT: '/api/event'
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

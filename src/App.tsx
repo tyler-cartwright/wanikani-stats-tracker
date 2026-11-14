@@ -8,6 +8,7 @@ import { ErrorBoundary } from './components/shared/error-boundary'
 import { InitialSync } from './components/shared/initial-sync'
 import { Loader2 } from 'lucide-react'
 import { lazyWithRetry } from './lib/utils/lazy-with-retry'
+import { AnalyticsTracker } from './lib/analytics/analytics-tracker'
 
 // Lazy load pages with automatic chunk error retry
 const Dashboard = lazyWithRetry(() => import('./pages/dashboard').then(m => ({ default: m.Dashboard })))
@@ -60,6 +61,8 @@ function AppContent() {
 
   // Show main app if authenticated
   return (
+    <>
+    <AnalyticsTracker />
     <InitialSync>
       <AppShell>
         <Suspense fallback={loadingFallback}>
@@ -80,6 +83,7 @@ function AppContent() {
         </Suspense>
       </AppShell>
     </InitialSync>
+    </>
   )
 }
 

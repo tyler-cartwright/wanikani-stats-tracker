@@ -5,6 +5,8 @@ import { useSyncStore } from '@/stores/sync-store'
 import { useUserStore } from '@/stores/user-store'
 import { performSync, forceFullSync, getLastSyncInfo } from '@/lib/sync/sync-manager'
 import { queryKeys } from '@/lib/api/queries'
+import { WaniKaniAPIError } from '@/lib/api/client'
+import { trackError } from '@/lib/analytics/track'
 
 export function useSync() {
   const queryClient = useQueryClient()
@@ -45,6 +47,7 @@ export function useSync() {
         // already communicates it) and resolves itself on reconnect.
         if (!result.success && result.error && navigator.onLine) {
           setError(result.error)
+          trackError('sync')
         }
 
         // Clear React Query cache completely to ensure fresh data
@@ -75,6 +78,7 @@ export function useSync() {
         if (navigator.onLine) {
           const errorMessage = err instanceof Error ? err.message : 'Sync failed'
           setError(errorMessage)
+          trackError('sync', err instanceof WaniKaniAPIError ? err.status : undefined)
         }
         throw err
       } finally {

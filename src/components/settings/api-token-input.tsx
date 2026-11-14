@@ -1,7 +1,9 @@
 // API Token Input Component
 import { useState } from 'react'
 import { Check, X, Loader2, ExternalLink } from 'lucide-react'
-import { validateToken } from '@/lib/api/client'
+import { validateToken, WaniKaniAPIError } from '@/lib/api/client'
+import { identify, track } from '@/lib/analytics/track'
+import { connectFailReason } from '@/lib/analytics/events'
 import { fetchUser } from '@/lib/api/endpoints'
 import { useUserStore } from '@/stores/user-store'
 import { useConfirm } from '@/hooks/use-confirm'
@@ -38,7 +40,16 @@ export function APITokenInput() {
       if (isValid) {
         // Just validate, don't store user data
         // User data will be fetched fresh by React Query
-        await fetchUser(token.trim())
+        const user = await fetchUser(token.trim())
+
+        // Usage analytics: only a digest of the user's UUID is sent, and
+        // before the token is saved so it precedes the app's first `open`.
+        // Never blocks or fails the connect.
+        try {
+          track({ e: 'connect', uidc: await identify(user.id) })
+        } catch {
+          // ignore
+        }
 
         // Save only the token
         saveToken(token.trim())
@@ -46,10 +57,15 @@ export function APITokenInput() {
         setValidationStatus('success')
         setToken('') // Clear input after successful save
       } else {
+        track({ e: 'connect_fail', reason: 'invalid_token' })
         setValidationStatus('error')
         setErrorMessage('Invalid API token')
       }
     } catch (error) {
+      track({
+        e: 'connect_fail',
+        reason: connectFailReason(error instanceof WaniKaniAPIError ? error.status : undefined),
+      })
       setValidationStatus('error')
       if (error instanceof Error) {
         setErrorMessage(error.message)
